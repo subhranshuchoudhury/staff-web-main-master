@@ -158,7 +158,7 @@ export default function Home() {
       },
     ];
 
-    DownloadExcel(Data.PartyName, Data.InvoiceNumber, data);
+    DownloadExcel(content[0]?.partyname, content[0]?.InvoiceNumber, data);
   };
 
   const pushContent = () => {
@@ -287,7 +287,7 @@ export default function Home() {
 
   const DownloadExcel = (fileName, invoice, data) => {
     const settings = {
-      fileName: `${fileName}-${invoice?.split("-")[1]}`,
+      fileName: `${fileName}-${invoice?.split("-")[1] || invoice}`,
       extraLength: 3,
       writeMode: "writeFile",
       writeOptions: {},
