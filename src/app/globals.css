@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.react-virtualized-menu-placeholder {
+  margin-top: 12px;
+  color: #9a9a9a;
+  text-align: center;
+}
+.react-virtualized-list-wrapper li {
+  list-style: none;
+}
+
+.custom-option {
+  transition: background 60ms;
+}
+.custom-option:hover {
+  transition-delay: 60ms;
+  background: #deebff;
+}
+.custom-option.custom-select__option--is-focused {
+  background: none;
+}
+.custom-option.custom-select__option--is-selected {
+  background: #2684ff;
+}
