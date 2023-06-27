@@ -19,11 +19,18 @@ import CustomOption from "./Dropdown/CustomOption";
 import CustomMenuList from "./Dropdown/CustomMenuList";
 import { useRouter } from "next/navigation";
 
-export default function Home() {
+export default function Home(props) {
+  const router = useRouter();
+
   useEffect(() => {
+    console.log(props.searchParams);
+    setSearchParam(props.searchParams);
     getItemsExcel();
     alertUnsavedData();
   }, []);
+
+  const [searchParam, setSearchParam] = useState({});
+
   const [Data, setData] = useState({
     PartyName: null,
     InvoiceNumber: null,
@@ -47,7 +54,6 @@ export default function Home() {
   const [ExcelContent, setExcelContent] = useState([]);
   const [ItemData, setItemData] = useState([]);
   const [PartyData, setPartyData] = useState([]);
-  const router = useRouter();
 
   const addObject = (obj) => {
     setExcelContent((prevArray) => [...prevArray, obj]);
@@ -55,6 +61,19 @@ export default function Home() {
 
   const alertUnsavedData = () => {
     if (localStorage.getItem("US_PURC")) {
+      if (
+        props?.searchParams?.itemname &&
+        props?.searchParams?.gst &&
+        props?.searchParams?.mrp
+      ) {
+        // when we found both unsaved data and param.
+        restoreUnsaved();
+        Data.MRP = props?.searchParams?.mrp;
+        Data.GstValue = props?.searchParams?.gst;
+        Data.ItemName = props?.searchParams?.itemname;
+        return;
+      }
+
       setModalMessage({
         message: "We found an unsaved work! do you want to restore it ?",
         title: "Unsaved 🔎",
@@ -301,6 +320,13 @@ export default function Home() {
       });
       window.my_modal_1.showModal();
       localStorage.removeItem("US_PURC");
+      if (
+        props?.searchParams?.itemname &&
+        props?.searchParams?.gst &&
+        props?.searchParams?.mrp
+      ) {
+        router.replace("/");
+      }
     };
     xlsx(data, settings, callback);
   };
@@ -425,6 +451,16 @@ export default function Home() {
               getOptionLabel={(option) => `${option["value"]}`}
               options={PartyData}
               onChange={(e) => (Data.PartyName = e.value)}
+              noOptionsMessage={() => {
+                return (
+                  <p
+                    onClick={() => router.push("/party")}
+                    className="hover:cursor-pointer"
+                  >
+                    ➕ Add Party
+                  </p>
+                );
+              }}
             />
           ) : // <input
           //   className="input input-bordered m-auto p-5 text-blue-800 font-bold input-secondary w-[300px] placeholder-white"
@@ -472,6 +508,11 @@ export default function Home() {
             <Select
               filterOption={createFilter({ ignoreAccents: false })}
               components={{ Option: CustomOption, MenuList: CustomMenuList }}
+              defaultInputValue={
+                props?.searchParams?.itemname
+                  ? props?.searchParams?.itemname
+                  : ""
+              }
               placeholder="Item / Part No"
               className="w-full m-auto p-5 text-blue-800 font-bold"
               options={ItemData}
@@ -479,6 +520,16 @@ export default function Home() {
               onChange={(e) => {
                 Data.ItemName = e?.value;
                 Data.ItemLoc = e?.loc;
+              }}
+              noOptionsMessage={() => {
+                return (
+                  <p
+                    onClick={() => router.push("/item")}
+                    className="hover:cursor-pointer"
+                  >
+                    ➕ Add Item
+                  </p>
+                );
               }}
             />
           ) : // <input
@@ -503,6 +554,11 @@ export default function Home() {
               className="input input-bordered input-secondary w-[295px] m-5"
               placeholder="MRP"
               type="number"
+              value={
+                props?.searchParams?.mrp && ExcelContent?.length > 0
+                  ? parseFloat(props?.searchParams?.mrp)
+                  : undefined
+              }
               onWheel={(e) => {
                 e.target.blur();
               }}
@@ -516,8 +572,12 @@ export default function Home() {
             onChange={(e) => {
               Data.GstValue = e?.value;
             }}
+            defaultInputValue={
+              props?.searchParams?.gst ? props?.searchParams?.gst : ""
+            }
             isDisabled={toggleGstButton}
             isSearchable={true}
+            isClearable={true}
           />
         </div>
 

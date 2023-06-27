@@ -45,9 +45,7 @@ export default function RootLayout({ children }) {
                   <Link href={"/party"}>Add New Party</Link>
                 </li>
                 <li>
-                  {/* <Link href={"/item"}>Add New Item</Link>
-                   */}
-                  <a>Add New Item</a>
+                  <Link href={"/item"}>Add New Item</Link>
                 </li>
                 <li>
                   <a>Developers</a>

@@ -53,23 +53,31 @@ const Page = () => {
       part_no: d.Item_Alias,
     };
 
-    const response = await uploadItem(payload);
+    try {
+      const response = await uploadItem(payload);
 
-    if (response === "200") {
-      addObject(d);
-      setModalMessage({
-        message: "The data has been added to the excel & dropdown!",
-        title: "Success ✅",
-        btn: "Ok",
-      });
-      // window.my_modal_1.showModal();
-    } else {
+      if (response === "200") {
+        addObject(d);
+        setModalMessage({
+          message: "The data has been added to the excel & dropdown!",
+          title: "Success ✅",
+          btn: "Ok",
+        });
+        // window.my_modal_1.showModal();
+      } else {
+        setModalMessage({
+          message: "Error while saving data kindly retry.",
+          title: "Failed ❌",
+          btn: "Ok",
+        });
+        // window.my_modal_1.showModal();
+      }
+    } catch (error) {
       setModalMessage({
         message: "Error while saving data kindly retry.",
         title: "Failed ❌",
         btn: "Ok",
       });
-      // window.my_modal_1.showModal();
     }
   };
 
@@ -151,7 +159,9 @@ const Page = () => {
         btn: "Ok",
       });
       window.my_modal_1.showModal();
-      router.push("/");
+      router.push(
+        `/?itemname=${DATA.Item_Name}&mrp=${DATA.MRP}&gst=${DATA.Tax_Category}`
+      );
     };
     xlsx(data, settings, callback);
   };
@@ -205,7 +215,7 @@ const Page = () => {
       </div>
 
       <Select
-        //  The bvalue Needed To Be Added From Excel Sheet
+        //  The value Needed To Be Added From Excel Sheet
         placeholder="ITEM GROUP"
         className="w-full m-auto p-5 text-blue-800 font-bold"
         filterOption={createFilter({ ignoreAccents: false })}
@@ -252,6 +262,9 @@ const Page = () => {
           onChange={(e) => {
             const d_format = parseFloat(e.target?.value);
             DATA.MRP = Math.round(d_format * 100) / 100;
+          }}
+          onWheel={(e) => {
+            e.target.blur();
           }}
         />
         <input
