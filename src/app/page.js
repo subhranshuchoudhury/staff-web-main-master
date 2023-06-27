@@ -325,6 +325,7 @@ export default function Home(props) {
         props?.searchParams?.gst &&
         props?.searchParams?.mrp
       ) {
+        router.replace("/");
         window.location.reload();
       }
     };
@@ -628,6 +629,7 @@ export default function Home(props) {
         </button>
         <button
           onClick={() => {
+            router.replace("/");
             window.location.reload();
           }}
           className="text-white hover:bg-blue-900"
