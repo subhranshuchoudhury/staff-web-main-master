@@ -9,6 +9,7 @@ import states from "../DB/statesnames";
 import dealertype from "../DB/dealertype";
 import { useRouter } from "next/navigation";
 import xlsx from "json-as-xlsx";
+import { uploadParty } from "../AppScript/script";
 
 const Page = () => {
   const router = useRouter();
@@ -39,7 +40,7 @@ const Page = () => {
     setContent((prevArray) => [...prevArray, obj]);
   };
 
-  const pushContent = () => {
+  const pushContent = async () => {
     let isEmpty = false;
     for (const key in DATA) {
       if (DATA[key] === "") {
@@ -57,14 +58,31 @@ const Page = () => {
       window.my_modal_1.showModal();
       return;
     } else {
-      addObject(DATA);
       setModalMessage({
-        message: "The data has been added to the excel!",
-        title: "Done ✅",
-        upload: "Upload",
-        btn: "Ok",
+        message: "Please wait while we updating party list...",
+        title: "Wait ⌛",
       });
       window.my_modal_1.showModal();
+
+      try {
+        const response = await uploadParty(DATA.ACC_NAME);
+        if (response === "200") {
+          addObject(DATA);
+          setModalMessage({
+            message: "The party has been added in the dropdown and excel.",
+            title: "Done ✅",
+            btn: "Ok",
+          });
+        } else {
+          throw new Error("error while uploading party data");
+        }
+      } catch (error) {
+        setModalMessage({
+          message: "Something went wrong!",
+          title: "Error ❌",
+          btn: "Ok",
+        });
+      }
     }
   };
 
@@ -128,18 +146,9 @@ const Page = () => {
         btn: "Ok",
       });
       window.my_modal_1.showModal();
+      router.replace("/");
     };
     xlsx(data, settings, callback);
-  };
-
-  const uploadToMainframe = () => {
-    console.log(DATA);
-    setModalMessage({
-      message: `This feature will be added soon!`,
-      title: "🍪",
-      btn: "Ok",
-    });
-    window.my_modal_1.showModal();
   };
 
   return (
@@ -150,26 +159,11 @@ const Page = () => {
         <form method="dialog" className="modal-box">
           <h3 className="font-bold text-lg">{modalMessage?.title}</h3>
           <p className="py-2">{modalMessage?.message}</p>
-          {modalMessage?.invoice ||
-          modalMessage?.extra ||
-          modalMessage?.disc ? (
-            <div>
-              <p className="py-1">{modalMessage?.invoice}</p>
-              <p className="py-1">{modalMessage?.extra}</p>
-              <p className="py-1 text-xl font-extrabold">
-                {modalMessage?.disc}
-              </p>
-              <p className="py-1 text-xl font-extrabold">{modalMessage?.loc}</p>
-            </div>
-          ) : null}
 
           <div className="modal-action">
-            {modalMessage?.upload ? (
-              <button className="btn" onClick={() => uploadToMainframe()}>
-                {modalMessage.upload}
-              </button>
+            {modalMessage?.btn ? (
+              <button className="btn">{modalMessage.btn}</button>
             ) : null}
-            <button className="btn">{modalMessage.btn}</button>
           </div>
         </form>
       </dialog>
@@ -231,7 +225,7 @@ const Page = () => {
           placeholder="NAME OF THE PARTY"
           type="text"
           onChange={(e) => {
-            DATA.ACC_NAME = e.target?.value;
+            DATA.ACC_NAME = e.target?.value?.toUpperCase();
           }}
         />
         <input
@@ -293,20 +287,7 @@ const Page = () => {
         />
       </div>
 
-    <div className="pt-36"></div>
-
-      {/* <div className="flex justify-center gap-5 pb-52 flex-wrap">
-        <button className="btn glass bg-violet-500  p-1 m-2 hover:cursor-pointer hover:bg-yellow-600 hover:text-white rounded-xl text-white border border-violet-600">
-          <Image
-            className="m-2"
-            src="/assets/images/uploadfile.png"
-            width={60}
-            height={60}
-            alt="icon"
-          ></Image>
-          <span className="mb-6 text-xl">Upload Party</span>
-        </button>
-      </div> */}
+      <div className="pt-36"></div>
       <div className="btm-nav glass bg-blue-800">
         <button
           onClick={() => {
@@ -331,7 +312,7 @@ const Page = () => {
         >
           <Image
             className="mb-20"
-            src="/assets/images/add-button.png"
+            src="/assets/images/uploadfile.png"
             width={70}
             height={70}
             alt="icon"
