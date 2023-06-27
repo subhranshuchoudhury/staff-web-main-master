@@ -325,8 +325,7 @@ export default function Home(props) {
         props?.searchParams?.gst &&
         props?.searchParams?.mrp
       ) {
-        router.replace("/");
-        window.location.reload();
+        window.location.href = "/";
       }
     };
     xlsx(data, settings, callback);
@@ -629,8 +628,8 @@ export default function Home(props) {
         </button>
         <button
           onClick={() => {
-            router.replace("/");
-            window.location.reload();
+            localStorage.removeItem("US_PURC");
+            window.location.href = "/";
           }}
           className="text-white hover:bg-blue-900"
         >
