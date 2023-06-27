@@ -325,7 +325,7 @@ export default function Home(props) {
         props?.searchParams?.gst &&
         props?.searchParams?.mrp
       ) {
-        router.replace("/");
+        window.location.reload();
       }
     };
     xlsx(data, settings, callback);
@@ -628,18 +628,17 @@ export default function Home(props) {
         </button>
         <button
           onClick={() => {
-            router.back();
+            window.location.reload();
           }}
           className="text-white hover:bg-blue-900"
         >
           <Image
-            className=""
-            src="/assets/images/undo.png"
+            src="/assets/images/remove.png"
             width={50}
             height={50}
             alt="icon"
           ></Image>
-          <span className="mb-6 text-xl font-mono">Back</span>
+          <span className="mb-6 text-xl font-mono">Reset</span>
         </button>
       </div>
     </>
