@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Select, { createFilter } from "react-select";
 import Itemgroup from "../DB/Itemgroup";
 import unitypes from "../DB/unitypes";
@@ -14,6 +14,12 @@ import { uploadItem } from "../AppScript/script";
 
 const Page = () => {
   const router = useRouter();
+
+  useEffect(() => {
+    // check for local storage
+    checkForUnsaved();
+  }, []);
+
   const [DATA, setDATA] = useState({
     Item_Name: "",
     Item_Alias: "",
@@ -58,6 +64,7 @@ const Page = () => {
 
       if (response === "200") {
         addObject(d);
+        storeUnsaved(d); // saving in local storage.
         setModalMessage({
           message: "The data has been added to the excel & dropdown!",
           title: "Success ✅",
@@ -79,6 +86,53 @@ const Page = () => {
         btn: "Ok",
       });
     }
+  };
+
+  const checkForUnsaved = () => {
+    if (localStorage.getItem("US_ADDED_ITEMS")) {
+      // first check if the router inv is equal to the saved inv. then don't popup just agree the restore permission.
+      if (localStorage.getItem("US_PURC")) {
+        agreeRestore();
+        setModalMessage({
+          message: "Previous added items are restored!",
+          title: "Restored 📁",
+          btn: "Ok",
+        });
+        window.my_modal_1.showModal();
+      } else {
+        const US_INV = JSON.parse(localStorage.getItem("US_PURC"))?.[0]
+          ?.InvoiceNumber;
+        setModalMessage({
+          message: `Unsaved items found ${
+            US_INV || ""
+          }. Do you want to restore or download it ?`,
+          title: "Unsaved 🔎",
+          agree: "YES",
+          disagree: "NO",
+        });
+        window.my_modal_1.showModal();
+      }
+    }
+  };
+
+  const agreeRestore = () => {
+    const retrievedArray =
+      JSON.parse(localStorage.getItem("US_ADDED_ITEMS")) || [];
+    setContent(retrievedArray);
+  };
+
+  const disagreeRestore = () => {
+    localStorage.removeItem("US_ADDED_ITEMS");
+    localStorage.removeItem("US_ADDED_ITEMS_INV");
+  };
+
+  const storeUnsaved = (obj) => {
+    // const invoiceNumber = "INV-985TY";
+    // localStorage.setItem("US_ADDED_ITEMS_INV", invoiceNumber);
+    const retrievedArray =
+      JSON.parse(localStorage.getItem("US_ADDED_ITEMS")) || [];
+    retrievedArray.push(obj);
+    localStorage.setItem("US_ADDED_ITEMS", JSON.stringify(retrievedArray));
   };
 
   const pushContent = () => {
@@ -159,9 +213,10 @@ const Page = () => {
         btn: "Ok",
       });
       window.my_modal_1.showModal();
-      router.push(
-        `/?itemname=${DATA.Item_Name}&mrp=${DATA.MRP}&gst=${DATA.Tax_Category}`
-      );
+      disagreeRestore(); // to completely remove saved items.
+      // router.push(
+      //   `/?itemname=${DATA.Item_Name}&mrp=${DATA.MRP}&gst=${DATA.Tax_Category}`
+      // );
     };
     xlsx(data, settings, callback);
   };
@@ -172,22 +227,20 @@ const Page = () => {
         <form method="dialog" className="modal-box">
           <h3 className="font-bold text-lg">{modalMessage?.title}</h3>
           <p className="py-2">{modalMessage?.message}</p>
-          {modalMessage?.invoice ||
-          modalMessage?.extra ||
-          modalMessage?.disc ? (
-            <div>
-              <p className="py-1">{modalMessage?.invoice}</p>
-              <p className="py-1">{modalMessage?.extra}</p>
-              <p className="py-1 text-xl font-extrabold">
-                {modalMessage?.disc}
-              </p>
-              <p className="py-1 text-xl font-extrabold">{modalMessage?.loc}</p>
-            </div>
-          ) : null}
 
           <div className="modal-action">
             {modalMessage.btn ? (
               <button className="btn">{modalMessage.btn}</button>
+            ) : null}
+            {modalMessage?.agree && modalMessage?.disagree ? (
+              <div>
+                <button onClick={agreeRestore} className="btn m-3">
+                  {modalMessage.agree}
+                </button>
+                <button onClick={disagreeRestore} className="btn">
+                  {modalMessage.disagree}
+                </button>
+              </div>
             ) : null}
           </div>
         </form>
@@ -311,7 +364,13 @@ const Page = () => {
         </button>
         <button
           onClick={() => {
-            router.back();
+            if (Content?.length > 0) {
+              router.push(
+                `/?itemname=${DATA.Item_Name}&mrp=${DATA.MRP}&gst=${DATA.Tax_Category}`
+              );
+            } else {
+              router.back();
+            }
           }}
           className="text-white hover:bg-blue-900"
         >
