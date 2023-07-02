@@ -66,6 +66,7 @@ export default function Home(props) {
     localStorage.removeItem("US_INVD_REFERER");
     localStorage.removeItem("US_GT_REFERER");
     localStorage.removeItem("US_PN_REFERER");
+    localStorage.removeItem("US_INV_REFERER");
   };
 
   const populateDate = () => {
