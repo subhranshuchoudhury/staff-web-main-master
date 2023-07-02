@@ -366,7 +366,7 @@ const Page = () => {
           onClick={() => {
             if (Content?.length > 0) {
               router.push(
-                `/?itemname=${DATA.Item_Name}&mrp=${DATA.MRP}&gst=${DATA.Tax_Category}`
+                `/?itemname=${DATA.Item_Name}&mrp=${DATA.MRP}&loc=${DATA.Loc}&gst=${DATA.Tax_Category}`
               );
             } else {
               router.back();

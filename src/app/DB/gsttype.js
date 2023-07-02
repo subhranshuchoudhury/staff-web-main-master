@@ -1,8 +1,8 @@
 "use client";
 const gstType = [
-  { value: "Inclusive", label: "Inclusive" },
-  { value: "Exclusive", label: "Exclusive" },
-  { value: "Exempt", label: "Exempt" },
+  { value: "Inclusive" },
+  { value: "Exclusive" },
+  { value: "Exempt" },
 ];
 
 export default gstType;

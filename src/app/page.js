@@ -27,6 +27,7 @@ export default function Home(props) {
     setSearchParam(props.searchParams);
     getItemsExcel();
     alertUnsavedData();
+    populateDate();
   }, []);
 
   const [searchParam, setSearchParam] = useState({});
@@ -59,8 +60,49 @@ export default function Home(props) {
     setExcelContent((prevArray) => [...prevArray, obj]);
   };
 
+  const removeLocalStorage = () => {
+    // all the items are of purchase page.
+    localStorage.removeItem("US_PURC");
+    localStorage.removeItem("US_INVD_REFERER");
+    localStorage.removeItem("US_GT_REFERER");
+    localStorage.removeItem("US_PN_REFERER");
+  };
+
+  const populateDate = () => {
+    let savedDate = localStorage.getItem("US_INVD_REFERER");
+
+    if (savedDate && savedDate !== "null") {
+      savedDate = new Date(savedDate);
+      setStartDate(savedDate);
+      Data.InvoiceDate = savedDate;
+    }
+
+    // Gst Type
+
+    Data.GstType =
+      localStorage.getItem("US_GT_REFERER") &&
+      localStorage.getItem("US_GT_REFERER")?.length > 0
+        ? localStorage.getItem("US_GT_REFERER")
+        : null;
+
+    // Party Name
+
+    Data.PartyName =
+      localStorage.getItem("US_PN_REFERER") &&
+      localStorage.getItem("US_PN_REFERER")?.length > 0
+        ? localStorage.getItem("US_PN_REFERER")
+        : null;
+
+    // invoice
+
+    if (localStorage.getItem("US_INV_REFERER")) {
+      Data.InvoiceNumber = localStorage.getItem("US_INV_REFERER");
+    }
+  };
+
   const alertUnsavedData = () => {
-    if (localStorage.getItem("US_PURC")) {
+    if (localStorage.getItem("US_PURC") || ExcelContent?.length === 0) {
+      // the first item is new item
       if (
         props?.searchParams?.itemname &&
         props?.searchParams?.gst &&
@@ -71,25 +113,29 @@ export default function Home(props) {
         Data.MRP = props?.searchParams?.mrp;
         Data.GstValue = props?.searchParams?.gst;
         Data.ItemName = props?.searchParams?.itemname;
+        Data.ItemLoc = props?.searchParams?.loc;
         return;
       }
 
-      setModalMessage({
-        message: "We found an unsaved work! do you want to restore it ?",
-        title: "Unsaved 🔎",
-        u_data: JSON.parse(localStorage.getItem("US_PURC")),
-        option: true,
-        btn: "Ok",
-      });
-      window.my_modal_1.showModal();
+      if (localStorage.getItem("US_PURC")) {
+        // after the user completely reset or download Excel
+        setModalMessage({
+          message: "We found an unsaved work! do you want to restore it ?",
+          title: "Unsaved 🔎",
+          u_data: JSON.parse(localStorage.getItem("US_PURC")),
+          option: true,
+          btn: "Ok",
+        });
+        window.my_modal_1.showModal();
+      }
     }
   };
 
   const restoreUnsaved = () => {
-    const data = JSON.parse(localStorage.getItem("US_PURC"));
+    const data = JSON.parse(localStorage.getItem("US_PURC")) || [];
     setExcelContent(data);
 
-    Data.InvoiceNumber = data[0].InvoiceNumber;
+    Data.InvoiceNumber = data?.[0]?.InvoiceNumber || null;
 
     setModalMessage({
       message: "The unsaved data has been restored.",
@@ -130,7 +176,15 @@ export default function Home(props) {
         // localStorage.setItem("ITEM_NAMES", JSON.stringify(item_names));
         // localStorage.setItem("PARTY_NAMES", JSON.stringify(party_names));
       })
-      .catch((error) => console.error(error));
+      .catch((error) => {
+        console.error(error);
+        setModalMessage({
+          message: "Kindly check your internet connection or reopen the app!",
+          title: "Error ⚠️",
+          btn: "Ok",
+        });
+        window.my_modal_1.showModal();
+      });
   };
 
   const createSheet = () => {
@@ -319,7 +373,9 @@ export default function Home(props) {
         btn: "Ok",
       });
       window.my_modal_1.showModal();
-      localStorage.removeItem("US_PURC");
+
+      // clear the local storage.
+      removeLocalStorage();
       if (
         props?.searchParams?.itemname &&
         props?.searchParams?.gst &&
@@ -450,7 +506,16 @@ export default function Home(props) {
               className="w-full m-auto p-5 text-blue-800 font-bold"
               getOptionLabel={(option) => `${option["value"]}`}
               options={PartyData}
-              onChange={(e) => (Data.PartyName = e.value)}
+              isClearable={true}
+              defaultInputValue={
+                localStorage.getItem("US_PN_REFERER")
+                  ? localStorage.getItem("US_PN_REFERER")
+                  : ""
+              }
+              onChange={(e) => {
+                Data.PartyName = e?.value || "";
+                localStorage.setItem("US_PN_REFERER", `${Data.PartyName}`);
+              }}
               noOptionsMessage={() => {
                 return (
                   <p
@@ -471,24 +536,31 @@ export default function Home(props) {
 
           <div className="flex justify-center items-center flex-wrap">
             <input
-              onChange={(e) => (Data.InvoiceNumber = e.target.value)}
+              onChange={(e) => {
+                Data.InvoiceNumber = e.target.value;
+                localStorage.setItem("US_INV_REFERER", e.target.value);
+              }}
               className="input input-bordered input-secondary m-5 uppercase w-[295px]"
               placeholder="Invoice No"
               type="text"
               disabled={ExcelContent?.length > 0 ? true : false}
-              value={
+              defaultValue={
                 ExcelContent?.length > 0
                   ? ExcelContent[0].InvoiceNumber
-                  : undefined
+                  : localStorage.getItem("US_INV_REFERER")
+                  ? localStorage.getItem("US_INV_REFERER")
+                  : undefined || ""
               }
             />
             <DatePicker
               className="input input-bordered input-secondary w-[295px] m-5 hover:cursor-pointer"
+              isClearable={true}
               selected={startDate}
               placeholderText="Invoice Date"
               onChange={(date) => {
                 Data.InvoiceDate = date;
                 setStartDate(date);
+                localStorage.setItem("US_INVD_REFERER", `${Data.InvoiceDate}`);
               }}
             />
           </div>
@@ -498,10 +570,18 @@ export default function Home(props) {
             className="w-full m-auto p-5 text-blue-800 font-bold"
             options={gstType}
             onChange={(e) => {
-              Data.GstType = e.value;
-              toggleGst(e.value);
+              Data.GstType = e?.value || "";
+              localStorage.setItem("US_GT_REFERER", `${Data.GstType}`);
+              toggleGst(e?.value);
             }}
-            isSearchable={false}
+            isClearable={true}
+            defaultInputValue={
+              localStorage.getItem("US_GT_REFERER")
+                ? localStorage.getItem("US_GT_REFERER")
+                : ""
+            }
+            getOptionLabel={(option) => `${option["value"]}`}
+            isSearchable={localStorage.getItem("US_GT_REFERER") ? true : false}
           />
 
           {ItemData?.length > 0 ? (
@@ -554,8 +634,8 @@ export default function Home(props) {
               className="input input-bordered input-secondary w-[295px] m-5"
               placeholder="MRP"
               type="number"
-              value={
-                props?.searchParams?.mrp && ExcelContent?.length > 0
+              defaultValue={
+                props?.searchParams?.mrp
                   ? parseFloat(props?.searchParams?.mrp)
                   : undefined
               }
@@ -575,7 +655,12 @@ export default function Home(props) {
             defaultInputValue={
               props?.searchParams?.gst ? props?.searchParams?.gst : ""
             }
-            isDisabled={toggleGstButton}
+            // isDisabled={toggleGstButton}
+            isDisabled={
+              localStorage.getItem("US_GT_REFERER") === "Exempt"
+                ? true
+                : toggleGstButton
+            }
             isSearchable={true}
             isClearable={true}
           />
@@ -628,7 +713,7 @@ export default function Home(props) {
         </button>
         <button
           onClick={() => {
-            localStorage.removeItem("US_PURC");
+            removeLocalStorage();
             window.location.href = "/";
           }}
           className="text-white hover:bg-blue-900"
