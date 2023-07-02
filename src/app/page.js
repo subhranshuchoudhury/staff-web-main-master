@@ -1,5 +1,4 @@
 "use client";
-
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import xlsx from "json-as-xlsx";
@@ -24,6 +23,7 @@ export default function Home(props) {
 
   useEffect(() => {
     console.log(props.searchParams);
+    localStorage.getItem("MOUNT");
     setSearchParam(props.searchParams);
     getItemsExcel();
     alertUnsavedData();
