@@ -54,9 +54,9 @@ const Page = () => {
     window.my_modal_1.showModal();
 
     const payload = {
-      item_name: d.Item_Name,
-      loc: d.Loc,
-      part_no: d.Item_Alias,
+      item_name: d.Item_Name?.toUpperCase(),
+      loc: d.Loc?.toUpperCase(),
+      part_no: d.Item_Alias?.toUpperCase(),
     };
 
     try {

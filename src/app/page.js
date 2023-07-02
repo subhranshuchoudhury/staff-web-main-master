@@ -113,7 +113,7 @@ export default function Home(props) {
         restoreUnsaved();
         Data.MRP = props?.searchParams?.mrp;
         Data.GstValue = props?.searchParams?.gst;
-        Data.ItemName = props?.searchParams?.itemname;
+        Data.ItemName = props?.searchParams?.itemname?.toUpperCase();
         Data.ItemLoc = props?.searchParams?.loc;
         return;
       }
