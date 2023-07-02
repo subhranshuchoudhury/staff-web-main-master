@@ -536,23 +536,26 @@ export default function Home(props) {
           null}
 
           <div className="flex justify-center items-center flex-wrap">
-            <input
-              onChange={(e) => {
-                Data.InvoiceNumber = e.target.value;
-                localStorage.setItem("US_INV_REFERER", e.target.value);
-              }}
-              className="input input-bordered input-secondary m-5 uppercase w-[295px]"
-              placeholder="Invoice No"
-              type="text"
-              disabled={ExcelContent?.length > 0 ? true : false}
-              defaultValue={
-                ExcelContent?.length > 0
-                  ? ExcelContent[0].InvoiceNumber
-                  : localStorage.getItem("US_INV_REFERER")
-                  ? localStorage.getItem("US_INV_REFERER")
-                  : undefined || ""
-              }
-            />
+            {!LoadingExcel ? (
+              <input
+                onChange={(e) => {
+                  Data.InvoiceNumber = e.target.value;
+                  localStorage.setItem("US_INV_REFERER", e.target.value);
+                }}
+                className="input input-bordered input-secondary m-5 uppercase w-[295px]"
+                placeholder="Invoice No"
+                type="text"
+                disabled={ExcelContent?.length > 0 ? true : false}
+                defaultValue={
+                  ExcelContent?.length > 0
+                    ? ExcelContent[0].InvoiceNumber
+                    : localStorage.getItem("US_INV_REFERER")
+                    ? localStorage.getItem("US_INV_REFERER")
+                    : undefined || ""
+                }
+              />
+            ) : null}
+
             <DatePicker
               className="input input-bordered input-secondary w-[295px] m-5 hover:cursor-pointer"
               isClearable={true}
@@ -566,24 +569,28 @@ export default function Home(props) {
             />
           </div>
 
-          <Select
-            placeholder="GST Type"
-            className="w-full m-auto p-5 text-blue-800 font-bold"
-            options={gstType}
-            onChange={(e) => {
-              Data.GstType = e?.value || "";
-              localStorage.setItem("US_GT_REFERER", `${Data.GstType}`);
-              toggleGst(e?.value);
-            }}
-            isClearable={true}
-            defaultInputValue={
-              localStorage.getItem("US_GT_REFERER")
-                ? localStorage.getItem("US_GT_REFERER")
-                : ""
-            }
-            getOptionLabel={(option) => `${option["value"]}`}
-            isSearchable={localStorage.getItem("US_GT_REFERER") ? true : false}
-          />
+          {!LoadingExcel ? (
+            <Select
+              placeholder="GST Type"
+              className="w-full m-auto p-5 text-blue-800 font-bold"
+              options={gstType}
+              onChange={(e) => {
+                Data.GstType = e?.value || "";
+                localStorage.setItem("US_GT_REFERER", `${Data.GstType}`);
+                toggleGst(e?.value);
+              }}
+              isClearable={true}
+              defaultInputValue={
+                localStorage.getItem("US_GT_REFERER")
+                  ? localStorage.getItem("US_GT_REFERER")
+                  : ""
+              }
+              getOptionLabel={(option) => `${option["value"]}`}
+              isSearchable={
+                localStorage.getItem("US_GT_REFERER") ? true : false
+              }
+            />
+          ) : null}
 
           {ItemData?.length > 0 ? (
             <Select
@@ -646,25 +653,27 @@ export default function Home(props) {
             />
           </div>
 
-          <Select
-            placeholder="GST %"
-            className="w-full m-auto p-5 text-blue-800 font-bold"
-            options={gstAmount}
-            onChange={(e) => {
-              Data.GstValue = e?.value;
-            }}
-            defaultInputValue={
-              props?.searchParams?.gst ? props?.searchParams?.gst : ""
-            }
-            // isDisabled={toggleGstButton}
-            isDisabled={
-              localStorage.getItem("US_GT_REFERER") === "Exempt"
-                ? true
-                : toggleGstButton
-            }
-            isSearchable={true}
-            isClearable={true}
-          />
+          {!LoadingExcel ? (
+            <Select
+              placeholder="GST %"
+              className="w-full m-auto p-5 text-blue-800 font-bold"
+              options={gstAmount}
+              onChange={(e) => {
+                Data.GstValue = e?.value;
+              }}
+              defaultInputValue={
+                props?.searchParams?.gst ? props?.searchParams?.gst : ""
+              }
+              // isDisabled={toggleGstButton}
+              isDisabled={
+                localStorage.getItem("US_GT_REFERER") === "Exempt"
+                  ? true
+                  : toggleGstButton
+              }
+              isSearchable={true}
+              isClearable={true}
+            />
+          ) : null}
         </div>
 
         <input
