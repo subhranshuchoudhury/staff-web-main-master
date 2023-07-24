@@ -396,55 +396,6 @@ export default function Home(props) {
     }
   };
 
-  // const uploadExcel = async () => {
-  //   if (!ExcelContent.length > 0) {
-  //     setModalMessage({
-  //       message: "Nothing for upload! Fill the fields to Upload  item.",
-  //       title: "Upload ❌",
-  //       btn: "Ok",
-  //     });
-  //     window.my_modal_1.showModal();
-  //     return;
-  //   } else {
-  //     try {
-  //       uploadSheet(ExcelContent);
-  //       setModalMessage({
-  //         message: "Data has been sent for uploading.",
-  //         extra: `Total Sent: ${ExcelContent?.length}`,
-  //         title: "Uploading 🚀",
-  //         btn: "Ok",
-  //       });
-  //       window.my_modal_1.showModal();
-  //     } catch (error) {
-  //       console.log(error);
-  //     }
-  //   }
-  // };
-
-  // const clearSheet = async () => {
-  //   setModalMessage({
-  //     message: "Clearing Online excel is in process!",
-  //     title: "Clearing ⌛",
-  //     btn: "Ok",
-  //   });
-  //   window.my_modal_1.showModal();
-  //   try {
-  //     const response = await clearExcelSheet();
-  //     if (response === "200") {
-  //       setModalMessage({
-  //         message: "Online excel file has been cleared!",
-  //         title: "Cleared 🧹",
-  //         btn: "Ok",
-  //       });
-  //       window.my_modal_1.showModal();
-  //     } else {
-  //       console.log("Clearing failed!");
-  //     }
-  //   } catch (error) {
-  //     console.log(error);
-  //   }
-  // };
-
   return (
     <>
       {/* Open the modal using ID.showModal() method */}
