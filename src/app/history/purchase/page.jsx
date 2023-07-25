@@ -37,7 +37,7 @@ const Page = () => {
     fetch("/api/purchases", options)
       .then((response) => {
         if (response.status === 200) {
-          alert("Delete Successful!");
+          alert("✔ Document has been deleted!");
           getSavedData();
         }
       })
@@ -78,7 +78,7 @@ const Page = () => {
         <p className="text-3xl">PURCHASE HISTORY</p>
       </div>
       {Loading ? (
-        <h1>Loading...</h1>
+        <h1 className="text-center">Loading...</h1>
       ) : (
         <div>
           {SavedData &&
