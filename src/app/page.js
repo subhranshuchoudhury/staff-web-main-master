@@ -359,6 +359,51 @@ export default function Home(props) {
     window.my_modal_1.showModal();
   };
 
+  // send data to history
+
+  const sendPurchaseHistory = (partyname, invoice, sheet) => {
+    setModalMessage({
+      message: `🚀 Saving the data to cloud...`,
+      title: "⏳ Wait",
+    });
+
+    const payload = {
+      sheetdata: JSON.stringify(sheet),
+      items: sheet?.length,
+      invoice,
+      partyname,
+    };
+    const options = {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    };
+
+    fetch("/api/purchases", options)
+      .then((response) => {
+        if (response.status === 200) {
+          setModalMessage({
+            message: `🚀 Saved to cloud`,
+            title: "✔ Done",
+            btn: "Ok",
+          });
+        } else {
+          setModalMessage({
+            message: `❌ Saved to cloud failed.`,
+            title: "❌ failed",
+            btn: "Ok",
+          });
+        }
+      })
+      .catch((err) => {
+        setModalMessage({
+          message: `❌ Saved to cloud failed.`,
+          title: "❌ failed",
+          btn: "Ok",
+        });
+      });
+  };
+
   const DownloadExcel = (fileName, invoice, data) => {
     const settings = {
       fileName: `${fileName}-${invoice?.split("-")[1] || invoice}`,
@@ -374,6 +419,7 @@ export default function Home(props) {
         btn: "Ok",
       });
       window.my_modal_1.showModal();
+      sendPurchaseHistory(fileName, invoice, data);
 
       // clear the local storage.
       removeLocalStorage();
