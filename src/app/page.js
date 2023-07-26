@@ -341,10 +341,14 @@ export default function Home(props) {
       cgst: cgst,
       sgst: cgst,
     };
-    // pushing the new list to the array
 
-    addObject(contentData);
-    storeUnsaved(contentData); // storing the unsaved data
+    const confirmedSave = () => {
+      // pushing the new list to the array
+      addObject(contentData);
+      storeUnsaved(contentData);
+      // storing the unsaved data
+    };
+
     // alert the user
 
     setModalMessage({
@@ -355,6 +359,8 @@ export default function Home(props) {
       loc: `🗺️ LOC: ${Data?.ItemLoc}`,
       title: "Done ✅",
       btn: "Ok",
+      reconfirm_save: confirmedSave,
+      editShow: true,
     });
     window.my_modal_1.showModal();
   };
@@ -483,9 +489,23 @@ export default function Home(props) {
                   No
                 </button>
               </div>
-            ) : (
+            ) : modalMessage?.editShow ? null : (
               <button className="btn">{modalMessage.btn}</button>
             )}
+
+            {modalMessage?.editShow ? (
+              <div>
+                <button
+                  className="btn m-2"
+                  onClick={() => {
+                    modalMessage.reconfirm_save();
+                  }}
+                >
+                  Ok
+                </button>
+                <button className="btn">Edit</button>
+              </div>
+            ) : null}
           </div>
         </form>
       </dialog>
@@ -525,12 +545,7 @@ export default function Home(props) {
                 );
               }}
             />
-          ) : // <input
-          //   className="input input-bordered m-auto p-5 text-blue-800 font-bold input-secondary w-[300px] placeholder-white"
-          //   type="text"
-          //   placeholder="Party Names Updating..."
-          // />
-          null}
+          ) : null}
 
           <div className="flex justify-center items-center flex-wrap">
             {!LoadingExcel ? (
@@ -617,12 +632,7 @@ export default function Home(props) {
                 );
               }}
             />
-          ) : // <input
-          //   className="input input-bordered m-auto p-5 my-5 text-blue-800 font-bold input-secondary w-[300px] placeholder-white"
-          //   type="text"
-          //   placeholder="Item Names Updating..."
-          // />
-          null}
+          ) : null}
 
           <div>
             <input
