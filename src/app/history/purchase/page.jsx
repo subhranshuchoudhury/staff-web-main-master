@@ -97,12 +97,14 @@ const Page = () => {
                   </button>
                   <br />
                   <div className="text-right bg-black">
-                    <button
-                      onClick={() => deleteDocument(d?._id)}
+                    {/* <button
+                      onClick={() => {
+                        deleteDocument(d?._id);
+                      }}
                       className="btn btn-error m-5"
                     >
                       DELETE
-                    </button>
+                    </button> */}
                     <button
                       onClick={() =>
                         DownloadExcel(
