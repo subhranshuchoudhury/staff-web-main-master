@@ -39,7 +39,7 @@ export const POST = async (request) => {
       invoice: data?.invoice,
       partyname: data?.partyname,
     });
-    payload.save();
+    await payload.save();
     return new NextResponse("ok", { status: 200 });
   } catch (error) {
     return new NextResponse("not ok", { status: 500 });
@@ -52,7 +52,7 @@ export const PUT = async (request) => {
   checkConnection();
   try {
     const data = await request.json();
-    await Purchase.findByIdAndDelete({ _id: data?._id });
+    await Purchase.findByIdAndDelete({ _id: data._id });
     return new NextResponse("ok", { status: 200 });
   } catch (error) {
     console.log(error);
