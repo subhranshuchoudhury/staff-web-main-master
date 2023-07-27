@@ -2,7 +2,7 @@
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import xlsx from "json-as-xlsx";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Select, { createFilter } from "react-select";
 import gstAmount from "./DB/gstamount";
 import partyname from "./DB/partyname";
@@ -31,6 +31,14 @@ export default function Home(props) {
   }, []);
 
   const [searchParam, setSearchParam] = useState({});
+
+  // useRef fields
+
+  const totalAmountField = useRef();
+  const quantityField = useRef();
+  const mrpField = useRef();
+  const partNoField = useRef();
+  const gstField = useRef();
 
   const [Data, setData] = useState({
     PartyName: null,
@@ -346,18 +354,36 @@ export default function Home(props) {
       // pushing the new list to the array
       addObject(contentData);
       storeUnsaved(contentData);
+
       // storing the unsaved data
+
+      // clearing the fields
+
+      totalAmountField.current.value = null;
+      quantityField.current.value = null;
+      mrpField.current.value = null;
+      // gstField.current.clearValue;
+      // partNoField.current.clearValue;
+
+      Data.TotalAmount = null;
+      Data.MRP = null;
+      Data.Quantity = null;
+      // Data.GstValue = null;
+      // Data.ItemName = null;
+      // Data.ItemLoc = null;
+
+      console.log();
     };
 
     // alert the user
 
     setModalMessage({
-      message: `Item added successfully.`,
+      message: `Press OK to add the purchase.`,
       invoice: `Item: ${Data?.ItemName}`,
       extra: `Total Added: ${ExcelContent?.length + 1}`,
       disc: `🏷️ DISC:  ${disc}%`,
       loc: `🗺️ LOC: ${Data?.ItemLoc}`,
-      title: "Done ✅",
+      title: "Confirm ❓",
       btn: "Ok",
       reconfirm_save: confirmedSave,
       editShow: true,
@@ -389,7 +415,7 @@ export default function Home(props) {
       .then((response) => {
         if (response.status === 200) {
           setModalMessage({
-            message: `🚀 Saved to cloud`,
+            message: `🚀 Saved to cloud.`,
             title: "✔ Done",
             btn: "Ok",
           });
@@ -606,6 +632,7 @@ export default function Home(props) {
 
           {ItemData?.length > 0 ? (
             <Select
+              ref={partNoField}
               filterOption={createFilter({ ignoreAccents: false })}
               components={{ Option: CustomOption, MenuList: CustomMenuList }}
               defaultInputValue={
@@ -640,6 +667,7 @@ export default function Home(props) {
               className="input input-bordered input-secondary w-[295px] m-5"
               placeholder="Quantity"
               type="number"
+              ref={quantityField}
               onWheel={(e) => {
                 e.target.blur();
               }}
@@ -648,6 +676,7 @@ export default function Home(props) {
               onChange={(e) => (Data.MRP = e.target.value)}
               className="input input-bordered input-secondary w-[295px] m-5"
               placeholder="MRP"
+              ref={mrpField}
               type="number"
               defaultValue={
                 props?.searchParams?.mrp
@@ -662,6 +691,7 @@ export default function Home(props) {
 
           {!LoadingExcel ? (
             <Select
+              ref={gstField}
               placeholder="GST %"
               className="w-full m-auto p-5 text-blue-800 font-bold"
               options={gstAmount}
@@ -688,6 +718,7 @@ export default function Home(props) {
           className="input input-bordered input-secondary w-[295px] m-5"
           placeholder="Total Amount"
           type="number"
+          ref={totalAmountField}
           onWheel={(e) => {
             e.target.blur();
           }}
