@@ -75,6 +75,7 @@ const Itemgroup = [
   { value: "FINOLEX" },
   { value: "FLEXO" },
   { value: "FUSI" },
+  { value: "GATES" },
   { value: "GABRIEL" },
   { value: "GAJARA" },
   { value: "GASKET" },
