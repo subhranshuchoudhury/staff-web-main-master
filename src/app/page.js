@@ -51,6 +51,8 @@ export default function Home(props) {
     TotalAmount: null,
     GstType: null,
     GstValue: null,
+    BILL_REF_AMOUNT: null,
+    BILL_REF_DUE_DATE: null,
   });
   const [startDate, setStartDate] = useState(null);
   const [toggleGstButton, settoggleGst] = useState(false);
@@ -210,11 +212,15 @@ export default function Home(props) {
     // empty variable to restore.
 
     let content = [];
+    let BILL_REF_AMOUNT = 0;
 
     // do not touch this.
     ExcelContent.forEach((e) => {
       content.push(e);
+      BILL_REF_AMOUNT += e?.TotalAmount;
     });
+
+    content[0].BILL_REF_AMOUNT = BILL_REF_AMOUNT;
 
     let data = [
       {
@@ -235,6 +241,16 @@ export default function Home(props) {
           { label: "Amount", value: "TotalAmount", format: "0.00" },
           { label: "CGST", value: "cgst", format: "0" },
           { label: "SGST", value: "sgst", format: "0" },
+          { label: "BILL_REF", value: "InvoiceNumber" },
+          {
+            label: "BILL_REF_AMOUNT",
+            value: "BILL_REF_AMOUNT",
+            format: "0.00",
+          },
+          {
+            label: "BILL_REF_DUE_DATE",
+            value: "BILL_REF_DUE_DATE",
+          },
         ],
         content,
       },
@@ -245,23 +261,28 @@ export default function Home(props) {
 
   const pushContent = () => {
     // appropriate format of date eg. 21-05-2023
-    var dateString = `${Data.InvoiceDate}`;
-    var date = new Date(dateString);
-    var day = date.getDate();
-    var month = date.getMonth() + 1;
-    var year = date.getFullYear();
 
-    var formattedDate =
-      (day < 10 ? "0" + day : day) +
-      "-" +
-      (month < 10 ? "0" + month : month) +
-      "-" +
-      year;
+    const convertToDateString = (date) => {
+      var dateString = `${date}`;
+      var date = new Date(dateString);
+      var day = date.getDate();
+      var month = date.getMonth() + 1;
+      var year = date.getFullYear();
+
+      var formattedDate =
+        (day < 10 ? "0" + day : day) +
+        "-" +
+        (month < 10 ? "0" + month : month) +
+        "-" +
+        year;
+
+      return formattedDate;
+    };
 
     const PartyName = Data.PartyName;
     const InvoiceNumber = Data.InvoiceNumber?.toUpperCase();
     const ItemName = Data.ItemName;
-    const InvoiceDate = formattedDate;
+    const InvoiceDate = convertToDateString(Data.InvoiceDate);
     const Quantity = Data.Quantity;
     const MRP = Data.MRP;
     const gstType = Data.GstType;
@@ -332,6 +353,18 @@ export default function Home(props) {
 
     Amount = TotalAmountCalc(MRP, disc, Quantity);
 
+    // credit days function
+
+    const getFutureDate = (curDate, fuDay) => {
+      const tempDate = new Date(curDate);
+      tempDate.setDate(tempDate.getDate() + fuDay);
+      return tempDate;
+    };
+
+    const futureCreditDay = convertToDateString(
+      getFutureDate(Data.InvoiceDate, Data.BILL_REF_DUE_DATE)
+    );
+
     let contentData = {
       bill: bill,
       billDate: InvoiceDate,
@@ -348,6 +381,7 @@ export default function Home(props) {
       TotalAmount: parseFloat(Amount),
       cgst: cgst,
       sgst: cgst,
+      BILL_REF_DUE_DATE: futureCreditDay,
     };
 
     const confirmedSave = () => {
@@ -559,6 +593,10 @@ export default function Home(props) {
               onChange={(e) => {
                 Data.PartyName = e?.value || "";
                 localStorage.setItem("US_PN_REFERER", `${Data.PartyName}`);
+                Data.BILL_REF_DUE_DATE =
+                  e?.creditDays === "" || isNaN(e?.creditDays)
+                    ? 0
+                    : e?.creditDays;
               }}
               noOptionsMessage={() => {
                 return (
