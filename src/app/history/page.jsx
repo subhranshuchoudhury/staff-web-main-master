@@ -7,7 +7,7 @@ const Page = () => {
   const router = useRouter();
 
   return (
-    <div className="flex justify-center">
+    <div className="flex justify-center flex-wrap">
       <button
         onClick={() => router.push("/history/purchase")}
         className="btn btn-accent w-44 h-28 m-5"
