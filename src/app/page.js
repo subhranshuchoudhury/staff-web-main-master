@@ -218,9 +218,8 @@ export default function Home(props) {
     ExcelContent.forEach((e) => {
       content.push(e);
       BILL_REF_AMOUNT += e?.TotalAmount;
-    });
-
-    content[0].BILL_REF_AMOUNT = BILL_REF_AMOUNT;
+    }); 
+    content[0].BILL_REF_AMOUNT = Math.round(BILL_REF_AMOUNT);
 
     let data = [
       {
@@ -233,7 +232,6 @@ export default function Home(props) {
           { label: "ITC ELIGIBILITY", value: "Eligibility" },
           { label: "NARRATION", value: "InvoiceNumber" },
           { label: "ITEM NAME", value: "ItemName" },
-          // { label: "Invoice Date", value: "InvoiceDate" },
           { label: "QTY", value: "Quantity", format: "0" },
           { label: "Unit", value: "unit" },
           { label: "PRICE", value: "MRP", format: "0.00" },
@@ -241,11 +239,12 @@ export default function Home(props) {
           { label: "Amount", value: "TotalAmount", format: "0.00" },
           { label: "CGST", value: "cgst", format: "0" },
           { label: "SGST", value: "sgst", format: "0" },
+
           { label: "BILL_REF", value: "InvoiceNumber" },
           {
             label: "BILL_REF_AMOUNT",
             value: "BILL_REF_AMOUNT",
-            format: "0.00",
+            format: "0",
           },
           {
             label: "BILL_REF_DUE_DATE",
