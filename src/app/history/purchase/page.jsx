@@ -68,7 +68,7 @@ const Page = () => {
       RTL: false,
     };
     let callback = function () {
-      alert("Download Successful!");
+      alert("✔ Download Successful!");
     };
     xlsx(data, settings, callback);
   };
@@ -86,25 +86,32 @@ const Page = () => {
               return (
                 <div
                   key={i}
-                  className="bg-cyan-600 m-10 rounded-sm text-center"
+                  className="bg-cyan-600 m-10 rounded-xl text-center"
                 >
                   <div className="p-4">{timeStampConvert(d.createdAt)}</div>
 
-                  <button className="btn btn-neutral m-5">{d?.items}</button>
-                  <button className="btn btn-neutral m-5">{d?.invoice}</button>
-                  <button className="btn btn-neutral m-5">
-                    {d?.partyname}
+                  <button className="btn btn-neutral m-5 hover:cursor-default">
+                    Total Items: {d?.items}
+                  </button>
+                  <button className="btn btn-neutral m-5 hover:cursor-default">
+                    INVOICE: {d?.invoice}
+                  </button>
+                  <button className="btn btn-neutral m-5 hover:cursor-default">
+                    PARTY: {d?.partyname}
                   </button>
                   <br />
-                  <div className="text-right bg-black">
-                    {/* <button
+                  <div className="text-right bg-slate-300 rounded-b-xl">
+                    <button
                       onClick={() => {
-                        deleteDocument(d?._id);
+                        // deleteDocument(d?._id);
+                        alert(
+                          "NOTE: currently this function is not available."
+                        );
                       }}
-                      className="btn btn-error m-5"
+                      className="btn btn-error m-5 hover:cursor-not-allowed"
                     >
                       DELETE
-                    </button> */}
+                    </button>
                     <button
                       onClick={() =>
                         DownloadExcel(
@@ -113,9 +120,9 @@ const Page = () => {
                           JSON.parse(d?.sheetdata)
                         )
                       }
-                      className="btn btn-accent m-5"
+                      className="btn bg-black m-5"
                     >
-                      Download
+                      Download ⬇
                     </button>
                   </div>
                 </div>

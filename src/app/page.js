@@ -218,7 +218,7 @@ export default function Home(props) {
     ExcelContent.forEach((e) => {
       content.push(e);
       BILL_REF_AMOUNT += e?.TotalAmount;
-    }); 
+    });
     content[0].BILL_REF_AMOUNT = Math.round(BILL_REF_AMOUNT);
 
     let data = [
@@ -352,18 +352,6 @@ export default function Home(props) {
 
     Amount = TotalAmountCalc(MRP, disc, Quantity);
 
-    // credit days function
-
-    const getFutureDate = (curDate, fuDay) => {
-      const tempDate = new Date(curDate);
-      tempDate.setDate(tempDate.getDate() + fuDay);
-      return tempDate;
-    };
-
-    const futureCreditDay = convertToDateString(
-      getFutureDate(Data.InvoiceDate, Data.BILL_REF_DUE_DATE)
-    );
-
     let contentData = {
       bill: bill,
       billDate: InvoiceDate,
@@ -380,8 +368,23 @@ export default function Home(props) {
       TotalAmount: parseFloat(Amount),
       cgst: cgst,
       sgst: cgst,
-      BILL_REF_DUE_DATE: futureCreditDay,
     };
+
+    if (ExcelContent?.length === 0) {
+      // credit days function
+
+      const getFutureDate = (curDate, fuDay) => {
+        const tempDate = new Date(curDate);
+        tempDate.setDate(tempDate.getDate() + fuDay);
+        return tempDate;
+      };
+
+      const futureCreditDay = convertToDateString(
+        getFutureDate(Data.InvoiceDate, Data.BILL_REF_DUE_DATE)
+      );
+
+      contentData.BILL_REF_DUE_DATE = futureCreditDay;
+    }
 
     const confirmedSave = () => {
       // pushing the new list to the array
@@ -434,10 +437,11 @@ export default function Home(props) {
 
     const payload = {
       sheetdata: JSON.stringify(sheet),
-      items: sheet?.length,
+      items: sheet[0]?.content?.length,
       invoice,
       partyname,
     };
+
     const options = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
