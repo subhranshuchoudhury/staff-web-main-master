@@ -18,7 +18,20 @@ const Page = () => {
   useEffect(() => {
     // check for local storage
     checkForUnsaved();
+    getInvoice();
   }, []);
+
+  const [Invoice, setInvoice] = useState("");
+  const [PartyName, setPartyName] = useState("");
+  const [PageLoaded, setPageLoaded] = useState(false);
+
+  const getInvoice = () => {
+    const inv = localStorage.getItem("US_INV_REFERER") || "";
+    const party = localStorage.getItem("US_PN_REFERER") || "";
+    setInvoice(inv);
+    setPartyName(party);
+    setPageLoaded(true);
+  };
 
   const [DATA, setDATA] = useState({
     Item_Name: "",
@@ -199,8 +212,15 @@ const Page = () => {
   };
 
   const downloadExcel = (data) => {
+    if (Invoice.length === 0 || PartyName.length === 0) {
+      console.log(Invoice.length);
+      alert("⚠ Kindly set a Invoice No or Party Name!");
+      return;
+    }
+
+    console.log(Invoice.length, PartyName.length);
     const settings = {
-      fileName: `NEW ITEM-${new Date().getTime()}`,
+      fileName: `NEW ITEM-${PartyName}-${Invoice}-${new Date().getTime()}`,
       extraLength: 3,
       writeMode: "writeFile",
       writeOptions: {},
@@ -265,6 +285,31 @@ const Page = () => {
             DATA.Item_Alias = e.target?.value;
           }}
         />
+
+        {PageLoaded ? (
+          <>
+            <input
+              value={PartyName}
+              className="input input-bordered input-secondary w-[320px] m-5 uppercase"
+              placeholder="ENTER PARTY NAME"
+              type="text"
+              onChange={(e) => {
+                setPartyName(e.target?.value);
+                localStorage.setItem("US_PN_REFERER", e?.target?.value);
+              }}
+            />
+            <input
+              value={Invoice}
+              className="input input-bordered input-secondary w-[320px] m-5 uppercase"
+              placeholder="ENTER INVOICE"
+              type="text"
+              onChange={(e) => {
+                setInvoice(e.target?.value);
+                localStorage.setItem("US_INV_REFERER", e?.target?.value);
+              }}
+            />
+          </>
+        ) : null}
       </div>
 
       <Select
