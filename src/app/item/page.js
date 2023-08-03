@@ -233,12 +233,56 @@ const Page = () => {
         btn: "Ok",
       });
       window.my_modal_1.showModal();
+      sendPurchaseHistory(PartyName, Invoice, data);
       disagreeRestore(); // to completely remove saved items.
       // router.push(
       //   `/?itemname=${DATA.Item_Name}&mrp=${DATA.MRP}&gst=${DATA.Tax_Category}`
       // );
     };
     xlsx(data, settings, callback);
+  };
+
+  //
+
+  const sendPurchaseHistory = (partyname, invoice, sheet) => {
+    setModalMessage({
+      message: `🚀 Saving the data to cloud...`,
+      title: "⏳ Wait",
+    });
+
+    const payload = {
+      sheetdata: JSON.stringify(sheet),
+      items: sheet[0]?.content?.length,
+      invoice,
+      partyname,
+      desc: "item",
+    };
+
+    const options = {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    };
+
+    fetch("/api/purchases", options)
+      .then((response) => {
+        if (response.status === 200) {
+          setModalMessage({
+            message: `🚀 Saved to cloud.`,
+            title: "✔ Done",
+            btn: "Ok",
+          });
+        } else {
+          setModalMessage({
+            message: `❌ Saved to cloud failed.`,
+            title: "❌ failed",
+            btn: "Ok",
+          });
+        }
+      })
+      .catch((err) => {
+        alert("❌ The item is not uploaded to the history.", err);
+      });
   };
 
   return (

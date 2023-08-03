@@ -38,10 +38,12 @@ export const POST = async (request) => {
       items: data?.items,
       invoice: data?.invoice,
       partyname: data?.partyname,
+      desc: data?.desc,
     });
     await payload.save();
     return new NextResponse("ok", { status: 200 });
   } catch (error) {
+    console.log(error);
     return new NextResponse("not ok", { status: 500 });
   }
 };

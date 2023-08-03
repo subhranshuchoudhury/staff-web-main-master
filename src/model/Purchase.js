@@ -6,6 +6,7 @@ const purchaseSchema = new mongoose.Schema(
     items: { type: Number, required: false },
     invoice: { type: String, required: true },
     partyname: { type: String, required: true },
+    desc: { type: String, required: true },
   },
   { timestamps: true }
 );

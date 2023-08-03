@@ -89,7 +89,9 @@ const Page = () => {
                   className="bg-cyan-600 m-10 rounded-xl text-center"
                 >
                   <div className="p-4">{timeStampConvert(d.createdAt)}</div>
-
+                  <button className="btn btn-accent m-5 hover:cursor-default">
+                    {d?.desc || "PURCHASE"}
+                  </button>
                   <button className="btn btn-neutral m-5 hover:cursor-default">
                     Total Items: {d?.items}
                   </button>
@@ -103,12 +105,16 @@ const Page = () => {
                   <div className="text-right bg-slate-300 rounded-b-xl">
                     <button
                       onClick={() => {
-                        // deleteDocument(d?._id);
-                        alert(
-                          "NOTE: currently this function is not available."
-                        );
+                        if (
+                          confirm(`Do you want to delete "${d?.invoice}" ?`)
+                        ) {
+                          deleteDocument(d._id);
+                        }
+                        // alert(
+                        //   "NOTE: currently this function is not available."
+                        // );
                       }}
-                      className="btn btn-error m-5 hover:cursor-not-allowed"
+                      className="btn btn-error m-5"
                     >
                       DELETE
                     </button>

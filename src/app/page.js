@@ -440,6 +440,7 @@ export default function Home(props) {
       items: sheet[0]?.content?.length,
       invoice,
       partyname,
+      desc: "purchase",
     };
 
     const options = {
