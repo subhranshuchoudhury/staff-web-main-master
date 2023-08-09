@@ -685,6 +685,7 @@ export default function Home(props) {
               <Select
                 placeholder="Purchase Type"
                 className="w-full m-auto p-5 text-blue-800 font-bold"
+                isSearchable={false}
                 options={purchasetype}
                 onChange={(e) => {
                   setPurchaseType(e?.value);
