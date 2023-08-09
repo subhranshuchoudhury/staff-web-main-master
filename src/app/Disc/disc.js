@@ -31,3 +31,14 @@ export const TotalAmountCalc = (MRP, DISC, QUANTITY) => {
   const result = (MRP - MRP * (DISC / 100)) * QUANTITY;
   return Math.round(result * 100) / 100;
 };
+
+// Type II : Discount mentioned
+
+export const exclusiveDM = (MRP, Quantity, discPercent, gst) => {
+  const newMRP = MRP * Quantity;
+  const amtAfterDisc = newMRP - (newMRP * discPercent) / 100;
+  const amtAfterGst = amtAfterDisc + amtAfterDisc * (gst / 100);
+  const newDisc = ((newMRP - amtAfterGst) / newMRP) * 100;
+
+  return newDisc;
+};

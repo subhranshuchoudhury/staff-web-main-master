@@ -12,11 +12,13 @@ import {
   ExclusiveCalc,
   ExemptCalc,
   TotalAmountCalc,
+  exclusiveDM,
 } from "../Disc/disc";
 import Image from "next/image";
 import CustomOption from "../Dropdown/CustomOption";
 import CustomMenuList from "../Dropdown/CustomMenuList";
 import { useRouter } from "next/navigation";
+import purchasetype from "../DB/purchasetype";
 
 export default function Home(props) {
   const router = useRouter();
@@ -52,6 +54,7 @@ export default function Home(props) {
     GstValue: null,
     BILL_REF_AMOUNT: null,
     BILL_REF_DUE_DATE: null,
+    MentionedDISC: null,
   });
   const [startDate, setStartDate] = useState(null);
   const [toggleGstButton, settoggleGst] = useState(false);
@@ -64,6 +67,7 @@ export default function Home(props) {
   const [ExcelContent, setExcelContent] = useState([]);
   const [ItemData, setItemData] = useState([]);
   const [PartyData, setPartyData] = useState([]);
+  const [purchaseType, setPurchaseType] = useState("DNM");
 
   const addObject = (obj) => {
     setExcelContent((prevArray) => [...prevArray, obj]);
@@ -347,7 +351,13 @@ export default function Home(props) {
       }
     }
 
-    // calculate the amount:
+    if (purchaseType === "DM" && Data?.GstType === "Exclusive") {
+      disc = exclusiveDM(MRP, Quantity, Data?.MentionedDISC, GstValue);
+    } else if (purchaseType === "DM") {
+      disc = Data?.MentionedDISC;
+    }
+
+    // calculate the Total amount:
 
     Amount = TotalAmountCalc(MRP, disc, Quantity);
 
@@ -400,7 +410,7 @@ export default function Home(props) {
       // gstField.current.clearValue;
       // partNoField.current.clearValue;
 
-      Data.TotalAmount = null;
+      Data.TotalAmount = purchaseType === "DM" ? 1 : null;
       Data.MRP = null;
       Data.Quantity = null;
       // Data.GstValue = null;
@@ -670,6 +680,33 @@ export default function Home(props) {
               }
             />
           ) : null}
+          {!LoadingExcel ? (
+            <div>
+              <Select
+                placeholder="Purchase Type"
+                className="w-full m-auto p-5 text-blue-800 font-bold"
+                options={purchasetype}
+                onChange={(e) => {
+                  setPurchaseType(e?.value);
+                }}
+                defaultValue={{ label: "Discount Not Mentioned", value: "DNM" }}
+                isClearable={false}
+              />
+              <input
+                hidden={purchaseType === "DNM"}
+                onChange={(e) => {
+                  Data.MentionedDISC = parseFloat(e.target.value);
+                  Data.TotalAmount = 1;
+                }}
+                className="input input-bordered input-secondary w-[295px] m-5"
+                placeholder="DISC %"
+                type="number"
+                onWheel={(e) => {
+                  e.target.blur();
+                }}
+              />
+            </div>
+          ) : null}
 
           {ItemData?.length > 0 ? (
             <Select
@@ -760,6 +797,7 @@ export default function Home(props) {
           placeholder="Total Amount"
           type="number"
           ref={totalAmountField}
+          hidden={purchaseType === "DM"}
           onWheel={(e) => {
             e.target.blur();
           }}
@@ -803,7 +841,7 @@ export default function Home(props) {
         <button
           onClick={() => {
             removeLocalStorage();
-            window.location.href = "/";
+            window.location.href = "/purchase";
           }}
           className="text-white hover:bg-blue-900"
         >

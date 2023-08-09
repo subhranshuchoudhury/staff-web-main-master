@@ -14,6 +14,7 @@ const Page = () => {
   }, []);
 
   const routePath = (path) => {
+    setNavigating(true);
     router.push(path);
   };
 
