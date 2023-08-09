@@ -4,18 +4,18 @@ import "react-datepicker/dist/react-datepicker.css";
 import xlsx from "json-as-xlsx";
 import { useState, useEffect, useRef } from "react";
 import Select, { createFilter } from "react-select";
-import gstAmount from "./DB/gstamount";
-import partyname from "./DB/partyname";
-import gstType from "./DB/gsttype";
+import gstAmount from "../DB/gstamount";
+import partyname from "../DB/partyname";
+import gstType from "../DB/gsttype";
 import {
   InclusiveCalc,
   ExclusiveCalc,
   ExemptCalc,
   TotalAmountCalc,
-} from "./Disc/disc";
+} from "../Disc/disc";
 import Image from "next/image";
-import CustomOption from "./Dropdown/CustomOption";
-import CustomMenuList from "./Dropdown/CustomMenuList";
+import CustomOption from "../Dropdown/CustomOption";
+import CustomMenuList from "../Dropdown/CustomMenuList";
 import { useRouter } from "next/navigation";
 
 export default function Home(props) {

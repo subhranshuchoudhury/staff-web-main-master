@@ -3,13 +3,13 @@
 import Image from "next/image";
 import React, { useState } from "react";
 import Select from "react-select";
-import ledgertype from "../DB/ledgertype";
-import Grouptype from "../DB/grouptypename";
-import states from "../DB/statesnames";
-import dealertype from "../DB/dealertype";
+import ledgertype from "../../DB/ledgertype";
+import Grouptype from "../../DB/grouptypename";
+import states from "../../DB/statesnames";
+import dealertype from "../../DB/dealertype";
 import { useRouter } from "next/navigation";
 import xlsx from "json-as-xlsx";
-import { uploadParty } from "../AppScript/script";
+import { uploadParty } from "../../AppScript/script";
 
 const Page = () => {
   const router = useRouter();

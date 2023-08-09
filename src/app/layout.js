@@ -42,13 +42,13 @@ export default function RootLayout({ children }) {
                 className="menu menu-sm dropdown-content mt-3 p-2 bg-blue-950  rounded-box w-52 z-20"
               >
                 <li>
-                  <Link href={"/party"}>Add New Party</Link>
+                  <Link href={"/purchase/party"}>Add New Party</Link>
                 </li>
                 <li>
-                  <Link href={"/item"}>Add New Item</Link>
+                  <Link href={"/purchase/item"}>Add New Item</Link>
                 </li>
                 <li>
-                  <Link href={"/history"}>History</Link>
+                  <Link href={"/purchase/history"}>History</Link>
                 </li>
               </ul>
             </div>

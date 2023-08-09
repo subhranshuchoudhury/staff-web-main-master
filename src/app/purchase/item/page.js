@@ -2,15 +2,15 @@
 
 import { useState, useEffect } from "react";
 import Select, { createFilter } from "react-select";
-import Itemgroup from "../DB/Itemgroup";
-import unitypes from "../DB/unitypes";
-import gstAmount from "../DB/gstamount";
+import Itemgroup from "../../DB/Itemgroup";
+import unitypes from "../../DB/unitypes";
+import gstAmount from "../../DB/gstamount";
 import Image from "next/image";
-import CustomOption from "../Dropdown/CustomOption";
-import CustomMenuList from "../Dropdown/CustomMenuList";
+import CustomOption from "../../Dropdown/CustomOption";
+import CustomMenuList from "../../Dropdown/CustomMenuList";
 import { useRouter } from "next/navigation";
 import xlsx from "json-as-xlsx";
-import { uploadItem } from "../AppScript/script";
+import { uploadItem } from "../../AppScript/script";
 
 const Page = () => {
   const router = useRouter();
@@ -455,7 +455,7 @@ const Page = () => {
           onClick={() => {
             if (Content?.length > 0) {
               router.push(
-                `/?itemname=${DATA.Item_Name}&mrp=${DATA.MRP}&loc=${DATA.Loc}&gst=${DATA.Tax_Category}`
+                `/purchase/?itemname=${DATA.Item_Name}&mrp=${DATA.MRP}&loc=${DATA.Loc}&gst=${DATA.Tax_Category}`
               );
             } else {
               router.back();
