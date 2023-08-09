@@ -22,15 +22,14 @@ export default function Home(props) {
   const router = useRouter();
 
   useEffect(() => {
-    console.log(props.searchParams);
-    localStorage.getItem("MOUNT");
-    setSearchParam(props.searchParams);
+    localStorage.getItem("MOUNT"); // caution
+    // setSearchParam(props.searchParams);
     getItemsExcel();
     alertUnsavedData();
     populateDate();
   }, []);
 
-  const [searchParam, setSearchParam] = useState({});
+  // const [searchParam, setSearchParam] = useState({});
 
   // useRef fields
 
@@ -693,7 +692,7 @@ export default function Home(props) {
               noOptionsMessage={() => {
                 return (
                   <p
-                    onClick={() => router.push("/item")}
+                    onClick={() => router.push("/purchase/item")}
                     className="hover:cursor-pointer"
                   >
                     ➕ Add Item
