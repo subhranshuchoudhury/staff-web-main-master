@@ -3,10 +3,10 @@
 import Image from "next/image";
 import React, { useState } from "react";
 import Select from "react-select";
-import ledgertype from "../../DB/ledgertype";
-import Grouptype from "../../DB/grouptypename";
-import states from "../../DB/statesnames";
-import dealertype from "../../DB/dealertype";
+import ledgertype from "../../DB/Purchase/ledgertype";
+import Grouptype from "../../DB/Purchase/grouptypename";
+import states from "../../DB/Purchase/statesnames";
+import dealertype from "../../DB/Purchase/dealertype";
 import { useRouter } from "next/navigation";
 import xlsx from "json-as-xlsx";
 import { uploadParty } from "../../AppScript/script";

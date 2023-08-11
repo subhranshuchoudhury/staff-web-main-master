@@ -19,7 +19,9 @@ const Page = () => {
 
   return (
     <div className="flex justify-center items-center flex-col">
-      <div className="mb-9">Welcome</div>
+      <p className="glass text-center text-[40px] font-mono mb-9 rounded-xl w-full">
+          Welcome
+        </p>
       {Navigating ? (
         <div>
           <span className="loading loading-bars loading-lg"></span>
@@ -38,7 +40,10 @@ const Page = () => {
           />
           <p>PURCHASE</p>
         </div>
-        <div className="btn btn-info text-white w-44 h-28 m-5 shadow-2xl hover:shadow-white flex-col bg-transparent grayscale hover:cursor-not-allowed">
+        <div 
+          // onClick={() => routePath("/sale")} 
+        className="btn btn-info text-white w-44 h-28 m-5 shadow-2xl hover:shadow-white flex-col bg-transparent grayscale hover:cursor-not-allowed">
+          
           <Image
             src="/assets/images/sale.png"
             alt="purchase"
@@ -47,12 +52,15 @@ const Page = () => {
           />
           <p>SALE</p>
         </div>
+        
         <div className="btn btn-info text-white w-44 h-28 m-5 shadow-2xl hover:shadow-white flex-col bg-transparent grayscale hover:cursor-not-allowed">
+          
           <Image
             src="/assets/images/store.png"
             alt="purchase"
             width={50}
             height={50}
+            
           />
           <p>STOCK</p>
         </div>

@@ -4,9 +4,9 @@ import "react-datepicker/dist/react-datepicker.css";
 import xlsx from "json-as-xlsx";
 import { useState, useEffect, useRef } from "react";
 import Select, { createFilter } from "react-select";
-import gstAmount from "../DB/gstamount";
-import partyname from "../DB/partyname";
-import gstType from "../DB/gsttype";
+import gstAmount from "../DB/Purchase/gstamount";
+import partyname from "../DB/Purchase/partyname";
+import gstType from "../DB/Purchase/gsttype";
 import {
   InclusiveCalc,
   ExclusiveCalc,
@@ -18,7 +18,7 @@ import Image from "next/image";
 import CustomOption from "../Dropdown/CustomOption";
 import CustomMenuList from "../Dropdown/CustomMenuList";
 import { useRouter } from "next/navigation";
-import purchasetype from "../DB/purchasetype";
+import purchasetype from "../DB/Purchase/purchasetype";
 
 export default function Home(props) {
   const router = useRouter();

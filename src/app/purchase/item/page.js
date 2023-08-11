@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Select, { createFilter } from "react-select";
-import Itemgroup from "../../DB/Itemgroup";
-import unitypes from "../../DB/unitypes";
-import gstAmount from "../../DB/gstamount";
+import Itemgroup from "../../DB/Purchase/Itemgroup";
+import unitypes from "../../DB/Purchase/unitypes";
+import gstAmount from "../../DB/Purchase/gstamount";
 import Image from "next/image";
 import CustomOption from "../../Dropdown/CustomOption";
 import CustomMenuList from "../../Dropdown/CustomMenuList";
