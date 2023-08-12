@@ -22,7 +22,7 @@ export default function Home() {
 
   const [formData, setFormData] = useState({
     seriesType: null,
-    saleDate: new Date(),
+    saleDate: new Date(), // default today.
     saleType: null,
     partyName: null,
     vehicleNo: null,
@@ -47,6 +47,7 @@ export default function Home() {
 
   const handleSubmit = () => {
     validateForm(formData) && alert(JSON.stringify(formData));
+    // action
   };
 
   const validateForm = (form) => {
@@ -67,8 +68,11 @@ export default function Home() {
   // API CALLS
 
   const getAPIContent = async () => {
+    // check for local storage (fast loading)
     checkLocalStorageSaved("PARTY_API_DATA", setPartyAPIData);
     checkLocalStorageSaved("ITEM_API_DATA", setItemAPIData);
+
+    // calls apis simultaneously
 
     Promise.all([
       fetch(
@@ -82,9 +86,6 @@ export default function Home() {
         Promise.all(responses.map((response) => response.json()))
       )
       .then((data) => {
-        // data[0] contains the items
-        // data[1] contains the party
-
         const item_api_data = data[0];
         const party_api_data = data[1];
 
@@ -99,6 +100,7 @@ export default function Home() {
       .catch((error) => {
         setAPILoading(false);
         console.error(error);
+        alert("REPORT IT ->[SALE - PAGE.JS - 103]\n" + error);
       });
   };
 
@@ -135,12 +137,10 @@ export default function Home() {
       <div className="flex justify-center items-center flex-wrap">
         <DatePicker
           className="input input-bordered input-secondary w-[295px] m-5 hover:cursor-pointer"
-          isClearable={true}
           placeholderText="SALE DATE"
           showPopperArrow={true}
-          showIcon={true}
           maxDate={new Date()}
-          selected={formData?.saleDate ? formData?.saleDate : new Date()}
+          selected={formData?.saleDate ?? new Date()}
           onChange={(selectedDate) => {
             handleChange({
               target: {
