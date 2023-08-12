@@ -16,12 +16,15 @@
     "Partyname",
     "Purc",
     "purchasetype",
+    "saletype",
+    "seriestype",
     "settoggle",
     "SGST",
     "sheetdata",
     "synthwave",
     "tailwindcss",
     "unitypes",
-    "uploadfile"
+    "uploadfile",
+    "vehicleno"
   ]
 }
