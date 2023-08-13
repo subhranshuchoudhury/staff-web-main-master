@@ -113,6 +113,45 @@ export default function Home() {
     }
   };
 
+  // defined functionalities
+
+  const calculateDiscountRoundOf = (amount, discountPercentage) => {
+    let discountedAmount = amount * (1 - discountPercentage / 100);
+    let roundedDiscountedAmount = Math.round(discountedAmount);
+    let actualDiscountPercentage = Number(
+      (((amount - roundedDiscountedAmount) / amount) * 100).toFixed(2)
+    );
+    return [roundedDiscountedAmount, actualDiscountPercentage];
+  };
+
+  const adjustAmount = () => {
+    const mrp = formData?.mrp || 0;
+    const disc = formData?.disc || 0;
+
+    const [roundedAmount, actualDiscount] = calculateDiscountRoundOf(mrp, disc);
+
+    // assigning values
+
+    handleChange({
+      target: {
+        name: "disc",
+        value: actualDiscount,
+      },
+    });
+    handleChange({
+      target: {
+        name: "discAmount",
+        value: mrp - roundedAmount,
+      },
+    });
+    handleChange({
+      target: {
+        name: "totalAmount",
+        value: roundedAmount,
+      },
+    });
+  };
+
   // ****
   return (
     <>
@@ -250,6 +289,14 @@ export default function Home() {
             e.target.blur();
           }}
         />
+        {formData?.disc && formData?.mrp && (
+          <button
+            onClick={adjustAmount}
+            className="btn btn-info w-[295px] m-5 text-white glass"
+          >
+            ADJUST
+          </button>
+        )}
       </div>
       <div className="flex justify-center items-center flex-wrap">
         <input
