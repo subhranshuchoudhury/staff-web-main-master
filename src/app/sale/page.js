@@ -160,7 +160,7 @@ export default function Home() {
   return (
     <>
       <p className="glass text-center text-[40px] font-mono mb-9 m-auto rounded-xl w-[98%] text-red-600">
-        SALE (NOT READY)
+        SALE (Work Under Process)
       </p>
       <div className="text-center">
         {APILoading && (
