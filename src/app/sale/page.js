@@ -32,6 +32,7 @@ export default function Home() {
     mrp: null,
     disc: null,
     discAmount: null,
+    gstAmount: null,
     totalAmount: null,
   });
 
@@ -258,6 +259,17 @@ export default function Home() {
           onChange={handleChange}
           value={formData?.discAmount || ""}
           name="discAmount"
+          onWheel={(e) => {
+            e.target.blur();
+          }}
+        />
+        <input
+          className="input input-bordered input-secondary w-[295px] m-5"
+          placeholder="GST %"
+          type="number"
+          onChange={handleChange}
+          value={formData?.gstAmount || ""}
+          name="gstAmount"
           onWheel={(e) => {
             e.target.blur();
           }}
