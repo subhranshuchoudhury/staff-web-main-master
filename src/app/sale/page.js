@@ -113,41 +113,45 @@ export default function Home() {
     }
   };
 
-  // defined functionalities
+  const calculateDisc = (disc) => {
+    if (!disc || !formData?.mrp) return;
 
-  const calculateDiscountRoundOf = (amount, discountPercentage) => {
-    let discountedAmount = amount * (1 - discountPercentage / 100);
-    let roundedDiscountedAmount = Math.round(discountedAmount);
-    let actualDiscountPercentage = Number(
-      (((amount - roundedDiscountedAmount) / amount) * 100).toFixed(2)
-    );
-    return [roundedDiscountedAmount, actualDiscountPercentage];
-  };
+    const mrp = formData?.mrp;
 
-  const adjustAmount = () => {
-    const mrp = formData?.mrp || 0;
-    const disc = formData?.disc || 0;
+    // console.log(mrp, disc);
 
-    const [roundedAmount, actualDiscount] = calculateDiscountRoundOf(mrp, disc);
+    const discAmount = (mrp * disc) / 100;
 
-    // assigning values
-
-    handleChange({
-      target: {
-        name: "disc",
-        value: actualDiscount,
-      },
-    });
     handleChange({
       target: {
         name: "discAmount",
-        value: mrp - roundedAmount,
+        value: Number(discAmount.toFixed(2)),
       },
     });
     handleChange({
       target: {
         name: "totalAmount",
-        value: roundedAmount,
+        value: mrp - discAmount,
+      },
+    });
+  };
+
+  const adjustDisc = (discAmount) => {
+    if (!formData?.mrp || !formData?.discAmount) return;
+    const disc = (discAmount / formData?.mrp) * 100;
+    // console.log(disc);
+    handleChange({
+      target: {
+        name: "disc",
+        value: Number(disc.toFixed(2)),
+      },
+    });
+
+    handleChange({
+      target: {
+        name: "totalAmount",
+
+        value: formData?.mrp - discAmount,
       },
     });
   };
@@ -271,7 +275,10 @@ export default function Home() {
           className="input input-bordered input-secondary w-[295px] m-5"
           placeholder="MRP"
           type="number"
-          onChange={handleChange}
+          onChange={(e) => {
+            handleChange(e);
+            calculateDisc();
+          }}
           value={formData?.mrp || ""}
           name="mrp"
           onWheel={(e) => {
@@ -282,28 +289,26 @@ export default function Home() {
           className="input input-bordered input-secondary w-[295px] m-5"
           placeholder="DISC %"
           type="number"
-          onChange={handleChange}
+          onChange={(e) => {
+            handleChange(e);
+            calculateDisc(e.target.value);
+          }}
           value={formData?.disc || ""}
           name="disc"
           onWheel={(e) => {
             e.target.blur();
           }}
         />
-        {formData?.disc && formData?.mrp && (
-          <button
-            onClick={adjustAmount}
-            className="btn btn-info w-[295px] m-5 text-white glass"
-          >
-            ADJUST
-          </button>
-        )}
       </div>
       <div className="flex justify-center items-center flex-wrap">
         <input
           className="input input-bordered input-secondary w-[295px] m-5"
           placeholder="DISC AMOUNT"
           type="number"
-          onChange={handleChange}
+          onChange={(e) => {
+            handleChange(e);
+            adjustDisc(e.target.value);
+          }}
           value={formData?.discAmount || ""}
           name="discAmount"
           onWheel={(e) => {
