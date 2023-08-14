@@ -42,7 +42,6 @@ const Page = () => {
         </div>
         <div
           onClick={() => {
-            alert("⚠ SALE is under development!");
             routePath("/sale");
           }}
           className="btn btn-warning text-white w-44 h-28 m-5 shadow-2xl hover:shadow-white flex-col bg-transparent"

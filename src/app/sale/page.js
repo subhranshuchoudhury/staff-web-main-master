@@ -227,7 +227,7 @@ export default function Page() {
 
   const exportExcel = (data) => {
     const settings = {
-      fileName: `sale_${new Date().getTime()}`,
+      fileName: `${formData?.vehicleNo?.toUpperCase()}_${new Date().getTime()}`,
       extraLength: 3,
       writeMode: "writeFile",
       writeOptions: {},
@@ -265,6 +265,12 @@ export default function Page() {
       return formattedDate;
     };
 
+    const igstDisc = () => {
+      const igstPercent = formData?.gstAmount;
+      const discPercent = formData?.disc;
+      return (discPercent + igstPercent) / igstPercent + igstPercent / 100;
+    };
+
     const tempContent = {
       vchSeries: formData?.seriesType,
       billDate: convertToDateString(formData?.saleDate),
@@ -277,7 +283,7 @@ export default function Page() {
       price: formData?.mrp,
       disc: formData?.disc,
       amount: formData?.totalAmount * formData?.quantity,
-      igstPercent: formData?.gstAmount,
+      igstPercent: igstDisc(),
       cgst: formData?.gstAmount / 2,
       sgst: formData?.gstAmount / 2,
     };
@@ -305,7 +311,7 @@ export default function Page() {
         </form>
       </dialog>
       <p className="glass text-center text-[40px] font-mono mb-9 m-auto rounded-xl w-[98%] text-red-600">
-        SALE (Work Under Progress)
+        SALE (Testing Phase)
       </p>
       <div className="text-center">
         {APILoading && (
@@ -321,7 +327,13 @@ export default function Page() {
         value={formData?.seriesType && { value: formData.seriesType }}
         onChange={(e) => {
           handleChange({ target: { name: "seriesType", value: e?.value } });
+          if (e?.value === "MAIN") {
+            handleChange({ target: { name: "saleType", value: "Exempt" } });
+          } else if (e?.value === "GST") {
+            handleChange({ target: { name: "saleType", value: "GST INCL" } });
+          }
         }}
+        isDisabled={ExcelContent?.length > 0}
       />
       <div className="flex justify-center items-center flex-wrap">
         <DatePicker
@@ -351,6 +363,12 @@ export default function Page() {
           onChange={(e) => {
             handleChange({ target: { name: "saleType", value: e?.value } });
           }}
+          isDisabled={formData?.seriesType === "MAIN"}
+          filterOption={
+            formData?.seriesType === "GST"
+              ? (option) => option?.value !== "Exempt"
+              : null
+          }
         />
       </div>
       <Select
@@ -377,6 +395,7 @@ export default function Page() {
           onWheel={(e) => {
             e.target.blur();
           }}
+          disabled={ExcelContent?.length > 0}
         />
       </div>
       <Select
@@ -509,7 +528,28 @@ export default function Page() {
             alt="icon"
           ></Image>
         </button>
-        <button className="text-white hover:bg-blue-900">
+        <button
+          onClick={() => {
+            setFormData({
+              seriesType: null,
+              saleDate: new Date(), // default today.
+              saleType: null,
+              partyName: null,
+              vehicleNo: null,
+              item: null,
+              quantity: null,
+              unitType: null,
+              mrp: null,
+              disc: null,
+              discAmount: null,
+              gstAmount: null,
+              totalAmount: null,
+            });
+
+            setExcelContent([]);
+          }}
+          className="text-white hover:bg-blue-900"
+        >
           <Image
             src="/assets/images/remove.png"
             width={50}

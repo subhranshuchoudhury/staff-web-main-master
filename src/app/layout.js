@@ -48,7 +48,7 @@ export default function RootLayout({ children }) {
                   <Link href={"/purchase/item"}>Add New Item</Link>
                 </li>
                 <li>
-                  <Link href={"/sale"}>Sale : Under_Process</Link>
+                  <Link href={"/sale"}>Sale (Testing)</Link>
                 </li>
 
                 <li>

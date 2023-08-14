@@ -507,7 +507,7 @@ export default function Home(props) {
         props?.searchParams?.gst &&
         props?.searchParams?.mrp
       ) {
-        window.location.href = "/";
+        window.location.href = "/purchase";
       }
     };
     xlsx(data, settings, callback);
