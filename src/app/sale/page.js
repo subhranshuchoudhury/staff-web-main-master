@@ -3,17 +3,16 @@
 import "react-datepicker/dist/react-datepicker.css";
 import DatePicker from "react-datepicker";
 import Select, { createFilter } from "react-select";
-// import partyname from "../DB/Purchase/partyname";
-// import Itemgroup from "../DB/Purchase/Itemgroup";
 import saletype from "../DB/Sale/saletype";
 import seriesType from "../DB/Sale/seriestype";
 import Image from "next/image";
 import unitypes from "../DB/Purchase/unitypes";
-import { useEffect, useState } from "react";
 import CustomOption from "../Dropdown/CustomOption";
 import CustomMenuList from "../Dropdown/CustomMenuList";
+import xlsx from "json-as-xlsx";
+import { useEffect, useState } from "react";
 
-export default function Home() {
+export default function Page() {
   // ****
 
   useEffect(() => {
@@ -36,30 +35,41 @@ export default function Home() {
     totalAmount: null,
   });
 
+  const [modalMessage, setModalMessage] = useState({
+    message: null,
+    summary: null,
+    edit: null,
+    ok: null,
+  });
+
   const [PartyAPIData, setPartyAPIData] = useState([]);
   const [ItemAPIData, setItemAPIData] = useState([]);
   const [APILoading, setAPILoading] = useState(true);
+  const [ExcelContent, setExcelContent] = useState([]);
 
   const handleChange = (event) => {
-    const name = event.target.name;
-    const value = event.target.value;
+    const name = event.target?.name;
+    const value = event.target?.value;
     setFormData((values) => ({ ...values, [name]: value }));
   };
 
-  const handleSubmit = () => {
-    validateForm(formData) && alert(JSON.stringify(formData));
-    // action
+  const handleModalMessage = (message) => {
+    const name = message?.name;
+    const value = message?.value;
+    setModalMessage((values) => ({ ...values, [name]: value }));
   };
 
-  const validateForm = (form) => {
+  const isFormValidated = (form) => {
     for (let key in form) {
       if (form[key] === null || form[key] === undefined || form[key] === "") {
-        alert(
-          `The field "${key
+        handleModalMessage({
+          name: "message",
+          value: `📜 The field "${key
             .replace(/[A-Z]/g, (match) => " " + match)
             .trim()
-            .toUpperCase()}" is empty.`
-        );
+            .toUpperCase()}" is empty.`,
+        });
+        window.saleModal_1.showModal();
         return false;
       }
     }
@@ -101,7 +111,8 @@ export default function Home() {
       .catch((error) => {
         setAPILoading(false);
         console.error(error);
-        alert("REPORT IT ->[SALE - PAGE.JS - 103]\n" + error);
+        process.env.NODE_ENV === "development" &&
+          alert("REPORT IT ->[SALE - PAGE.JS - 103]\n" + error);
       });
   };
 
@@ -156,11 +167,145 @@ export default function Home() {
     });
   };
 
+  const downloadSheet = () => {
+    if (ExcelContent.length === 0) {
+      handleModalMessage({
+        name: "message",
+        value: `⚠ Add one document before exporting excel.`,
+      });
+      window.saleModal_1.showModal();
+      return;
+    }
+
+    let content = [];
+
+    ExcelContent.forEach((d) => {
+      content.push(d);
+    });
+
+    let data = [
+      {
+        sheet: "Sheet1",
+        columns: [
+          { label: "vch_series", value: "vchSeries" },
+          { label: "bill date", value: "billDate" },
+          { label: "sale type", value: "saleType" },
+          { label: "party name", value: "partyName" },
+          { label: "narration", value: "narration" },
+          { label: "item name", value: "itemName" },
+          { label: "qty", value: "qty", format: "0.00" },
+          { label: "unit", value: "unit" },
+          { label: "price", value: "price", format: "0.00" },
+          { label: "disc", value: "disc", format: "0.00" },
+          { label: "Amount", value: "amount", format: "0.00" },
+        ],
+        content,
+      },
+    ];
+
+    if (formData?.saleType === "IGST")
+      data[0].columns.push({
+        label: "igst percent",
+        value: "igstPercent",
+        format: "0",
+      });
+    else
+      data[0].columns.push(
+        {
+          label: "CGST",
+          value: "cgst",
+          format: "0",
+        },
+        {
+          label: "SGST",
+          value: "sgst",
+          format: "0",
+        }
+      );
+    exportExcel(data);
+  };
+
+  const exportExcel = (data) => {
+    const settings = {
+      fileName: `sale_${new Date().getTime()}`,
+      extraLength: 3,
+      writeMode: "writeFile",
+      writeOptions: {},
+      RTL: false,
+    };
+
+    const callback = () => {
+      handleModalMessage({
+        name: "message",
+        value: `✔ Exporting excel successful.`,
+      });
+      window.saleModal_1.showModal();
+    };
+
+    xlsx(data, settings, callback);
+  };
+
+  const addContent = () => {
+    if (!isFormValidated(formData)) return;
+
+    const convertToDateString = (date) => {
+      var dateString = `${date}`;
+      var date = new Date(dateString);
+      var day = date.getDate();
+      var month = date.getMonth() + 1;
+      var year = date.getFullYear();
+
+      var formattedDate =
+        (day < 10 ? "0" + day : day) +
+        "/" +
+        (month < 10 ? "0" + month : month) +
+        "/" +
+        year;
+
+      return formattedDate;
+    };
+
+    const tempContent = {
+      vchSeries: formData?.seriesType,
+      billDate: convertToDateString(formData?.saleDate),
+      saleType: formData?.saleType,
+      partyName: formData?.partyName,
+      narration: formData?.vehicleNo?.toUpperCase(),
+      itemName: formData?.item,
+      qty: formData?.quantity,
+      unit: formData?.unitType,
+      price: formData?.mrp,
+      disc: formData?.disc,
+      amount: formData?.totalAmount * formData?.quantity,
+      igstPercent: formData?.gstAmount,
+      cgst: formData?.gstAmount / 2,
+      sgst: formData?.gstAmount / 2,
+    };
+
+    setExcelContent((prevArray) => [...prevArray, tempContent]);
+
+    handleModalMessage({
+      name: "message",
+      value: `✔ Item added successfully.`,
+    });
+    window.saleModal_1.showModal();
+  };
+
   // ****
   return (
     <>
+      <dialog id="saleModal_1" className="modal">
+        <form method="dialog" className="modal-box">
+          <h3 className="font-bold text-lg">Message!</h3>
+          <p className="py-4">{modalMessage?.message}</p>
+          <div className="modal-action">
+            {/* if there is a button in form, it will close the modal */}
+            <button className="btn">Close</button>
+          </div>
+        </form>
+      </dialog>
       <p className="glass text-center text-[40px] font-mono mb-9 m-auto rounded-xl w-[98%] text-red-600">
-        SALE (Work Under Process)
+        SALE (Work Under Progress)
       </p>
       <div className="text-center">
         {APILoading && (
@@ -223,9 +368,9 @@ export default function Home() {
 
       <div className="flex justify-center items-center flex-wrap">
         <input
-          className="input input-bordered input-secondary w-[295px] m-5"
+          className="input input-bordered input-secondary w-[295px] m-5 uppercase"
           placeholder="VEHICLE NO"
-          type="number"
+          type="text"
           name="vehicleNo"
           onChange={handleChange}
           value={formData?.vehicleNo || ""}
@@ -343,7 +488,10 @@ export default function Home() {
       {/* Bottom Nav Bar */}
 
       <div className="btm-nav glass bg-blue-800">
-        <button className=" text-white hover:bg-blue-900">
+        <button
+          onClick={downloadSheet}
+          className=" text-white hover:bg-blue-900"
+        >
           <Image
             src="/assets/images/download (1).png"
             width={50}
@@ -352,7 +500,7 @@ export default function Home() {
           ></Image>
           <span className="mb-6 text-xl font-mono">Download</span>
         </button>
-        <button onClick={handleSubmit} className="text-white hover:bg-blue-900">
+        <button onClick={addContent} className="text-white hover:bg-blue-900">
           <Image
             className="mb-20"
             src="/assets/images/add-button.png"
