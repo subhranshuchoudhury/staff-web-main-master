@@ -264,11 +264,14 @@ export default function Page() {
 
       return formattedDate;
     };
-
-    const igstDisc = () => {
-      const igstPercent = formData?.gstAmount;
-      const discPercent = formData?.disc;
-      return (discPercent + igstPercent) / igstPercent + igstPercent / 100;
+    //   Formula to return the disc percent in Excel
+    const discPercent = () => {
+      const igstPer = parseFloat(formData?.gstAmount);
+      const discPer = parseFloat(formData?.disc);
+      const deno = igstPer / 100;
+      const num = discPer + igstPer;
+      const result = num / (deno + 1);
+      return result;
     };
 
     const tempContent = {
@@ -281,9 +284,9 @@ export default function Page() {
       qty: formData?.quantity,
       unit: formData?.unitType,
       price: formData?.mrp,
-      disc: formData?.disc,
-      amount: formData?.totalAmount * formData?.quantity,
-      igstPercent: igstDisc(),
+      disc: discPercent(),
+      amount: Math.round(formData?.totalAmount * formData?.quantity),
+      igstPercent: formData?.gstAmount,
       cgst: formData?.gstAmount / 2,
       sgst: formData?.gstAmount / 2,
     };
