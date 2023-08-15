@@ -421,6 +421,9 @@ export default function Page() {
           handleChange({ target: { name: "unitType", value: e?.unit } });
           handleChange({ target: { name: "mrp", value: e?.mrp || null } });
           handleChange({ target: { name: "item", value: e?.value } });
+          handleChange({
+            target: { name: "gstAmount", value: e?.gst || null },
+          });
         }}
         filterOption={createFilter({ ignoreAccents: false })}
         components={{ Option: CustomOption, MenuList: CustomMenuList }}
