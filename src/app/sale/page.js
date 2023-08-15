@@ -100,11 +100,18 @@ export default function Page() {
         const item_api_data = data[0];
         const party_api_data = data[1];
 
-        setPartyAPIData(party_api_data);
-        setItemAPIData(item_api_data);
+        // item list with row index added
 
-        localStorage.setItem("ITEM_API_DATA", JSON.stringify(item_api_data));
+        const indexedItems = item_api_data.map((obj, row) => ({
+          ...obj,
+          row,
+        }));
+
+        setPartyAPIData(party_api_data);
+        setItemAPIData(indexedItems);
+
         localStorage.setItem("PARTY_API_DATA", JSON.stringify(party_api_data));
+        localStorage.setItem("ITEM_API_DATA", JSON.stringify(indexedItems));
 
         setAPILoading(false);
       })
@@ -408,6 +415,8 @@ export default function Page() {
         getOptionLabel={(option) => `${option["value"]}`}
         value={formData?.item && { value: formData?.item }}
         onChange={(e) => {
+          console.log(e);
+          handleChange({ target: { name: "unitType", value: e?.unit } });
           handleChange({ target: { name: "item", value: e?.value } });
         }}
         filterOption={createFilter({ ignoreAccents: false })}
