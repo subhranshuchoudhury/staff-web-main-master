@@ -339,7 +339,9 @@ export default function Page() {
           handleChange({ target: { name: "seriesType", value: e?.value } });
           if (e?.value === "MAIN") {
             handleChange({ target: { name: "saleType", value: "Exempt" } });
+            handleChange({ target: { name: "gstAmount", value: "0" } });
           } else if (e?.value === "GST") {
+            handleChange({ target: { name: "gstAmount", value: null } });
             handleChange({ target: { name: "saleType", value: "GST INCL" } });
           }
         }}
@@ -417,6 +419,7 @@ export default function Page() {
         onChange={(e) => {
           console.log(e);
           handleChange({ target: { name: "unitType", value: e?.unit } });
+          handleChange({ target: { name: "mrp", value: e?.mrp || null } });
           handleChange({ target: { name: "item", value: e?.value } });
         }}
         filterOption={createFilter({ ignoreAccents: false })}
@@ -501,6 +504,7 @@ export default function Page() {
           onWheel={(e) => {
             e.target.blur();
           }}
+          disabled={formData?.seriesType === "MAIN"}
         />
         <input
           className="input input-bordered input-secondary w-[295px] m-5"
