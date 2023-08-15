@@ -43,6 +43,8 @@ export default function Home(props) {
   const partNoField = useRef();
   const gstField = useRef();
 
+  // ************* AFTER
+
   const [Data, setData] = useState({
     PartyName: null,
     InvoiceNumber: null,
@@ -58,6 +60,27 @@ export default function Home(props) {
     BILL_REF_DUE_DATE: null,
     MentionedDISC: null,
   });
+
+  const [formData, setFormData] = useState({
+    partyName: null,
+    invoiceNo: null,
+    gstType: null,
+    purchaseType: "DNM",
+    itemPartNo: null,
+    quantity: null,
+    mrp: null,
+    gstPercentage: null,
+    amount: null,
+  });
+
+  const handleFormChange = (event) => {
+    const name = event.target?.name;
+    const value = event.target?.value;
+    setFormData((values) => ({ ...values, [name]: value }));
+  };
+
+  // AFTER END *******************
+
   const [startDate, setStartDate] = useState(null);
   const [toggleGstButton, settoggleGst] = useState(false);
   const [modalMessage, setModalMessage] = useState({

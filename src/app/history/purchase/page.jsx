@@ -6,17 +6,36 @@ import xlsx from "json-as-xlsx";
 const Page = () => {
   const [SavedData, setSavedData] = useState([]);
   const [Loading, setLoading] = useState(true);
+  const [searchInput, setSearchInput] = useState("");
+  const [FilteredContent, setFilteredContent] = useState([]);
 
   useEffect(() => {
     getSavedData();
   }, []);
+
+  const handleSearch = (e) => {
+    if (e.target.value !== "") {
+      // setSearchInput(e.target.value);
+      const filteredResult = SavedData.filter((movie) => {
+        return Object.values(movie)
+          .join(" ")
+          .toLowerCase()
+          .includes(e.target.value?.toLowerCase());
+      });
+      setFilteredContent(filteredResult);
+    } else {
+      setFilteredContent(SavedData);
+    }
+  };
 
   const getSavedData = async () => {
     setLoading(true);
     try {
       const response = await fetch("/api/purchases");
       const data = await response.json();
-      setSavedData(data);
+      console.log(typeof data);
+      setSavedData(data?.purchases);
+      setFilteredContent(data?.purchases);
       console.log(data);
       setLoading(false);
     } catch (error) {
@@ -76,33 +95,52 @@ const Page = () => {
     <div>
       <div className="text-center pb-10">
         <p className="text-3xl">PURCHASE HISTORY</p>
+        {!Loading && (
+          <input
+            className="input input-bordered input-secondary m-5 normal-case w-[295px]"
+            type="text"
+            name="searchInput"
+            id=""
+            value={searchInput}
+            onChange={(e) => {
+              setSearchInput(e?.target?.value);
+              handleSearch(e);
+            }}
+            placeholder="🔍 eg. INV-56, AB ENTERPRISES.."
+          />
+        )}
       </div>
+
       {Loading ? (
-        <h1 className="text-center">Loading...</h1>
+        <div className="text-center">
+          <span className="loading loading-infinity w-[80px] text-sky-500"></span>
+        </div>
       ) : (
         <div>
           {SavedData &&
-            SavedData?.purchases.map((d, i) => {
+            FilteredContent?.map((d, i) => {
               return (
                 <div
                   key={i}
-                  className="bg-cyan-600 m-10 rounded-xl text-center"
+                  className="bg-sky-800 m-10 w-[90%] rounded-xl text-center"
                 >
-                  <div className="p-4">{timeStampConvert(d.createdAt)}</div>
-                  <button className="btn btn-accent m-5 hover:cursor-default">
+                  <div className="p-4 bg-black rounded-t-xl">
+                    {timeStampConvert(d.createdAt)?.toLocaleUpperCase()}
+                  </div>
+                  <button className="btn btn-accent m-1 hover:cursor-default">
                     {d?.desc || "PURCHASE"}
                   </button>
-                  <button className="btn btn-neutral m-5 hover:cursor-default">
-                    Total Items: {d?.items}
+                  <button className="btn btn-neutral m-1 hover:cursor-default">
+                    Items: {d?.items}
                   </button>
-                  <button className="btn btn-neutral m-5 hover:cursor-default">
+                  <button className="btn btn-neutral m-1 hover:cursor-default">
                     INVOICE: {d?.invoice}
                   </button>
-                  <button className="btn btn-neutral m-5 hover:cursor-default">
+                  <button className="btn btn-neutral m-1 hover:cursor-default">
                     PARTY: {d?.partyname}
                   </button>
                   <br />
-                  <div className="text-right bg-slate-300 rounded-b-xl">
+                  <div className="text-right h-10 bg-slate-300 rounded-b-xl">
                     <button
                       onClick={() => {
                         if (
@@ -110,13 +148,10 @@ const Page = () => {
                         ) {
                           deleteDocument(d._id);
                         }
-                        // alert(
-                        //   "NOTE: currently this function is not available."
-                        // );
                       }}
                       className="btn btn-error m-5"
                     >
-                      DELETE
+                      DELETE 🗑
                     </button>
                     <button
                       onClick={() =>
@@ -126,7 +161,7 @@ const Page = () => {
                           JSON.parse(d?.sheetdata)
                         )
                       }
-                      className="btn bg-black m-5"
+                      className="btn bg-green-700 m-5"
                     >
                       Download ⬇
                     </button>
