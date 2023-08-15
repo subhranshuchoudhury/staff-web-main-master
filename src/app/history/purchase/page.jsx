@@ -122,7 +122,7 @@ const Page = () => {
               return (
                 <div
                   key={i}
-                  className="bg-sky-800 m-10 w-[90%] rounded-xl text-center"
+                  className="bg-sky-800 mx-5 my-12 rounded-xl text-center"
                 >
                   <div className="p-4 bg-black rounded-t-xl">
                     {timeStampConvert(d.createdAt)?.toLocaleUpperCase()}
