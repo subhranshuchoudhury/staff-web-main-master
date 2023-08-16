@@ -421,6 +421,7 @@ export default function Page() {
           handleChange({ target: { name: "unitType", value: e?.unit } });
           handleChange({ target: { name: "mrp", value: e?.mrp || null } });
           handleChange({ target: { name: "item", value: e?.value } });
+          if (formData?.seriesType === "MAIN") return;
           handleChange({
             target: { name: "gstAmount", value: e?.gst || null },
           });
