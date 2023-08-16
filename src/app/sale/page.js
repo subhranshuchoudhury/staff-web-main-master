@@ -273,12 +273,16 @@ export default function Page() {
     };
     //   Formula to return the disc percent in Excel
     const discPercent = () => {
-      const igstPer = parseFloat(formData?.gstAmount);
-      const discPer = parseFloat(formData?.disc);
-      const deno = igstPer / 100;
-      const num = discPer + igstPer;
-      const result = num / (deno + 1);
-      return result;
+      if (formData?.saleType === "IGST") {
+        const igstPer = parseFloat(formData?.gstAmount);
+        const discPer = parseFloat(formData?.disc);
+        const deno = igstPer / 100;
+        const num = discPer + igstPer;
+        const result = num / (deno + 1);
+        return result;
+      } else {
+        return formData?.disc;
+      }
     };
 
     const tempContent = {
