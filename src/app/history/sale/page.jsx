@@ -16,8 +16,8 @@ const Page = () => {
   const handleSearch = (e) => {
     if (e.target.value !== "") {
       // setSearchInput(e.target.value);
-      const filteredResult = SavedData.filter((movie) => {
-        return Object.values(movie)
+      const filteredResult = SavedData.filter((document) => {
+        return Object.values(document)
           .join(" ")
           .toLowerCase()
           .includes(e.target.value?.toLowerCase());
@@ -31,11 +31,11 @@ const Page = () => {
   const getSavedData = async () => {
     setLoading(true);
     try {
-      const response = await fetch("/api/purchases");
+      const response = await fetch("/api/sales");
       const data = await response.json();
-      console.log(typeof data);
-      setSavedData(data?.purchases);
-      setFilteredContent(data?.purchases);
+      console.log(data);
+      setSavedData(data?.sale);
+      setFilteredContent(data?.sale);
       console.log(data);
       setLoading(false);
     } catch (error) {
@@ -53,7 +53,7 @@ const Page = () => {
       }),
     };
 
-    fetch("/api/purchases", options)
+    fetch("/api/sales", options)
       .then((response) => {
         if (response.status === 200) {
           alert("✔ Document has been deleted!");
@@ -78,9 +78,9 @@ const Page = () => {
     return indianTime;
   };
 
-  const DownloadExcel = (fileName, invoice, data) => {
+  const DownloadExcel = (vehicle, data) => {
     const settings = {
-      fileName: `${fileName}-${invoice?.split("-")[1] || invoice}`,
+      fileName: `${vehicle}-Downloaded-${new Date().getTime()}`,
       extraLength: 3,
       writeMode: "writeFile",
       writeOptions: {},
@@ -94,7 +94,7 @@ const Page = () => {
   return (
     <div>
       <div className="text-center pb-10">
-        <p className="text-3xl">PURCHASE HISTORY</p>
+        <p className="text-3xl">SALE HISTORY</p>
         {!Loading && (
           <input
             className="input input-bordered input-secondary m-5 normal-case w-[295px]"
@@ -106,13 +106,10 @@ const Page = () => {
               setSearchInput(e?.target?.value);
               handleSearch(e);
             }}
-            placeholder="🔍 eg. INV-56, AB ENTERPRISES.."
+            placeholder="🔍 eg. OD-29-XX, AB ENTERPRISES.."
           />
         )}
       </div>
-      {!Loading && FilteredContent?.length === 0 && (
-        <p className="text-center">No data found.</p>
-      )}
 
       {Loading ? (
         <div className="text-center">
@@ -120,6 +117,9 @@ const Page = () => {
         </div>
       ) : (
         <div>
+          {!Loading && FilteredContent?.length === 0 && (
+            <p className="text-center">No data found.</p>
+          )}
           {SavedData &&
             FilteredContent?.map((d, i) => {
               return (
@@ -131,23 +131,21 @@ const Page = () => {
                     {timeStampConvert(d.createdAt)?.toLocaleUpperCase()}
                   </div>
                   <button className="btn btn-accent m-1 hover:cursor-default">
-                    {d?.desc || "PURCHASE"}
+                    {d?.desc}
                   </button>
                   <button className="btn btn-neutral m-1 hover:cursor-default">
                     Items: {d?.items}
                   </button>
                   <button className="btn btn-neutral m-1 hover:cursor-default">
-                    INVOICE: {d?.invoice}
+                    VEHICLE: {d?.vehicle}
                   </button>
-                  <button className="btn btn-neutral m-1 hover:cursor-default">
-                    PARTY: {d?.partyname}
-                  </button>
+
                   <br />
                   <div className="text-right h-10 bg-slate-300 rounded-b-xl">
                     <button
                       onClick={() => {
                         if (
-                          confirm(`Do you want to delete "${d?.invoice}" ?`)
+                          confirm(`Do you want to delete "${d?.vehicle}" ?`)
                         ) {
                           deleteDocument(d._id);
                         }
@@ -158,11 +156,7 @@ const Page = () => {
                     </button>
                     <button
                       onClick={() =>
-                        DownloadExcel(
-                          d?.partyname,
-                          d?.invoice,
-                          JSON.parse(d?.sheetdata)
-                        )
+                        DownloadExcel(d?.vehicle, JSON.parse(d?.sheetdata))
                       }
                       className="btn bg-green-700 m-5"
                     >

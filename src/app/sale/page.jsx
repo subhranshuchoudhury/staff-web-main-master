@@ -247,6 +247,8 @@ export default function Page() {
         value: `✔ Exporting excel successful.`,
       });
       window.saleModal_1.showModal();
+
+      sendPurchaseHistory(data);
     };
 
     xlsx(data, settings, callback);
@@ -309,6 +311,50 @@ export default function Page() {
       value: `✔ Item added successfully.`,
     });
     window.saleModal_1.showModal();
+  };
+
+  const sendPurchaseHistory = (sheet) => {
+    handleModalMessage({
+      name: "message",
+      value: `⏳ Uploading document to history....`,
+    });
+    window.saleModal_1.showModal();
+    const payload = {
+      sheetdata: JSON.stringify(sheet),
+      items: sheet[0]?.content?.length,
+      vehicle: formData?.vehicleNo,
+      desc: "sale",
+    };
+
+    const options = {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    };
+
+    fetch("/api/sales", options)
+      .then((response) => {
+        if (response.status === 200) {
+          handleModalMessage({
+            name: "message",
+            value: `✔ Successfully uploaded.`,
+          });
+          window.saleModal_1.showModal();
+        } else {
+          handleModalMessage({
+            name: "message",
+            value: `❌ Uploading failed.`,
+          });
+          window.saleModal_1.showModal();
+        }
+      })
+      .catch((err) => {
+        handleModalMessage({
+          name: "message",
+          value: `❌ Server error, reupload or contact developer.`,
+        });
+        window.saleModal_1.showModal();
+      });
   };
 
   // ****
