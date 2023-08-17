@@ -6,6 +6,7 @@ const saleSchema = new mongoose.Schema(
     items: { type: Number, required: false }, // no. of items in the list.
     vehicle: { type: String, required: true },
     desc: { type: String, required: true }, // description
+    totalAmount: { type: String, required: true },
   },
   { timestamps: true }
 );

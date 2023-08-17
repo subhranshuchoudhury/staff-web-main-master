@@ -139,6 +139,9 @@ const Page = () => {
                   <button className="btn btn-neutral m-1 hover:cursor-default">
                     VEHICLE: {d?.vehicle}
                   </button>
+                  <button className="btn btn-neutral m-1 hover:cursor-default">
+                    TOTAL AMOUNT: {d?.totalAmount}
+                  </button>
 
                   <br />
                   <div className="text-right h-10 bg-slate-300 rounded-b-xl">

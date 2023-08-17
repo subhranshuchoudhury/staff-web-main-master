@@ -38,6 +38,7 @@ export const POST = async (request) => {
       items: data?.items,
       vehicle: data?.vehicle,
       desc: data?.desc,
+      totalAmount: data?.totalAmount,
     });
     await payload.save();
     return new NextResponse("ok", { status: 200 });

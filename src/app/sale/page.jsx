@@ -324,6 +324,9 @@ export default function Page() {
       items: sheet[0]?.content?.length,
       vehicle: formData?.vehicleNo,
       desc: "sale",
+      totalAmount: `${
+        Math.round(formData?.totalAmount * formData?.quantity) || "N/A"
+      }`,
     };
 
     const options = {
