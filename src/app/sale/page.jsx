@@ -37,9 +37,6 @@ export default function Page() {
 
   const [modalMessage, setModalMessage] = useState({
     message: null,
-    summary: null,
-    edit: null,
-    ok: null,
   });
 
   const [PartyAPIData, setPartyAPIData] = useState([]);
@@ -255,7 +252,7 @@ export default function Page() {
   };
 
   const addContent = () => {
-    if (!isFormValidated(formData)) return;
+    // if (!isFormValidated(formData)) return;
 
     const convertToDateString = (date) => {
       var dateString = `${date}`;
@@ -363,16 +360,47 @@ export default function Page() {
   // ****
   return (
     <>
+      {/* Alert */}
+
+      {/* General dialog */}
+
       <dialog id="saleModal_1" className="modal">
         <form method="dialog" className="modal-box">
           <h3 className="font-bold text-lg">Message!</h3>
           <p className="py-4">{modalMessage?.message}</p>
           <div className="modal-action">
-            {/* if there is a button in form, it will close the modal */}
             <button className="btn">Close</button>
           </div>
         </form>
       </dialog>
+
+      {/* Confirmation dialog */}
+
+      <dialog id="saleModal_2" className="modal">
+        <form method="dialog" className="modal-box">
+          <h3 className="font-bold text-lg">Confirmation ?</h3>
+          <p className="py-4 text-warning">Press "OK" to add the item.</p>
+          <div className="text-white">
+            <b className="block mb-2 text-warning">Summary: </b>
+            <p>Item: {formData?.item}</p>
+            <p>MRP: {formData?.mrp}</p>
+            <p>QTY: {formData?.quantity}</p>
+            <p>
+              Total Amount:{" "}
+              {Math.round(formData?.totalAmount * formData?.quantity)}
+            </p>
+          </div>
+          <div className="modal-action">
+            <button className="btn btn-success">Edit</button>
+            <button onClick={addContent} className="btn btn-error">
+              Ok
+            </button>
+          </div>
+        </form>
+      </dialog>
+
+      {/* Alert  */}
+
       <p className="glass text-center text-[40px] font-mono mb-9 m-auto rounded-xl w-[98%] text-red-600">
         SALE (Testing Phase)
       </p>
@@ -592,7 +620,12 @@ export default function Page() {
           ></Image>
           <span className="mb-6 text-xl font-mono">Download</span>
         </button>
-        <button onClick={addContent} className="text-white hover:bg-blue-900">
+        <button
+          onClick={() => {
+            if (isFormValidated(formData)) window.saleModal_2.showModal();
+          }}
+          className="text-white hover:bg-blue-900"
+        >
           <Image
             className="mb-20"
             src="/assets/images/add-button.png"
