@@ -25,6 +25,7 @@ export default function page() {
 
   useEffect(() => {
     getExcelData();
+    checkNotDownload();
   }, []);
 
   // * useStates for storing data.
@@ -47,6 +48,7 @@ export default function page() {
     mrp: null,
     gstPercentage: null,
     amount: null,
+    finalDisc: "ERROR!",
   });
   const [modalMessage, setModalMessage] = useState({
     title: "",
@@ -54,12 +56,40 @@ export default function page() {
     button: "",
   });
 
-  const [modalConfirmation, setModalConfirmation] = useState({});
+  const [modalConfirmation, setModalConfirmation] = useState({
+    title: "",
+    message: "",
+    button_1: "",
+    button_2: "",
+    messages: [],
+    btn_f_1: () => {},
+    btn_f_2: () => {},
+  });
 
   // * handle the modal
 
   const handleModal = (title, message, button) => {
     setModalMessage({ title, message, button });
+  };
+
+  const handleConfirmationModal = (
+    title,
+    message,
+    button_1,
+    button_2,
+    messages,
+    f1,
+    f2
+  ) => {
+    setModalConfirmation({
+      title,
+      message,
+      button_1,
+      button_2,
+      messages,
+      btn_f_1: f1,
+      btn_f_2: f2,
+    });
   };
 
   // * handle the changes of formData
@@ -118,6 +148,7 @@ export default function page() {
   };
 
   // * localStorage for storing data
+
   const checkLocalStorageSaved = (address, manager) => {
     let storage = localStorage.getItem(address); // * address is the key
     if (storage !== null && storage != undefined) {
@@ -126,13 +157,74 @@ export default function page() {
     }
   };
 
+  const setLocalStorage = (key, value) => {
+    localStorage.setItem(key, JSON.stringify(value));
+  };
+
+  const getLocalStorage = (key) => {
+    const storage = localStorage.getItem(key);
+    if (storage !== null && storage !== undefined) {
+      return JSON.parse(storage);
+    } else {
+      return null;
+    }
+  };
+
+  const clearLocalStorage = (key) => {
+    localStorage.removeItem(key);
+  };
+
+  const storeNotDownload = (obj) => {
+    const retrievedArray = getLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA") || [];
+    retrievedArray.push(obj);
+    setLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA", retrievedArray);
+  };
+
+  const checkNotDownload = () => {
+    const retrievedArray = getLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA");
+    const agreed = () => {
+      if (retrievedArray !== null && retrievedArray !== undefined) {
+        setExcelContent(retrievedArray);
+      }
+    };
+
+    handleConfirmationModal(
+      "Confirmation ❓",
+      "Do you want to load the previous unsaved data?",
+      "Yes",
+      "No",
+      [
+        {
+          data: `📜 Invoice: ${retrievedArray?.[0]?.invoiceNo}`,
+          style: "text-xl font-bold",
+        },
+        {
+          data: `🤵 Party: ${retrievedArray?.[0]?.partyName}`,
+          style: "text-sm",
+        },
+        {
+          data: `📑 Total: ${retrievedArray?.length} items`,
+          style: "text-sm",
+        },
+        {
+          data: `📅 Date: ${retrievedArray?.[0]?.billDate}`,
+          style: "text-sm",
+        },
+      ],
+
+      agreed,
+      () => clearLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA")
+    );
+    retrievedArray && window.purchase_modal_2.showModal();
+  };
+
   // * form validation
 
   const isFormValidated = (form) => {
     for (let key in form) {
       if (form[key] === null || form[key] === undefined || form[key] === "") {
         handleModal(
-          "Error",
+          "❌ Error",
           `Please fill "${key
             .replace(/[A-Z]/g, (match) => " " + match)
             .trim()
@@ -150,8 +242,6 @@ export default function page() {
   // * handle the add button
 
   const addSingleFormContent = () => {
-    if (!isFormValidated(formData)) return;
-
     // * Converting the new Date() to dd-mm-yyyy format
 
     const dateToFormattedString = (date) => {
@@ -224,6 +314,15 @@ export default function page() {
       formData?.quantity
     );
 
+    // // * disc value for confirmation modal
+
+    // handleFormChange({
+    //   target: {
+    //     name: "finalDisc",
+    //     value: disc,
+    //   },
+    // });
+
     // * setting the content after all operations
 
     const tempContent = {
@@ -259,14 +358,60 @@ export default function page() {
       tempContent.bill_ref_due_date = futureCreditDay;
     }
 
-    setExcelContent((prevArray) => [...prevArray, tempContent]);
+    const modalConfirmedAdd = () => {
+      setExcelContent((prevArray) => [...prevArray, tempContent]);
+
+      // * saving the data to localStorage
+      storeNotDownload(tempContent);
+
+      // * show the modal
+      handleModal("Success", "Content Added Successfully!", "Okay");
+      window.purchase_modal_1.showModal();
+    };
+
+    handleConfirmationModal(
+      "Confirmation",
+      "Are you sure you want to add this content?",
+      "Yes",
+      "No",
+      [
+        {
+          data: `🎫 Discount: ${disc}%`,
+          style: "text-xl font-bold text-orange-500",
+        },
+        {
+          data: `🗺 Location: ${formData?.itemLocation}`,
+          style: "text-xl font-bold",
+        },
+        {
+          data: `📜 Invoice: ${formData?.invoiceNo}`,
+          style: "text-xl font-bold",
+        },
+        {
+          data: `Party: ${formData?.partyName}`,
+          style: "text-sm",
+        },
+        {
+          data: `Item: ${formData?.itemPartNo}`,
+          style: "text-sm",
+        },
+      ],
+      modalConfirmedAdd,
+      () => {}
+    );
+    window.purchase_modal_2.showModal();
   };
 
   // * create Excel file
 
   const createSheet = () => {
     if (excelContent.length === 0) {
-      alert("Empty Content!");
+      handleModal(
+        "⚠ Empty",
+        "The file is empty. Add one item before generating excel file.",
+        "Okay"
+      );
+      window.purchase_modal_1.showModal();
       return;
     }
     // empty variable to restore.
@@ -331,6 +476,8 @@ export default function page() {
     let callback = function () {
       console.log("File Downloaded..");
       //   sendPurchaseHistory(fileName, invoice, data);
+      // * clear the localStorage
+      clearLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA");
     };
     xlsx(data, settings, callback);
   };
@@ -350,16 +497,37 @@ export default function page() {
 
       <dialog id="purchase_modal_2" className="modal">
         <form method="dialog" className="modal-box">
-          <h3 className="font-bold text-lg">{modalMessage?.title}</h3>
-          <p className="py-4">{modalMessage?.message}</p>
+          <h3 className="font-bold text-lg">{modalConfirmation?.title}</h3>
+          <p className="py-4">{modalConfirmation?.message}</p>
+          {
+            // * if there is a message array, it will show the message
+            modalConfirmation?.messages?.map((e, i) => {
+              return (
+                <p key={i} className={[`${e?.style} text-teal-700`]}>
+                  {e?.data}
+                </p>
+              );
+            })
+          }
           <div className="modal-action">
             {/* if there is a button in form, it will close the modal */}
-            <button className="btn">{modalMessage?.button}</button>
+            <button
+              onClick={() => modalConfirmation?.btn_f_1()}
+              className="btn"
+            >
+              {modalConfirmation?.button_1}
+            </button>
+            <button
+              onClick={() => modalConfirmation?.btn_f_2()}
+              className="btn"
+            >
+              {modalConfirmation?.button_2}
+            </button>
           </div>
         </form>
       </dialog>
 
-      <h1 className="text-center">V2</h1>
+      <h1 className="text-center">Purchase Module Ver 2.0.0 (TESTING)</h1>
       <div className="text-center m-auto">
         {loadingExcel && (
           <span className="loading loading-infinity w-[80px] text-sky-500"></span>
@@ -650,7 +818,9 @@ export default function page() {
         </button>
         <button
           onClick={() => {
-            addSingleFormContent();
+            if (isFormValidated(formData)) {
+              addSingleFormContent();
+            }
           }}
           className="text-white hover:bg-blue-900"
         >
