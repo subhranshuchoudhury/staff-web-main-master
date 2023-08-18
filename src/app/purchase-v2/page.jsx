@@ -48,6 +48,17 @@ export default function page() {
     gstPercentage: null,
     amount: null,
   });
+  const [modalMessage, setModalMessage] = useState({
+    title: "",
+    message: "",
+    button: "",
+  });
+
+  // * handle the modal
+
+  const handleModal = (title, message, button) => {
+    setModalMessage({ title, message, button });
+  };
 
   // * handle the changes of formData
 
@@ -118,20 +129,16 @@ export default function page() {
   const isFormValidated = (form) => {
     for (let key in form) {
       if (form[key] === null || form[key] === undefined || form[key] === "") {
-        // handleModalMessage({
-        //   name: "message",
-        //   value: `📜 The field "${key
-        //     .replace(/[A-Z]/g, (match) => " " + match)
-        //     .trim()
-        //     .toUpperCase()}" is empty.`,
-        // });
-        // window.saleModal_1.showModal();
-        alert(
-          `📜 The field "${key
+        handleModal(
+          "Error",
+          `Please fill "${key
             .replace(/[A-Z]/g, (match) => " " + match)
             .trim()
-            .toUpperCase()}" is empty.`
+            .toUpperCase()}" field.`,
+          "Okay"
         );
+        window.purchase_modal_1.showModal();
+
         return false;
       }
     }
@@ -216,7 +223,7 @@ export default function page() {
     // * setting the content after all operations
 
     const tempContent = {
-      billSeries: "PUR",
+      billSeries: bill,
       billDate: dateToFormattedString(formData?.invoiceDate),
       purchaseType: purchaseType,
       partyName: formData?.partyName,
@@ -326,6 +333,19 @@ export default function page() {
 
   return (
     <>
+      {/* <button className="btn" onClick={() => window.my_modal_1.showModal()}>
+        open modal
+      </button> */}
+      <dialog id="purchase_modal_1" className="modal">
+        <form method="dialog" className="modal-box">
+          <h3 className="font-bold text-lg">{modalMessage?.title}</h3>
+          <p className="py-4">{modalMessage?.message}</p>
+          <div className="modal-action">
+            {/* if there is a button in form, it will close the modal */}
+            <button className="btn">{modalMessage?.button}</button>
+          </div>
+        </form>
+      </dialog>
       <h1 className="text-center">V2</h1>
       <div className="text-center m-auto">
         {loadingExcel && (
