@@ -316,14 +316,21 @@ export default function Page() {
       value: `⏳ Uploading document to history....`,
     });
     window.saleModal_1.showModal();
+
+    // calculate the total amount
+
+    let totalAmount = 0;
+
+    sheet[0].content.forEach((element) => {
+      totalAmount += element?.amount;
+    });
+
     const payload = {
       sheetdata: JSON.stringify(sheet),
       items: sheet[0]?.content?.length,
       vehicle: formData?.vehicleNo,
       desc: "sale",
-      totalAmount: `${
-        Math.round(formData?.totalAmount * formData?.quantity) || "N/A"
-      }`,
+      totalAmount: totalAmount,
     };
 
     const options = {

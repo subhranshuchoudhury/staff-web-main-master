@@ -33,10 +33,10 @@ const Page = () => {
     try {
       const response = await fetch("/api/purchases");
       const data = await response.json();
-      console.log(typeof data);
+      // console.log(typeof data);
       setSavedData(data?.purchases);
       setFilteredContent(data?.purchases);
-      console.log(data);
+      // console.log(data);
       setLoading(false);
     } catch (error) {
       alert("error while fetching saved data");
@@ -141,6 +141,10 @@ const Page = () => {
                   </button>
                   <button className="btn btn-neutral m-1 hover:cursor-default">
                     PARTY: {d?.partyname}
+                  </button>
+                  <button className="btn btn-neutral m-1 hover:cursor-default">
+                    TOTAL AMOUNT:{" "}
+                    {JSON.parse(d?.sheetdata)[0].content[0].BILL_REF_AMOUNT}
                   </button>
                   <br />
                   <div className="text-right h-10 bg-slate-300 rounded-b-xl">

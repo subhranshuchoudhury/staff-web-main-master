@@ -33,10 +33,8 @@ const Page = () => {
     try {
       const response = await fetch("/api/sales");
       const data = await response.json();
-      console.log(data);
       setSavedData(data?.sale);
       setFilteredContent(data?.sale);
-      console.log(data);
       setLoading(false);
     } catch (error) {
       alert("error while fetching saved data");
