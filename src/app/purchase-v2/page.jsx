@@ -1,5 +1,11 @@
 "use client";
 
+// ! Pending Work:
+
+// * Item history upload.
+// * Populate data from add new item page. (through local storage)
+// * MRP field value should modify whenever user edits the mrp field.
+
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import xlsx from "json-as-xlsx";
@@ -26,6 +32,7 @@ export default function page() {
   useEffect(() => {
     getExcelData();
     checkNotDownload();
+    // TestRetrieveData(); // * TEST: Retrieve data from the new item page.
   }, []);
 
   // * useStates for storing data.
@@ -216,6 +223,43 @@ export default function page() {
       () => clearLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA")
     );
     retrievedArray && window.purchase_modal_2.showModal();
+  };
+
+  // ? TEST: Retrieve data from the new item page.
+
+  const TestRetrieveData = () => {
+    // ? These will be the values from the new item page.
+
+    const loc = "Kolkata";
+    const mrp = 100;
+    const gst = "5%";
+    const item = "Test Item";
+    const party = "Test Party";
+    const credit = 0;
+
+    handleFormChange({
+      target: { name: "itemLocation", value: loc },
+    });
+
+    handleFormChange({
+      target: { name: "mrp", value: mrp },
+    });
+
+    handleFormChange({
+      target: { name: "gstPercentage", value: gst },
+    });
+
+    handleFormChange({
+      target: { name: "itemPartNo", value: item },
+    });
+
+    handleFormChange({
+      target: { name: "partyName", value: party },
+    });
+
+    handleFormChange({
+      target: { name: "creditDays", value: credit },
+    });
   };
 
   // * form validation
@@ -542,7 +586,12 @@ export default function page() {
               className="w-full m-auto p-5 text-blue-800 font-bold"
               getOptionLabel={(option) => `${option["value"]}`}
               options={partyData}
-              value={formData?.partyName && { value: formData.partyName }}
+              value={
+                formData?.partyName && {
+                  value: formData.partyName,
+                  creditDays: formData?.creditDays,
+                }
+              }
               onChange={(e) => {
                 console.log("PARTY NAME SELECT: ", e);
                 handleFormChange({
@@ -693,7 +742,14 @@ export default function page() {
               placeholder="ITEM / PART NO."
               className="w-full m-auto p-5 text-blue-800 font-bold"
               options={itemData}
-              value={formData?.itemPartNo && { value: formData.itemPartNo }}
+              value={
+                formData?.itemPartNo && {
+                  value: formData.itemPartNo,
+                  loc: formData?.itemLocation,
+                  mrp: formData?.mrp,
+                  gst: formData?.gstPercentage,
+                }
+              }
               onChange={(e) => {
                 console.log("ITEM SELECT: ", e);
                 handleFormChange({
@@ -708,15 +764,20 @@ export default function page() {
                 handleFormChange({
                   target: {
                     name: "mrp",
-                    value: e?.mrp,
+                    value: isNaN(e?.mrp) || e?.mrp === "" ? null : e?.mrp, // * if mrp is not a number, then it will be null
                   },
                 });
-                handleFormChange({
-                  target: {
-                    name: "gstPercentage",
-                    value: e?.gst,
-                  },
-                });
+
+                if (formData?.gstType !== "Exempt") {
+                  // * if gst type is exempt, then it will not change the gst percentage
+                  handleFormChange({
+                    target: {
+                      name: "gstPercentage",
+                      value:
+                        isNaN(e?.gst) || e?.gst === "" ? null : `${e?.gst}%`,
+                    },
+                  });
+                }
               }}
               getOptionLabel={(option) =>
                 `${option["value"]} ${option["pn"] || ""}`
@@ -769,6 +830,7 @@ export default function page() {
             <Select
               isDisabled={formData?.gstType === "Exempt"}
               placeholder="GST %"
+              isSearchable={false}
               className="w-full m-auto p-5 text-blue-800 font-bold"
               options={gstAmount}
               getOptionLabel={(option) => `${option["value"]}`}
