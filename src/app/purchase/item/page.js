@@ -255,7 +255,7 @@ const Page = () => {
       items: sheet[0]?.content?.length,
       invoice,
       partyname,
-      desc: "item",
+      desc: "New Item",
     };
 
     const options = {

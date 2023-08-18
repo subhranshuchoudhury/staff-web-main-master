@@ -711,6 +711,12 @@ export default function page() {
                     value: e?.mrp,
                   },
                 });
+                handleFormChange({
+                  target: {
+                    name: "gstPercentage",
+                    value: e?.gst,
+                  },
+                });
               }}
               getOptionLabel={(option) =>
                 `${option["value"]} ${option["pn"] || ""}`
