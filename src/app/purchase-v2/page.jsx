@@ -54,6 +54,8 @@ export default function page() {
     button: "",
   });
 
+  const [modalConfirmation, setModalConfirmation] = useState({});
+
   // * handle the modal
 
   const handleModal = (title, message, button) => {
@@ -170,8 +172,10 @@ export default function page() {
     };
 
     // * mutable values
-
-    let gstValue = parseInt(formData?.gstPercentage?.split("%")[0]?.trim());
+    let gstValue =
+      formData?.gstType === "Exempt"
+        ? 0
+        : parseInt(formData?.gstPercentage?.split("%")[0]?.trim());
     let disc = 0;
     let purchaseType = "";
     let eligibility = "Goods/Services";
@@ -343,6 +347,18 @@ export default function page() {
           </div>
         </form>
       </dialog>
+
+      <dialog id="purchase_modal_2" className="modal">
+        <form method="dialog" className="modal-box">
+          <h3 className="font-bold text-lg">{modalMessage?.title}</h3>
+          <p className="py-4">{modalMessage?.message}</p>
+          <div className="modal-action">
+            {/* if there is a button in form, it will close the modal */}
+            <button className="btn">{modalMessage?.button}</button>
+          </div>
+        </form>
+      </dialog>
+
       <h1 className="text-center">V2</h1>
       <div className="text-center m-auto">
         {loadingExcel && (
