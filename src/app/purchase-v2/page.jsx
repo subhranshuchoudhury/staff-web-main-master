@@ -333,9 +333,6 @@ export default function page() {
 
   return (
     <>
-      {/* <button className="btn" onClick={() => window.my_modal_1.showModal()}>
-        open modal
-      </button> */}
       <dialog id="purchase_modal_1" className="modal">
         <form method="dialog" className="modal-box">
           <h3 className="font-bold text-lg">{modalMessage?.title}</h3>
@@ -436,6 +433,14 @@ export default function page() {
               getOptionLabel={(option) => `${option["value"]}`}
               value={formData?.gstType && { value: formData.gstType }}
               onChange={(e) => {
+                if (e?.value === "Exempt") {
+                  handleFormChange({
+                    target: {
+                      name: "gstPercentage",
+                      value: 0,
+                    },
+                  });
+                }
                 handleFormChange({
                   target: { name: "gstType", value: e.value },
                 });
@@ -450,6 +455,15 @@ export default function page() {
                 isSearchable={false}
                 options={purchasetype}
                 onChange={(e) => {
+                  if (e?.value === "DM") {
+                    // * whenever the purchase type is DM, the amount field will be hidden & zero.
+                    handleFormChange({
+                      target: {
+                        name: "amount",
+                        value: 0,
+                      },
+                    });
+                  }
                   handleFormChange({
                     target: { name: "purchaseType", value: e.value },
                   });
