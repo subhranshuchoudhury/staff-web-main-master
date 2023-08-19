@@ -11,6 +11,7 @@ import CustomOption from "../Dropdown/CustomOption";
 import CustomMenuList from "../Dropdown/CustomMenuList";
 import xlsx from "json-as-xlsx";
 import { useEffect, useState } from "react";
+import MyQrScanner from "../../../components/QrScanner";
 
 export default function Page() {
   // ****
@@ -43,6 +44,8 @@ export default function Page() {
   const [ItemAPIData, setItemAPIData] = useState([]);
   const [APILoading, setAPILoading] = useState(true);
   const [ExcelContent, setExcelContent] = useState([]);
+  const [showQrScanner, setShowQrScanner] = useState(false);
+  const [qrResult, setQrResult] = useState("");
 
   const handleChange = (event) => {
     const name = event.target?.name;
@@ -71,6 +74,13 @@ export default function Page() {
       }
     }
     return true;
+  };
+
+  // * Qr handler
+
+  const qrResultHandler = (result) => {
+    console.log("QR SCANNED: ", result);
+    setQrResult(result);
   };
 
   // API CALLS
@@ -498,6 +508,29 @@ export default function Page() {
           disabled={ExcelContent?.length > 0}
         />
       </div>
+      <div className="flex justify-center items-center flex-wrap">
+        <button
+          onClick={() => setShowQrScanner(!showQrScanner)}
+          className="btn btn-info glass w-[94%]"
+        >
+          <Image
+            alt="qr scanner"
+            src={
+              !showQrScanner
+                ? "/assets/images/scan-qr-code.png"
+                : "/assets/images/close.png"
+            }
+            width={40}
+            height={40}
+          />
+        </button>
+      </div>
+      {showQrScanner && (
+        <div className="p-10 w-[70%] text-center m-auto">
+          <p>RESULT: {qrResult}</p>
+          <MyQrScanner qrResultHandler={(r) => qrResultHandler(r)} />
+        </div>
+      )}
       <Select
         placeholder="SELECT ITEM"
         className="w-full m-auto p-5 text-blue-800 font-bold"

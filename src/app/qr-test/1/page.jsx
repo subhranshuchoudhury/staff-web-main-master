@@ -4,7 +4,7 @@ import React from "react";
 import Scanner from "../../../../components/Scanner";
 import { useState } from "react";
 
-const Page = () => {
+const QrScanner = (props) => {
   const [result, setResult] = useState("No data found");
 
   return (
@@ -15,4 +15,4 @@ const Page = () => {
   );
 };
 
-export default Page;
+export default QrScanner;

@@ -13,6 +13,7 @@ export default function page() {
       </p>
       <div className="p-10 m-auto">
         <QrScanner
+          tracker={true}
           hideCount={false}
           onDecode={(result) => {
             setQrResult(result);
