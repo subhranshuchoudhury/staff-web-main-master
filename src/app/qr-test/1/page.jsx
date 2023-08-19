@@ -53,15 +53,13 @@ import { useState } from "react";
 
 const Page = () => {
   const [result, setResult] = useState("No data found");
-  const _onDetected = (e) => {
-    // this.setState({ results: [] })
-    // this.setState({ results: this.state.results.concat([result]) })
-    alert("working", JSON.stringify(e));
-  };
+
   return (
     <div>
-      <p>{JSON.stringify(result?.codeResult?.code)}</p>
-      <Scanner onDetected={(e) => setResult(e)} />
+      <p>{result}</p>
+      <div className="bg-green-500 text-center">
+        <Scanner onDetected={(e) => setResult(e?.codeResult?.code)} />
+      </div>
     </div>
   );
 };
