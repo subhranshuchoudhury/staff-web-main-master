@@ -3,7 +3,6 @@
 // ! Pending Work:
 
 // * Item history upload.
-// * Populate data from add new item page. (through local storage)
 // * MRP field value should modify whenever user edits the mrp field.
 
 import DatePicker from "react-datepicker";
@@ -23,16 +22,17 @@ import {
 import Image from "next/image";
 import CustomOption from "../Dropdown/CustomOption";
 import CustomMenuList from "../Dropdown/CustomMenuList";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import purchasetype from "../DB/Purchase/purchasetype";
 
-export default function page() {
+export default function page(props) {
+  const searchParams = useSearchParams();
   // * Use Effects
 
   useEffect(() => {
     getExcelData();
     checkNotDownload();
-    // TestRetrieveData(); // * TEST: Retrieve data from the new item page.
+    retrieveDataFromNewItem(searchParams.get("fromNewItem")); // * Retrieve data from the new item page.
   }, []);
 
   // * useStates for storing data.
@@ -177,6 +177,12 @@ export default function page() {
     }
   };
 
+  const getLocalStorageString = (key) => {
+    const storage = localStorage.getItem(key);
+    if (storage !== null || storage !== undefined) return storage;
+    return null;
+  };
+
   const clearLocalStorage = (key) => {
     localStorage.removeItem(key);
   };
@@ -225,41 +231,54 @@ export default function page() {
     retrievedArray && window.purchase_modal_2.showModal();
   };
 
-  // ? TEST: Retrieve data from the new item page.
+  // * This function used for get & set the data from new item addition page.
 
-  const TestRetrieveData = () => {
+  const retrieveDataFromNewItem = (response) => {
     // ? These will be the values from the new item page.
 
-    const loc = "Kolkata";
-    const mrp = 100;
-    const gst = "5%";
-    const item = "Test Item";
-    const party = "Test Party";
-    const credit = 0;
+    const retrievedArray =
+      JSON.parse(localStorage.getItem("US_ADDED_ITEMS")) || [];
 
-    handleFormChange({
-      target: { name: "itemLocation", value: loc },
-    });
+    if (response === "true" && retrievedArray?.length > 0) {
+      console.log("RETRIEVED ARRAY: ", retrievedArray);
 
-    handleFormChange({
-      target: { name: "mrp", value: mrp },
-    });
+      const loc = retrievedArray?.[0]?.Loc?.toUpperCase();
+      const mrp = retrievedArray?.[0]?.MRP;
+      const gst = retrievedArray?.[0]?.Tax_Category;
+      const item = retrievedArray?.[0]?.Item_Name?.toUpperCase();
+      const party = getLocalStorageString("US_PN_REFERER")?.toUpperCase();
+      const invoice = getLocalStorageString("US_INV_REFERER")?.toUpperCase();
+      const credit = 0;
 
-    handleFormChange({
-      target: { name: "gstPercentage", value: gst },
-    });
+      console.log(party, invoice);
 
-    handleFormChange({
-      target: { name: "itemPartNo", value: item },
-    });
+      handleFormChange({
+        target: { name: "itemLocation", value: loc },
+      });
 
-    handleFormChange({
-      target: { name: "partyName", value: party },
-    });
+      handleFormChange({
+        target: { name: "mrp", value: mrp },
+      });
 
-    handleFormChange({
-      target: { name: "creditDays", value: credit },
-    });
+      handleFormChange({
+        target: { name: "gstPercentage", value: gst },
+      });
+
+      handleFormChange({
+        target: { name: "itemPartNo", value: item },
+      });
+
+      handleFormChange({
+        target: { name: "partyName", value: party },
+      });
+      handleFormChange({
+        target: { name: "invoiceNo", value: invoice },
+      });
+
+      handleFormChange({
+        target: { name: "creditDays", value: credit },
+      });
+    }
   };
 
   // * form validation
@@ -519,11 +538,40 @@ export default function page() {
     };
     let callback = function () {
       console.log("File Downloaded..");
-      //   sendPurchaseHistory(fileName, invoice, data);
+      // * send the document to purchase history
+      sendPurchaseHistory(fileName, invoice, data);
       // * clear the localStorage
       clearLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA");
     };
     xlsx(data, settings, callback);
+  };
+
+  // * upload the document to history
+
+  const sendPurchaseHistory = (partyname, invoice, sheet) => {
+    const payload = {
+      sheetdata: JSON.stringify(sheet),
+      items: sheet[0]?.content?.length,
+      invoice,
+      partyname,
+      desc: "purchase",
+    };
+
+    const options = {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    };
+
+    fetch("/api/purchases", options)
+      .then((response) => {
+        if (response.status === 200) {
+          // ? show modal
+          alert("Document uploaded..");
+        } else {
+        }
+      })
+      .catch((err) => {});
   };
 
   return (
