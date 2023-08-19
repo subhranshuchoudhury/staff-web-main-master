@@ -57,7 +57,7 @@ const Page = () => {
   return (
     <div>
       <Scanner onDetected={(e) => setResult(e?.codeResult?.code)} />
-      <p>{result}</p>
+      <p className="text-center">{result}</p>
     </div>
   );
 };
