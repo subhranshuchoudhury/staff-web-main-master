@@ -692,7 +692,7 @@ export default function page(props) {
         </form>
       </dialog>
 
-      <h1 className="text-center">Purchase Module Ver 2.0.0 (TESTING)</h1>
+      <p className="text-center text-2xl glass m-5 p-4">PURCHASE</p>
       <div className="text-center m-auto">
         {loadingExcel && (
           <span className="loading loading-infinity w-[80px] text-sky-500"></span>
@@ -1022,7 +1022,13 @@ export default function page(props) {
             alt="icon"
           ></Image>
         </button>
-        <button onClick={() => {}} className="text-white hover:bg-blue-900">
+        <button
+          onClick={() => {
+            clearLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA");
+            window.location.href = "/purchase";
+          }}
+          className="text-white hover:bg-blue-900"
+        >
           <Image
             src="/assets/images/remove.png"
             width={50}
