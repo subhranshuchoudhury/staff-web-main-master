@@ -526,7 +526,7 @@ export default function Page() {
         </button>
       </div>
       {showQrScanner && (
-        <div className="p-10 w-[70%] text-center m-auto">
+        <div className="p-10 w-[90%] text-center m-auto">
           <p>RESULT: {qrResult}</p>
           <MyQrScanner qrResultHandler={(r) => qrResultHandler(r)} />
         </div>
