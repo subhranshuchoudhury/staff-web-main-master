@@ -10,16 +10,10 @@ class Scanner extends Component {
         inputStream: {
           type: "LiveStream",
           constraints: {
-            width: 640,
-            height: 320,
+            width: 300,
+            height: 300,
             facingMode: "environment",
           },
-          //   area: { // defines rectangle of the detection/localization area
-          //     top: "10%",    // top offset
-          //     right: "10%",  // right offset
-          //     left: "10%",   // left offset
-          //     bottom: "10%"  // bottom offset
-          //   },
         },
         locator: {
           halfSample: true,
@@ -70,7 +64,11 @@ class Scanner extends Component {
   };
 
   render() {
-    return <div id="interactive" className="viewport flex items-center"></div>;
+    return (
+      <div className="flex justify-center h-80 bg-blue-950 m-3 p-3 rounded-lg">
+        <div id="interactive" className="viewport" />
+      </div>
+    );
   }
 }
 

@@ -56,10 +56,8 @@ const Page = () => {
 
   return (
     <div>
+      <Scanner onDetected={(e) => setResult(e?.codeResult?.code)} />
       <p>{result}</p>
-      <div className="bg-green-500 text-center">
-        <Scanner onDetected={(e) => setResult(e?.codeResult?.code)} />
-      </div>
     </div>
   );
 };
