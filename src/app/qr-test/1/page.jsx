@@ -60,7 +60,7 @@ const Page = () => {
   };
   return (
     <div>
-      <p>{JSON.stringify(result)}</p>
+      <p>{JSON.stringify(result?.codeResult?.code)}</p>
       <Scanner onDetected={(e) => setResult(e)} />
     </div>
   );
