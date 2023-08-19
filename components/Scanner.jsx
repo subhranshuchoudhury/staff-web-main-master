@@ -1,5 +1,3 @@
-"use client";
-
 import React, { Component } from "react";
 import Quagga from "quagga";
 
@@ -10,10 +8,16 @@ class Scanner extends Component {
         inputStream: {
           type: "LiveStream",
           constraints: {
-            width: 300,
-            height: 300,
+            width: 640,
+            height: 320,
             facingMode: "environment",
           },
+          //   area: { // defines rectangle of the detection/localization area
+          //     top: "10%",    // top offset
+          //     right: "10%",  // right offset
+          //     left: "10%",   // left offset
+          //     bottom: "10%"  // bottom offset
+          //   },
         },
         locator: {
           halfSample: true,
