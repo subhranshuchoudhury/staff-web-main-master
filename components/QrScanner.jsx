@@ -6,18 +6,34 @@ import { QrScanner } from "@yudiel/react-qr-scanner";
 export default function MyQrScanner(props) {
   const qrResultHandler = props.qrResultHandler;
   // const [qrResult, setQrResult] = useState("");
-  const [counter, setCounter] = useState(0);
   return (
     <QrScanner
       tracker={false}
       hideCount={false}
       onDecode={(result) => {
-        console.log(result);
         qrResultHandler(result);
-        setCounter(counter + 1);
       }}
       onError={(error) => console.log(error)}
-      constraints={{ facingMode: "environment" }}
+      constraints={{
+        noiseSuppression: true,
+        facingMode: {
+          exact: "environment",
+        },
+        frameRate: {
+          ideal: 10,
+          max: 15,
+        },
+        width: {
+          min: 500,
+          max: 800,
+          ideal: 400,
+        },
+        height: {
+          min: 500,
+          max: 800,
+          ideal: 400,
+        },
+      }}
     />
   );
 }

@@ -45,7 +45,7 @@ export default function Page() {
   const [APILoading, setAPILoading] = useState(true);
   const [ExcelContent, setExcelContent] = useState([]);
   const [showQrScanner, setShowQrScanner] = useState(false);
-  const [qrResult, setQrResult] = useState("");
+  const [qrResult, setQrResult] = useState("No result found..");
 
   const handleChange = (event) => {
     const name = event.target?.name;
@@ -513,24 +513,32 @@ export default function Page() {
           onClick={() => setShowQrScanner(!showQrScanner)}
           className="btn btn-info glass w-[94%]"
         >
-          <Image
-            alt="qr scanner"
-            src={
-              !showQrScanner
-                ? "/assets/images/scan-qr-code.png"
-                : "/assets/images/close.png"
-            }
-            width={40}
-            height={40}
-          />
+          {showQrScanner ? (
+            <Image
+              alt="qr scanner"
+              src={"/assets/images/close.png"}
+              width={40}
+              height={40}
+            />
+          ) : (
+            <Image
+              alt="qr scanner"
+              src={"/assets/images/scan-qr-code.png"}
+              width={40}
+              height={40}
+            />
+          )}
         </button>
       </div>
+
+      <p className="text-center m-5 glass rounded-sm" hidden={!showQrScanner}>
+        Scanned result: {qrResult}
+      </p>
+
       {showQrScanner && (
-        <div className="p-2 w-[90%] text-center m-auto">
-          <p>RESULT: {qrResult}</p>
-          <MyQrScanner qrResultHandler={(r) => qrResultHandler(r)} />
-        </div>
+        <MyQrScanner qrResultHandler={(r) => qrResultHandler(r)} />
       )}
+
       <Select
         placeholder="SELECT ITEM"
         className="w-full m-auto p-5 text-blue-800 font-bold"
