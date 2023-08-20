@@ -8,7 +8,8 @@ const Page = () => {
   const [Loading, setLoading] = useState(true);
   const [searchInput, setSearchInput] = useState("");
   const [FilteredContent, setFilteredContent] = useState([]);
-
+  const [selectedDocuments, setSelectedDocuments] = useState([]);
+  const [deleting, setDeleting] = useState(false);
   useEffect(() => {
     getSavedData();
   }, []);
@@ -54,11 +55,39 @@ const Page = () => {
     fetch("/api/sales", options)
       .then((response) => {
         if (response.status === 200) {
-          alert("✔ Document has been deleted!");
+          alert("🗑 Document has been deleted.");
           getSavedData();
         }
       })
       .catch((err) => console.error(err));
+  };
+
+  const multipleDelete = async () => {
+    setDeleting(true);
+    selectedDocuments.forEach(async (id, index) => {
+      const options = {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          _id: id,
+        }),
+      };
+
+      try {
+        const response = await fetch("/api/sales", options);
+        if (response.status === 200) {
+          handleSelect(id);
+        }
+        if (selectedDocuments.length - 1 === index) {
+          setDeleting(false);
+          getSavedData();
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    });
+
+    // * refresh the Array
   };
 
   const timeStampConvert = (oldDate) => {
@@ -85,9 +114,31 @@ const Page = () => {
       RTL: false,
     };
     let callback = function () {
-      alert("✔ Download Successful!");
+      // alert("✔ Download Successful!");
     };
     xlsx(data, settings, callback);
+  };
+
+  const handleSelect = (id) => {
+    setSelectedDocuments((prevArray) => {
+      if (prevArray.includes(id)) {
+        return prevArray.filter((item) => item !== id);
+      } else {
+        return [...prevArray, id];
+      }
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (selectedDocuments.length === FilteredContent.length) {
+      setSelectedDocuments([]);
+    } else {
+      setSelectedDocuments(FilteredContent.map((d) => d._id));
+    }
+  };
+
+  const containsElement = (array, element) => {
+    return array.includes(element) ? "checked" : "";
   };
   return (
     <div>
@@ -109,6 +160,46 @@ const Page = () => {
         )}
       </div>
 
+      {selectedDocuments?.length > 1 && (
+        <div className="alert m-auto w-[90%] ">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            className="stroke-info shrink-0 w-6 h-6"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            ></path>
+          </svg>
+          <span>Delete all the selected documents ? </span>
+          <div>
+            <button
+              onClick={() => setSelectedDocuments([])}
+              className="btn btn-sm"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => handleSelectAll()}
+              className="btn btn-sm btn-secondary m-2"
+            >
+              Select all
+            </button>
+            <button onClick={multipleDelete} className="btn btn-sm btn-primary">
+              {deleting ? (
+                <span className="loading  loading-spinner loading-xs"></span>
+              ) : (
+                "Delete"
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+
       {Loading ? (
         <div className="text-center">
           <span className="loading loading-infinity w-[80px] text-sky-500"></span>
@@ -121,28 +212,34 @@ const Page = () => {
           {SavedData &&
             FilteredContent?.map((d, i) => {
               return (
-                <div
-                  key={i}
-                  className="bg-sky-800 mx-5 my-12 rounded-xl text-center"
-                >
-                  <div className="p-4 bg-black rounded-t-xl">
-                    {timeStampConvert(d.createdAt)?.toLocaleUpperCase()}
+                <div key={i} className="bg-sky-800 mx-5 my-12 rounded-xl">
+                  <div className="flex p-4 bg-black rounded-t-xl justify-between">
+                    <input
+                      onClick={() => handleSelect(d._id)}
+                      type="checkbox"
+                      checked={containsElement(selectedDocuments, d._id)}
+                      className="checkbox border-yellow-400"
+                    />{" "}
+                    <p className="inline">
+                      {timeStampConvert(d.createdAt)?.toLocaleUpperCase()}
+                    </p>
                   </div>
-                  <button className="btn btn-accent m-1 hover:cursor-default">
-                    {d?.desc}
-                  </button>
-                  <button className="btn btn-neutral m-1 hover:cursor-default">
-                    Items: {d?.items}
-                  </button>
-                  <button className="btn btn-neutral m-1 hover:cursor-default">
-                    VEHICLE: {d?.vehicle}
-                  </button>
-                  <button className="btn btn-neutral m-1 hover:cursor-default">
-                    TOTAL AMOUNT: {d?.totalAmount}
-                  </button>
+                  <div className="flex justify-center flex-row flex-wrap">
+                    <button className="btn btn-accent m-1 hover:cursor-default">
+                      {d?.desc}
+                    </button>
+                    <button className="btn btn-neutral m-1 hover:cursor-default">
+                      Items: {d?.items}
+                    </button>
+                    <button className="btn btn-neutral m-1 hover:cursor-default">
+                      VEHICLE: {d?.vehicle}
+                    </button>
+                    <button className="btn btn-neutral m-1 hover:cursor-default">
+                      TOTAL AMOUNT: {d?.totalAmount}
+                    </button>
+                  </div>
 
-                  <br />
-                  <div className="text-right h-10 bg-slate-300 rounded-b-xl">
+                  <div className="flex justify-center h-10 bg-slate-300 rounded-b-xl">
                     <button
                       onClick={() => {
                         if (

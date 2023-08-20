@@ -8,7 +8,8 @@ const Page = () => {
   const [Loading, setLoading] = useState(true);
   const [searchInput, setSearchInput] = useState("");
   const [FilteredContent, setFilteredContent] = useState([]);
-
+  const [selectedDocuments, setSelectedDocuments] = useState([]);
+  const [deleting, setDeleting] = useState(false);
   useEffect(() => {
     getSavedData();
   }, []);
@@ -16,8 +17,8 @@ const Page = () => {
   const handleSearch = (e) => {
     if (e.target.value !== "") {
       // setSearchInput(e.target.value);
-      const filteredResult = SavedData.filter((movie) => {
-        return Object.values(movie)
+      const filteredResult = SavedData.filter((document) => {
+        return Object.values(document)
           .join(" ")
           .toLowerCase()
           .includes(e.target.value?.toLowerCase());
@@ -33,10 +34,8 @@ const Page = () => {
     try {
       const response = await fetch("/api/purchases");
       const data = await response.json();
-      // console.log(typeof data);
       setSavedData(data?.purchases);
       setFilteredContent(data?.purchases);
-      // console.log(data);
       setLoading(false);
     } catch (error) {
       alert("error while fetching saved data");
@@ -56,11 +55,39 @@ const Page = () => {
     fetch("/api/purchases", options)
       .then((response) => {
         if (response.status === 200) {
-          alert("✔ Document has been deleted!");
+          alert("🗑 Document has been deleted.");
           getSavedData();
         }
       })
       .catch((err) => console.error(err));
+  };
+
+  const multipleDelete = async () => {
+    setDeleting(true);
+    selectedDocuments.forEach(async (id, index) => {
+      const options = {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          _id: id,
+        }),
+      };
+
+      try {
+        const response = await fetch("/api/purchases", options);
+        if (response.status === 200) {
+          handleSelect(id);
+        }
+        if (selectedDocuments.length - 1 === index) {
+          setDeleting(false);
+          getSavedData();
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    });
+
+    // * refresh the Array
   };
 
   const timeStampConvert = (oldDate) => {
@@ -91,6 +118,28 @@ const Page = () => {
     };
     xlsx(data, settings, callback);
   };
+
+  const handleSelect = (id) => {
+    setSelectedDocuments((prevArray) => {
+      if (prevArray.includes(id)) {
+        return prevArray.filter((item) => item !== id);
+      } else {
+        return [...prevArray, id];
+      }
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (selectedDocuments.length === FilteredContent.length) {
+      setSelectedDocuments([]);
+    } else {
+      setSelectedDocuments(FilteredContent.map((d) => d._id));
+    }
+  };
+
+  const containsElement = (array, element) => {
+    return array.includes(element) ? "checked" : "";
+  };
   return (
     <div>
       <div className="text-center pb-10">
@@ -106,12 +155,49 @@ const Page = () => {
               setSearchInput(e?.target?.value);
               handleSearch(e);
             }}
-            placeholder="🔍 eg. INV-56, AB ENTERPRISES.."
+            placeholder="🔍 eg. OD-29-XX, AB ENTERPRISES.."
           />
         )}
       </div>
-      {!Loading && FilteredContent?.length === 0 && (
-        <p className="text-center">No data found.</p>
+
+      {selectedDocuments?.length > 1 && (
+        <div className="alert m-auto w-[90%] ">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            className="stroke-info shrink-0 w-6 h-6"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            ></path>
+          </svg>
+          <span>Delete all the selected documents ? </span>
+          <div>
+            <button
+              onClick={() => setSelectedDocuments([])}
+              className="btn btn-sm"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => handleSelectAll()}
+              className="btn btn-sm btn-secondary m-2"
+            >
+              Select all
+            </button>
+            <button onClick={multipleDelete} className="btn btn-sm btn-primary">
+              {deleting ? (
+                <span className="loading  loading-spinner loading-xs"></span>
+              ) : (
+                "Delete"
+              )}
+            </button>
+          </div>
+        </div>
       )}
 
       {Loading ? (
@@ -120,34 +206,44 @@ const Page = () => {
         </div>
       ) : (
         <div>
+          {!Loading && FilteredContent?.length === 0 && (
+            <p className="text-center">No data found.</p>
+          )}
           {SavedData &&
             FilteredContent?.map((d, i) => {
               return (
-                <div
-                  key={i}
-                  className="bg-sky-800 mx-5 my-12 rounded-xl text-center"
-                >
-                  <div className="p-4 bg-black rounded-t-xl">
-                    {timeStampConvert(d.createdAt)?.toLocaleUpperCase()}
+                <div key={i} className="bg-sky-800 mx-5 my-12 rounded-xl">
+                  <div className="flex p-4 bg-black rounded-t-xl justify-between">
+                    <input
+                      onClick={() => handleSelect(d._id)}
+                      type="checkbox"
+                      checked={containsElement(selectedDocuments, d._id)}
+                      className="checkbox border-yellow-400"
+                    />{" "}
+                    <p className="inline">
+                      {timeStampConvert(d.createdAt)?.toLocaleUpperCase()}
+                    </p>
                   </div>
-                  <button className="btn btn-accent m-1 hover:cursor-default">
-                    {d?.desc || "PURCHASE"}
-                  </button>
-                  <button className="btn btn-neutral m-1 hover:cursor-default">
-                    Items: {d?.items}
-                  </button>
-                  <button className="btn btn-neutral m-1 hover:cursor-default">
-                    INVOICE: {d?.invoice}
-                  </button>
-                  <button className="btn btn-neutral m-1 hover:cursor-default">
-                    PARTY: {d?.partyname}
-                  </button>
-                  <button className="btn btn-neutral m-1 hover:cursor-default">
-                    TOTAL AMOUNT:{" "}
-                    {JSON.parse(d?.sheetdata)[0].content[0].BILL_REF_AMOUNT}
-                  </button>
-                  <br />
-                  <div className="text-right h-10 bg-slate-300 rounded-b-xl">
+                  <div className="flex justify-center flex-row flex-wrap">
+                    <button className="btn btn-accent m-1 hover:cursor-default">
+                      {d?.desc}
+                    </button>
+                    <button className="btn btn-neutral m-1 hover:cursor-default">
+                      Items: {d?.items}
+                    </button>
+                    <button className="btn btn-neutral m-1 hover:cursor-default">
+                      INVOICE: {d?.invoice}
+                    </button>
+                    <button className="btn btn-neutral m-1 hover:cursor-default">
+                      PARTY: {d?.partyname}
+                    </button>
+                    <button className="btn btn-neutral m-1 hover:cursor-default">
+                      TOTAL AMOUNT:{" "}
+                      {JSON.parse(d?.sheetdata)[0].content[0].BILL_REF_AMOUNT}
+                    </button>
+                  </div>
+
+                  <div className="flex justify-center h-10 bg-slate-300 rounded-b-xl">
                     <button
                       onClick={() => {
                         if (
