@@ -480,12 +480,14 @@ export default function page(props) {
         });
       }
 
-      handleFormChange({
-        target: {
-          name: "amount",
-          value: null,
-        },
-      });
+      if (formData?.purchaseType !== "DM") {
+        handleFormChange({
+          target: {
+            name: "amount",
+            value: null,
+          },
+        });
+      }
     };
 
     handleConfirmationModal(
