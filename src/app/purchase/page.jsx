@@ -470,12 +470,16 @@ export default function page(props) {
           value: null,
         },
       });
-      handleFormChange({
-        target: {
-          name: "gstPercentage",
-          value: null,
-        },
-      });
+
+      if (formData?.gstType !== "Exempt") {
+        handleFormChange({
+          target: {
+            name: "gstPercentage",
+            value: null,
+          },
+        });
+      }
+
       handleFormChange({
         target: {
           name: "amount",
