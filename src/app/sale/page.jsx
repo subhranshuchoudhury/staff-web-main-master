@@ -79,7 +79,6 @@ export default function Page() {
   // * Qr handler
 
   const qrResultHandler = (result) => {
-    console.log("QR SCANNED: ", result);
     setQrResult(result);
   };
 
@@ -143,8 +142,6 @@ export default function Page() {
 
     const mrp = formData?.mrp;
 
-    // console.log(mrp, disc);
-
     const discAmount = (mrp * disc) / 100;
 
     handleChange({
@@ -164,7 +161,6 @@ export default function Page() {
   const adjustDisc = (discAmount) => {
     if (!formData?.mrp || !formData?.discAmount) return;
     const disc = (discAmount / formData?.mrp) * 100;
-    // console.log(disc);
     handleChange({
       target: {
         name: "disc",
@@ -546,7 +542,6 @@ export default function Page() {
         getOptionLabel={(option) => `${option["value"]}`}
         value={formData?.item && { value: formData?.item }}
         onChange={(e) => {
-          console.log(e);
           handleChange({ target: { name: "unitType", value: e?.unit } });
           handleChange({ target: { name: "mrp", value: e?.mrp || null } });
           handleChange({ target: { name: "item", value: e?.value } });

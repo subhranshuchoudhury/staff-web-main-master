@@ -1,7 +1,5 @@
 "use client";
 
-// ! Upload mrp and tax category to the excel field.
-
 import { useState, useEffect } from "react";
 import Select, { createFilter } from "react-select";
 import Itemgroup from "../../DB/Purchase/Itemgroup";
@@ -72,6 +70,9 @@ const Page = () => {
       item_name: d.Item_Name?.toUpperCase(),
       loc: d.Loc?.toUpperCase(),
       part_no: d.Item_Alias?.toUpperCase(),
+      unit: d.Item_Main_Unit,
+      mrp: d?.MRP,
+      gst: d?.Tax_Category?.split("%")[0],
     };
 
     try {
@@ -108,7 +109,7 @@ const Page = () => {
   const checkForUnsaved = () => {
     if (localStorage.getItem("US_ADDED_ITEMS")) {
       // first check if the router inv is equal to the saved inv. then don't popup just agree the restore permission.
-      if (localStorage.getItem("US_PURC")) {
+      if (localStorage.getItem("PURCHASE_NOT_DOWNLOAD_DATA")) {
         agreeRestore();
         setModalMessage({
           message: "Previous added items are restored!",
@@ -117,8 +118,9 @@ const Page = () => {
         });
         window.my_modal_1.showModal();
       } else {
-        const US_INV = JSON.parse(localStorage.getItem("US_PURC"))?.[0]
-          ?.InvoiceNumber;
+        const US_INV = JSON.parse(
+          localStorage.getItem("PURCHASE_NOT_DOWNLOAD_DATA")
+        )?.[0]?.InvoiceNumber;
         setModalMessage({
           message: `Unsaved items found ${
             US_INV || ""
@@ -162,7 +164,6 @@ const Page = () => {
     }
 
     if (isEmpty) {
-      console.log(DATA);
       setModalMessage({
         message: "At least one value (field) is empty!",
         title: "Empty 🫙",
@@ -172,7 +173,6 @@ const Page = () => {
       return;
     } else {
       uploadItemList(DATA);
-      console.log(DATA);
     }
   };
 
@@ -217,12 +217,10 @@ const Page = () => {
 
   const downloadExcel = (data) => {
     if (Invoice.length === 0 || PartyName.length === 0) {
-      console.log(Invoice.length);
       alert("⚠ Kindly set a Invoice No or Party Name!");
       return;
     }
 
-    console.log(Invoice.length, PartyName.length);
     const settings = {
       fileName: `NEW ITEM-${PartyName}-${Invoice}-${new Date().getTime()}`,
       extraLength: 3,
@@ -239,9 +237,8 @@ const Page = () => {
       window.my_modal_1.showModal();
       sendPurchaseHistory(PartyName, Invoice, data);
       disagreeRestore(); // to completely remove saved items.
-      // router.push(
-      //   `/?itemname=${DATA.Item_Name}&mrp=${DATA.MRP}&gst=${DATA.Tax_Category}`
-      // );
+      localStorage.removeItem("US_INV_REFERER");
+      localStorage.removeItem("US_PN_REFERER");
     };
     xlsx(data, settings, callback);
   };

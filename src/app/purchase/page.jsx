@@ -1,9 +1,6 @@
 "use client";
 
-// ! Pending Work:
-
-// * Item history upload.
-// * MRP field value should modify whenever user edits the mrp field.
+// ! MRP field value should modify whenever user edits the mrp field.
 
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -102,7 +99,6 @@ export default function page(props) {
   // * handle the changes of formData
 
   const handleFormChange = (event) => {
-    console.log(event.target?.name, event.target?.value);
     const name = event.target?.name;
     const value = event.target?.value;
     setFormData((values) => ({ ...values, [name]: value }));
@@ -199,7 +195,6 @@ export default function page(props) {
       if (retrievedArray !== null && retrievedArray !== undefined) {
         setExcelContent(retrievedArray);
         const constantFields = retrievedArray[0];
-        console.log(constantFields);
         let dateString = constantFields?.billDate || "26-08-2003";
         let dateParts = dateString.split("-");
         let dateObject = new Date(dateParts[2], dateParts[1] - 1, dateParts[0]);
@@ -265,20 +260,16 @@ export default function page(props) {
     // ? These will be the values from the new item page.
 
     const retrievedArray =
-      JSON.parse(localStorage.getItem("US_ADDED_ITEMS")) || [];
+      JSON.parse(localStorage.getItem("US_ADDED_ITEMS")) || []; // * US_ADDED_ITEMS is the unsaved new added items.
 
     if (searchBar === "true" && retrievedArray?.length > 0) {
-      console.log("RETRIEVED ARRAY: ", retrievedArray);
-
       const loc = retrievedArray?.[0]?.Loc?.toUpperCase();
       const mrp = retrievedArray?.[0]?.MRP;
       const gst = retrievedArray?.[0]?.Tax_Category;
       const item = retrievedArray?.[0]?.Item_Name?.toUpperCase();
       const party = getLocalStorageString("US_PN_REFERER")?.toUpperCase();
       const invoice = getLocalStorageString("US_INV_REFERER")?.toUpperCase();
-      const credit = 0;
-
-      console.log(party, invoice);
+      const credit = 0; // ! credit days is not available in the new item page.
 
       handleFormChange({
         target: { name: "itemLocation", value: loc },
@@ -296,16 +287,20 @@ export default function page(props) {
         target: { name: "itemPartNo", value: item },
       });
 
-      handleFormChange({
-        target: { name: "partyName", value: party },
-      });
-      handleFormChange({
-        target: { name: "invoiceNo", value: invoice },
-      });
+      if (excelContent?.length === 0) {
+        // * if the excel content is empty, then only it will change the party name, invoice no & credit days.
+        handleFormChange({
+          target: { name: "partyName", value: party },
+        });
 
-      handleFormChange({
-        target: { name: "creditDays", value: credit },
-      });
+        handleFormChange({
+          target: { name: "invoiceNo", value: invoice },
+        });
+
+        handleFormChange({
+          target: { name: "creditDays", value: credit },
+        });
+      }
     }
   };
 
@@ -595,7 +590,6 @@ export default function page(props) {
       RTL: false,
     };
     let callback = function () {
-      console.log("File Downloaded..");
       // * send the document to purchase history
       sendPurchaseHistory(fileName, invoice, data);
       // * clear the localStorage
@@ -720,9 +714,8 @@ export default function page(props) {
                 }
               }
               onChange={(e) => {
-                console.log("PARTY NAME SELECT: ", e);
                 handleFormChange({
-                  target: { name: "partyName", value: e.value },
+                  target: { name: "partyName", value: e?.value },
                 });
                 handleFormChange({
                   target: {
@@ -733,6 +726,7 @@ export default function page(props) {
                         : e?.creditDays,
                   },
                 });
+                localStorage.setItem("US_PN_REFERER", e?.value);
               }}
               noOptionsMessage={() => {
                 return (
@@ -762,6 +756,10 @@ export default function page(props) {
                       value: e.target.value?.toUpperCase(),
                     },
                   });
+                  localStorage.setItem(
+                    "US_INV_REFERER",
+                    e.target.value?.toUpperCase()
+                  );
                 }}
               />
             )}
@@ -879,7 +877,6 @@ export default function page(props) {
                 }
               }
               onChange={(e) => {
-                console.log("ITEM SELECT: ", e);
                 handleFormChange({
                   target: { name: "itemPartNo", value: e.value },
                 });
@@ -966,7 +963,6 @@ export default function page(props) {
                 formData?.gstPercentage && { value: formData.gstPercentage }
               }
               onChange={(e) => {
-                console.log(e);
                 handleFormChange({
                   target: { name: "gstPercentage", value: e.value },
                 });
