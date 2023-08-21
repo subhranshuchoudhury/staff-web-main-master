@@ -12,6 +12,7 @@ import CustomMenuList from "../Dropdown/CustomMenuList";
 import xlsx from "json-as-xlsx";
 import { useEffect, useState } from "react";
 import MyQrScanner from "../../../components/QrScanner";
+import { uploadItem } from "../AppScript/script";
 
 export default function Page() {
   // ****
@@ -34,6 +35,7 @@ export default function Page() {
     discAmount: null,
     gstAmount: null,
     totalAmount: null,
+    selectedItemRow: -1,
   });
 
   const [modalMessage, setModalMessage] = useState({
@@ -309,6 +311,8 @@ export default function Page() {
 
     setExcelContent((prevArray) => [...prevArray, tempContent]);
 
+    isMrpMismatched(formData?.selectedItemRow, formData?.mrp); // * update the mrp field if any changes happened in the mrp field.
+
     handleModalMessage({
       name: "message",
       value: `✔ Item added successfully.`,
@@ -368,6 +372,39 @@ export default function Page() {
         });
         window.saleModal_1.showModal();
       });
+  };
+
+  // * update the mrp field if any changes happened in the mrp field.
+
+  const isMrpMismatched = (row, newMrp) => {
+    // Find the object with the specified row number
+    var obj = ItemAPIData.find(function (o) {
+      return o.row == row;
+    });
+
+    // Check if the object was found and if the new MRP value is different from the previous MRP value
+    if (obj && obj.mrp != newMrp) {
+      updateMrp(row, newMrp);
+    }
+  };
+
+  const updateMrp = async (row, mrp) => {
+    const payload = {
+      updateRow: parseInt(row) + 2,
+      mrp,
+    };
+
+    try {
+      const response = await uploadItem(payload);
+
+      if (response === "200") {
+        console.log("MRP UPDATED");
+      } else {
+        console.log("MRP NOT UPDATED");
+      }
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   // ****
@@ -545,6 +582,7 @@ export default function Page() {
           handleChange({ target: { name: "unitType", value: e?.unit } });
           handleChange({ target: { name: "mrp", value: e?.mrp || null } });
           handleChange({ target: { name: "item", value: e?.value } });
+          handleChange({ target: { name: "selectedItemRow", value: e?.row } });
           if (formData?.seriesType === "MAIN") return;
           handleChange({
             target: { name: "gstAmount", value: e?.gst || null },

@@ -21,6 +21,7 @@ import CustomOption from "../Dropdown/CustomOption";
 import CustomMenuList from "../Dropdown/CustomMenuList";
 import { useRouter, useSearchParams } from "next/navigation";
 import purchasetype from "../DB/Purchase/purchasetype";
+import { uploadItem } from "../AppScript/script";
 
 export default function page(props) {
   const searchParams = useSearchParams();
@@ -53,6 +54,7 @@ export default function page(props) {
     gstPercentage: null,
     amount: null,
     finalDisc: "ERROR!",
+    selectedItemRow: -1,
   });
   const [modalMessage, setModalMessage] = useState({
     title: "",
@@ -134,15 +136,18 @@ export default function page(props) {
         const item_data = data[0];
         const party_data = data[1];
 
-        // localStorage.setItem("")
+        const indexedItems = item_data.map((obj, row) => ({
+          ...obj,
+          row,
+        }));
 
-        setItemData(item_data);
+        setItemData(indexedItems);
         setPartyData(party_data);
 
         setLoadingExcel(false);
 
         localStorage.setItem("PARTY_API_DATA", JSON.stringify(party_data));
-        localStorage.setItem("ITEM_API_DATA", JSON.stringify(item_data));
+        localStorage.setItem("ITEM_API_DATA", JSON.stringify(indexedItems));
       })
       .catch((error) => {
         setLoadingExcel(true);
@@ -445,6 +450,10 @@ export default function page(props) {
       handleModal("Success", "Content Added Successfully!", "Okay");
       window.purchase_modal_1.showModal();
 
+      // * check if price need to be updated
+
+      isMrpMismatched(formData?.selectedItemRow, formData?.mrp);
+
       // * clearing some fields
 
       handleFormChange({
@@ -645,6 +654,39 @@ export default function page(props) {
         );
         window.purchase_modal_1.showModal();
       });
+  };
+
+  // * update the mrp field if any changes happened in the mrp field.
+
+  const isMrpMismatched = (row, newMrp) => {
+    // Find the object with the specified row number
+    var obj = itemData.find(function (o) {
+      return o.row == row;
+    });
+
+    // Check if the object was found and if the new MRP value is different from the previous MRP value
+    if (obj && obj.mrp != newMrp) {
+      updateMrp(row, newMrp);
+    }
+  };
+
+  const updateMrp = async (row, mrp) => {
+    const payload = {
+      updateRow: parseInt(row) + 2,
+      mrp,
+    };
+
+    try {
+      const response = await uploadItem(payload);
+
+      if (response === "200") {
+        console.log("MRP UPDATED");
+      } else {
+        console.log("MRP NOT UPDATED");
+      }
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
@@ -890,6 +932,13 @@ export default function page(props) {
                   target: {
                     name: "mrp",
                     value: isNaN(e?.mrp) || e?.mrp === "" ? null : e?.mrp, // * if mrp is not a number, then it will be null
+                  },
+                });
+
+                handleFormChange({
+                  target: {
+                    name: "selectedItemRow",
+                    value: e?.row,
                   },
                 });
 
