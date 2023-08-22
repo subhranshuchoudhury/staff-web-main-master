@@ -55,7 +55,8 @@ const Page = () => {
   // adding object to the content array
 
   const addObject = (obj) => {
-    setContent((prevArray) => [...prevArray, obj]);
+    const copiedObject = JSON.parse(JSON.stringify(obj)); // * deep copy
+    setContent((prevItems) => [...prevItems, copiedObject]);
   };
 
   const uploadItemList = async (d) => {
@@ -191,9 +192,10 @@ const Page = () => {
 
     let content = [];
 
-    Content.forEach((e) => {
-      content.push(e);
+    Content.forEach((item) => {
+      content.push(item);
     });
+
     let data = [
       {
         sheet: "Sheet1",

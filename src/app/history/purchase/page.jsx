@@ -155,7 +155,7 @@ const Page = () => {
               setSearchInput(e?.target?.value);
               handleSearch(e);
             }}
-            placeholder="🔍 eg. OD-29-XX, AB ENTERPRISES.."
+            placeholder="🔍 eg. INV-XXX, AB ENTERPRISES.."
           />
         )}
       </div>

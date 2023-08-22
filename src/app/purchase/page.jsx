@@ -268,6 +268,7 @@ export default function page(props) {
       JSON.parse(localStorage.getItem("US_ADDED_ITEMS")) || []; // * US_ADDED_ITEMS is the unsaved new added items.
 
     if (searchBar === "true" && retrievedArray?.length > 0) {
+      // * if the user comes from the new item page, then it will set the values from the new item page.
       const lastItemIndex = retrievedArray?.length - 1;
       const loc = retrievedArray?.[lastItemIndex]?.Loc?.toUpperCase();
       const mrp = retrievedArray?.[lastItemIndex]?.MRP;
