@@ -224,7 +224,7 @@ const Page = () => {
     }
 
     const settings = {
-      fileName: `NEW ITEM-${PartyName}-${Invoice}-${new Date().getTime()}`,
+      fileName: `NEW ITEM-${PartyName?.toUpperCase()}-${Invoice?.toUpperCase()}-${new Date().getTime()}`,
       extraLength: 3,
       writeMode: "writeFile",
       writeOptions: {},
