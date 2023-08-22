@@ -451,7 +451,7 @@ export default function Page() {
 
       {/* Alert  */}
 
-      <p className="glass text-center text-[40px] font-mono mb-9 m-auto rounded-xl w-[98%] text-red-600">
+      <p className="glass text-center text-[40px] font-mono mb-9 m-auto rounded-xl w-[98%] text-white">
         SALE
       </p>
       <div className="text-center">
