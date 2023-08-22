@@ -268,10 +268,11 @@ export default function page(props) {
       JSON.parse(localStorage.getItem("US_ADDED_ITEMS")) || []; // * US_ADDED_ITEMS is the unsaved new added items.
 
     if (searchBar === "true" && retrievedArray?.length > 0) {
-      const loc = retrievedArray?.[0]?.Loc?.toUpperCase();
-      const mrp = retrievedArray?.[0]?.MRP;
-      const gst = retrievedArray?.[0]?.Tax_Category;
-      const item = retrievedArray?.[0]?.Item_Name?.toUpperCase();
+      const lastItemIndex = retrievedArray?.length - 1;
+      const loc = retrievedArray?.[lastItemIndex]?.Loc?.toUpperCase();
+      const mrp = retrievedArray?.[lastItemIndex]?.MRP;
+      const gst = retrievedArray?.[lastItemIndex]?.Tax_Category;
+      const item = retrievedArray?.[lastItemIndex]?.Item_Name?.toUpperCase();
       const party = getLocalStorageString("US_PN_REFERER")?.toUpperCase();
       const invoice = getLocalStorageString("US_INV_REFERER")?.toUpperCase();
       const credit = 0; // ! credit days is not available in the new item page.
