@@ -19,7 +19,19 @@ export default function Page() {
 
   useEffect(() => {
     getAPIContent();
+    const unsubscribe = window.addEventListener("EXPO_LS_EVENT", function () {
+      digLocalStorageQR();
+    });
+    return () => {
+      window.removeEventListener("EXPO_LS_EVENT", unsubscribe);
+    };
   }, []);
+
+  const digLocalStorageQR = () => {
+    setQrResult("DIGGING...");
+    const res = localStorage.getItem("EXPO_SCN_RESULT");
+    setQrResult(res);
+  };
 
   const [formData, setFormData] = useState({
     seriesType: null,
@@ -541,7 +553,7 @@ export default function Page() {
           disabled={ExcelContent?.length > 0}
         />
       </div>
-      <div className="flex justify-center items-center flex-wrap">
+      {/* <div className="flex justify-center items-center flex-wrap">
         <button
           onClick={() => setShowQrScanner(!showQrScanner)}
           className="btn btn-info glass w-[94%]"
@@ -562,15 +574,15 @@ export default function Page() {
             />
           )}
         </button>
-      </div>
+      </div> */}
 
-      <p className="text-center m-5 glass rounded-sm" hidden={!showQrScanner}>
+      <p className="text-center m-5 glass rounded-sm">
         Scanned result: {qrResult}
       </p>
 
-      {showQrScanner && (
+      {/* {showQrScanner && (
         <MyQrScanner qrResultHandler={(r) => qrResultHandler(r)} />
-      )}
+      )} */}
 
       <Select
         placeholder="SELECT ITEM"

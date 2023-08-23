@@ -1,7 +1,5 @@
 "use client";
 
-// ! MRP field value should modify whenever user edits the mrp field.
-
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import xlsx from "json-as-xlsx";
@@ -31,6 +29,7 @@ export default function page(props) {
     getExcelData();
     checkNotDownload(searchParams.get("fromNewItem"));
     retrieveDataFromNewItem(searchParams.get("fromNewItem")); // * Retrieve data from the new item page.
+    setUnsavedState(); // * for gstType, DNM etc. field
   }, []);
 
   // * useStates for storing data.
@@ -104,6 +103,21 @@ export default function page(props) {
     const name = event.target?.name;
     const value = event.target?.value;
     setFormData((values) => ({ ...values, [name]: value }));
+  };
+
+  // * save the current state: (date, gstType, DNM)
+
+  const saveStateField = () => {
+    const tempObj = {
+      partyName: formData?.partyName,
+      invoiceNo: formData?.invoiceNo,
+      invoiceDate: formData?.invoiceDate,
+      gstType: formData?.gstType,
+      purchasetype: formData?.purchaseType,
+      mDiscPercentage: formData?.mDiscPercentage,
+    };
+
+    localStorage.setItem("US_STATE_PURCHASE", JSON.stringify(tempObj));
   };
 
   // * router for navigation
@@ -308,6 +322,43 @@ export default function page(props) {
           target: { name: "creditDays", value: credit },
         });
       }
+    }
+  };
+
+  const setUnsavedState = () => {
+    // * other unsaved state data
+
+    const unsavedFieldData = getLocalStorage("US_STATE_PURCHASE");
+    const parsedDate = unsavedFieldData?.invoiceDate
+      ? new Date(unsavedFieldData?.invoiceDate)
+      : new Date();
+
+    handleFormChange({
+      target: {
+        name: "gstType",
+        value: unsavedFieldData?.gstType,
+      },
+    });
+    handleFormChange({
+      target: {
+        name: "invoiceDate",
+        value: parsedDate,
+      },
+    });
+
+    if (unsavedFieldData?.purchasetype === "DM") {
+      handleFormChange({
+        target: {
+          name: "purchaseType",
+          value: unsavedFieldData?.purchasetype,
+        },
+      });
+      handleFormChange({
+        target: {
+          name: "mDiscPercentage",
+          value: unsavedFieldData?.mDiscPercentage,
+        },
+      });
     }
   };
 
@@ -961,7 +1012,10 @@ export default function page(props) {
               noOptionsMessage={() => {
                 return (
                   <p
-                    onClick={() => router.push("/purchase/item")}
+                    onClick={() => {
+                      saveStateField(); // * saving the state of fields , fix: back button press from new item page.
+                      router.push("/purchase/item");
+                    }}
                     className="hover:cursor-pointer"
                   >
                     ➕ Add Item
