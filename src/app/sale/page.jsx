@@ -11,7 +11,6 @@ import CustomOption from "../Dropdown/CustomOption";
 import CustomMenuList from "../Dropdown/CustomMenuList";
 import xlsx from "json-as-xlsx";
 import { useEffect, useState } from "react";
-import MyQrScanner from "../../../components/QrScanner";
 import { uploadItem } from "../AppScript/script";
 
 export default function Page() {
@@ -20,6 +19,7 @@ export default function Page() {
   useEffect(() => {
     getAPIContent();
     const unsubscribe = window.addEventListener("EXPO_LS_EVENT", function () {
+      // * This is for the expo app, using for scanning bar codes.
       digLocalStorageQR();
     });
     return () => {
@@ -28,9 +28,43 @@ export default function Page() {
   }, []);
 
   const digLocalStorageQR = () => {
-    setQrResult("DIGGING...");
+    let localSavedItemApi = [];
+
+    if (localSavedItemApi?.length === 0) {
+      setQrResult("🔍 Searching...");
+    }
+
+    const setLocalITEM_API = (data) => {
+      localSavedItemApi = data;
+    };
+
+    checkLocalStorageSaved("ITEM_API_DATA", setLocalITEM_API);
+
+    // * This function will get the local item whenever the event "EXPO_LS_EVENT" triggered.
+
     const res = localStorage.getItem("EXPO_SCN_RESULT");
-    setQrResult(res);
+    const result = localSavedItemApi.find(
+      (obj) => obj.pn !== "" && res.includes(obj.pn)
+    );
+
+    if (result?.value) {
+      console.log("SCN_RES", result);
+      setQrResult(`✔ ${result?.value}-${result?.pn}`);
+
+      // * setting the matched value
+      handleChange({ target: { name: "unitType", value: result?.unit } });
+      handleChange({ target: { name: "mrp", value: result?.mrp || null } });
+      handleChange({ target: { name: "item", value: result?.value } });
+      handleChange({ target: { name: "selectedItemRow", value: result?.row } });
+      if (formData?.seriesType === "MAIN") return;
+      handleChange({
+        target: { name: "gstAmount", value: result?.gst || null },
+      });
+    } else {
+      localSavedItemApi?.length === 0
+        ? setQrResult(`❓ Oops! Kindly retry..`)
+        : setQrResult(`❌ No match: ${res}`);
+    }
   };
 
   const [formData, setFormData] = useState({
@@ -58,8 +92,9 @@ export default function Page() {
   const [ItemAPIData, setItemAPIData] = useState([]);
   const [APILoading, setAPILoading] = useState(true);
   const [ExcelContent, setExcelContent] = useState([]);
-  const [showQrScanner, setShowQrScanner] = useState(false);
-  const [qrResult, setQrResult] = useState("No result found..");
+  const [qrResult, setQrResult] = useState("...");
+
+  // * for uncommon useState alternative
 
   const handleChange = (event) => {
     const name = event.target?.name;
@@ -88,12 +123,6 @@ export default function Page() {
       }
     }
     return true;
-  };
-
-  // * Qr handler
-
-  const qrResultHandler = (result) => {
-    setQrResult(result);
   };
 
   // API CALLS
@@ -390,9 +419,7 @@ export default function Page() {
 
   const isMrpMismatched = (row, newMrp) => {
     // Find the object with the specified row number
-    var obj = ItemAPIData.find(function (o) {
-      return o.row == row;
-    });
+    var obj = ItemAPIData[parseInt(row)];
 
     // Check if the object was found and if the new MRP value is different from the previous MRP value
     if (obj && obj.mrp != newMrp) {
@@ -576,9 +603,7 @@ export default function Page() {
         </button>
       </div> */}
 
-      <p className="text-center m-5 glass rounded-sm">
-        Scanned result: {qrResult}
-      </p>
+      <p className="text-center m-5 glass rounded-sm">{qrResult}</p>
 
       {/* {showQrScanner && (
         <MyQrScanner qrResultHandler={(r) => qrResultHandler(r)} />
