@@ -329,9 +329,7 @@ export default function page(props) {
     // * other unsaved state data
 
     const unsavedFieldData = getLocalStorage("US_STATE_PURCHASE");
-    const parsedDate = unsavedFieldData?.invoiceDate
-      ? new Date(unsavedFieldData?.invoiceDate)
-      : new Date();
+    const parsedDate = new Date(localStorage.getItem("US_INV_DATE"))
 
     handleFormChange({
       target: {
@@ -874,6 +872,7 @@ export default function page(props) {
                     value: selectedDate,
                   },
                 });
+                localStorage.setItem("US_INV_DATE", selectedDate);
               }}
             />
           </div>
