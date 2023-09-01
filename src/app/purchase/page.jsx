@@ -30,6 +30,14 @@ export default function page(props) {
     checkNotDownload(searchParams.get("fromNewItem"));
     retrieveDataFromNewItem(searchParams.get("fromNewItem")); // * Retrieve data from the new item page.
     setUnsavedState(); // * for gstType, DNM etc. field
+
+    const unsubscribe = window.addEventListener("EXPO_LS_EVENT", function () {
+      // * This is for the expo app, using for scanning bar codes.
+      digLocalStorageQR(); // * This function is in the app.js file.
+    });
+    return () => {
+      window.removeEventListener("EXPO_LS_EVENT", unsubscribe);
+    };
   }, []);
 
   // * useStates for storing data.
@@ -38,6 +46,7 @@ export default function page(props) {
   const [excelContent, setExcelContent] = useState([]);
   const [partyData, setPartyData] = useState([]);
   const [itemData, setItemData] = useState([]);
+  const [qrResult, setQrResult] = useState("...");
   const [formData, setFormData] = useState({
     partyName: null,
     invoiceNo: null,
@@ -70,6 +79,72 @@ export default function page(props) {
     btn_f_1: () => {},
     btn_f_2: () => {},
   });
+
+  // * handle QR search feature
+
+  const digLocalStorageQR = () => {
+    let localSavedItemApi = [];
+
+    if (localSavedItemApi?.length === 0) {
+      setQrResult("🔍 Searching...");
+    }
+
+    const setLocalITEM_API = (data) => {
+      localSavedItemApi = data;
+    };
+
+    checkLocalStorageSaved("ITEM_API_DATA", setLocalITEM_API);
+
+    // * This function will get the local item whenever the event "EXPO_LS_EVENT" triggered.
+
+    const res = localStorage.getItem("EXPO_SCN_RESULT");
+    const result = localSavedItemApi.find(
+      (obj) => obj.pn !== "" && res.includes(obj.pn)
+    );
+
+    if (result?.value) {
+      console.log("SCN_RES", result);
+      setQrResult(`✔ ${result?.value}-${result?.pn}`);
+
+      // * setting the matched value
+
+      handleFormChange({
+        target: { name: "itemPartNo", value: result?.value },
+      });
+      handleFormChange({
+        target: {
+          name: "itemLocation",
+          value: result?.loc?.toUpperCase(),
+        },
+      });
+      handleFormChange({
+        target: {
+          name: "mrp",
+          value: result?.mrp,
+        },
+      });
+
+      handleFormChange({
+        target: {
+          name: "selectedItemRow",
+          value: result?.row,
+        },
+      });
+
+      if (formData?.gstType !== "Exempt") {
+        handleFormChange({
+          target: {
+            name: "gstPercentage",
+            value: `${result?.gst}%`,
+          },
+        });
+      }
+    } else {
+      localSavedItemApi?.length === 0
+        ? setQrResult(`❓ Oops! Kindly retry..`)
+        : setQrResult(`❌ No match: ${res}`);
+    }
+  };
 
   // * handle the modal
 
@@ -329,7 +404,8 @@ export default function page(props) {
     // * other unsaved state data
 
     const unsavedFieldData = getLocalStorage("US_STATE_PURCHASE");
-    const parsedDate = new Date(localStorage.getItem("US_INV_DATE"))
+    const parsedDate =
+      new Date(localStorage.getItem("US_INV_DATE")) || new Date();
 
     handleFormChange({
       target: {
@@ -506,6 +582,8 @@ export default function page(props) {
       isMrpMismatched(formData?.selectedItemRow, formData?.mrp);
 
       // * clearing some fields
+
+      setQrResult("...");
 
       handleFormChange({
         target: {
@@ -954,6 +1032,8 @@ export default function page(props) {
               />
             </div>
           )}
+
+          <p className="text-center m-5 glass rounded-sm">{qrResult}</p>
 
           {itemData?.length > 0 && (
             <Select
