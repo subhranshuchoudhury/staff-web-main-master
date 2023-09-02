@@ -423,6 +423,12 @@ export default function page(props) {
     if (unsavedFieldData?.purchasetype === "DM") {
       handleFormChange({
         target: {
+          name: "amount",
+          value: 0,
+        },
+      });
+      handleFormChange({
+        target: {
           name: "purchaseType",
           value: unsavedFieldData?.purchasetype,
         },
