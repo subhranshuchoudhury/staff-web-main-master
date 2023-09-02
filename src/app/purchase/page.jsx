@@ -404,8 +404,17 @@ export default function page(props) {
     // * other unsaved state data
 
     const unsavedFieldData = getLocalStorage("US_STATE_PURCHASE");
-    const parsedDate =
-      new Date(localStorage.getItem("US_INV_DATE")) || new Date();
+
+    const localDate = localStorage.getItem("US_INV_DATE");
+    if (localDate !== null && localDate !== undefined) {
+      const dateObject = new Date(localDate);
+      handleFormChange({
+        target: {
+          name: "invoiceDate",
+          value: dateObject,
+        },
+      });
+    }
 
     handleFormChange({
       target: {
@@ -413,12 +422,12 @@ export default function page(props) {
         value: unsavedFieldData?.gstType,
       },
     });
-    handleFormChange({
-      target: {
-        name: "invoiceDate",
-        value: parsedDate,
-      },
-    });
+    // handleFormChange({
+    //   target: {
+    //     name: "invoiceDate",
+    //     value: parsedDate,
+    //   },
+    // });
 
     if (unsavedFieldData?.purchasetype === "DM") {
       handleFormChange({
