@@ -243,8 +243,8 @@ export default function Page() {
       date: convertToDateString(formData?.stockDate),
       item_name: formData?.item,
       qty: formData?.quantity,
-      mrp: formData?.mrp,
-      purc_price: formData?.purc_price,
+      mrp: parseFloat(formData?.mrp),
+      purc_price: parseFloat(formData?.purc_price),
       location: formData?.location,
     };
 
