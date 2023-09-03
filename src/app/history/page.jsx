@@ -51,7 +51,10 @@ const Page = () => {
           />
           <p>SALE</p>
         </div>
-        <div className="btn btn-info text-white w-44 h-28 m-5 shadow-2xl hover:shadow-white flex-col bg-transparent grayscale hover:cursor-not-allowed">
+        <div
+          onClick={() => routePath("/history/stock")}
+          className="btn btn-info text-white w-44 h-28 m-5 shadow-2xl hover:shadow-white flex-col bg-transparent"
+        >
           <Image
             src="/assets/images/store.png"
             alt="stock"
