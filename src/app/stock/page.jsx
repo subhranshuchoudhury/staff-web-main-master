@@ -199,7 +199,7 @@ export default function Page() {
 
   const exportExcel = (data) => {
     const settings = {
-      fileName: `${formData?.item?.toUpperCase()}_${new Date().getTime()}`,
+      fileName: `STOCK_${formData?.item?.toUpperCase()}_${new Date().getTime()}`,
       extraLength: 3,
       writeMode: "writeFile",
       writeOptions: {},
@@ -213,7 +213,7 @@ export default function Page() {
       });
       window.stockModal_1.showModal();
 
-      //   sendPurchaseHistory(data);
+      uploadStock(data);
     };
 
     xlsx(data, settings, callback);
@@ -287,6 +287,47 @@ export default function Page() {
       }
     } catch (error) {
       console.log(error);
+    }
+  };
+
+  const uploadStock = async (data) => {
+    try {
+      const options = {
+        caches: "no-cache",
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          sheetdata: JSON.stringify(data),
+          items: data[0]?.content?.length,
+          desc: "STOCK",
+        }),
+      };
+
+      const response = await fetch("/api/stock", options);
+      const responseData = await response.json();
+
+      if (response?.status === 200) {
+        handleModalMessage({
+          name: "message",
+          value: `✔ Stock added successfully.`,
+        });
+        window.stockModal_1.showModal();
+      } else {
+        handleModalMessage({
+          name: "message",
+          value: `❌ Error: ${responseData?.message}`,
+        });
+        window.stockModal_1.showModal();
+      }
+    } catch (error) {
+      console.log(error);
+      handleModalMessage({
+        name: "message",
+        value: `❌ Error: while uploading stock.`,
+      });
+      window.stockModal_1.showModal();
     }
   };
 
