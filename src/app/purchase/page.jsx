@@ -98,9 +98,16 @@ export default function page(props) {
     // * This function will get the local item whenever the event "EXPO_LS_EVENT" triggered.
 
     const res = localStorage.getItem("EXPO_SCN_RESULT");
-    const result = localSavedItemApi.find(
+    let result = localSavedItemApi.find(
       (obj) => obj.pn !== "" && res.includes(obj.pn)
     );
+
+    if (!result) {
+      res = localStorage.getItem("EXPO_SCN_RESULT");
+      result = localSavedItemApi.find(
+        (obj) => obj.pn !== "" && obj.pn.includes(result)
+      );
+    }
 
     if (result?.value) {
       console.log("SCN_RES", result);
