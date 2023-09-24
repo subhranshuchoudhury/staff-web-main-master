@@ -104,7 +104,7 @@ export default function page(props) {
 
     if (!result) {
       result = localSavedItemApi.find(
-        (obj) => obj.pn !== "" && obj.pn.includes(res)
+        (obj) => obj.pn !== "" && JSON.stringify(obj).includes(res)
       );
     }
 
