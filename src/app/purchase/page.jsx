@@ -103,9 +103,8 @@ export default function page(props) {
     );
 
     if (!result) {
-      res = localStorage.getItem("EXPO_SCN_RESULT");
       result = localSavedItemApi.find(
-        (obj) => obj.pn !== "" && obj.pn.includes(result)
+        (obj) => obj.pn !== "" && obj.pn.includes(res)
       );
     }
 
