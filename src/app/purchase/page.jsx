@@ -104,6 +104,18 @@ export default function page(props) {
 
     if (!result) {
       result = localSavedItemApi.find(
+        (obj) => obj.pn !== "" && JSON.stringify(obj?.value).includes(res)
+      );
+    }
+
+    if (!result) {
+      result = localSavedItemApi.find(
+        (obj) => obj.pn !== "" && JSON.stringify(obj?.pn).includes(res)
+      );
+    }
+
+    if (!result) {
+      result = localSavedItemApi.find(
         (obj) => obj.pn !== "" && JSON.stringify(obj).includes(res)
       );
     }
