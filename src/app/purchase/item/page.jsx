@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Select, { createFilter } from "react-select";
 import Itemgroup from "../../DB/Purchase/Itemgroup";
 import unitypes from "../../DB/Purchase/unitypes";
@@ -14,11 +14,20 @@ import { uploadItem } from "../../AppScript/script";
 
 const Page = () => {
   const router = useRouter();
+  const aliasRef = useRef(null);
 
   useEffect(() => {
     // check for local storage
     checkForUnsaved();
     getInvoice();
+
+    const unsubscribe = window.addEventListener("EXPO_LS_EVENT", function () {
+      // * This is for the expo app, using for scanning bar codes.
+      digLocalStorageQR(); // * This function is in the app.js file.
+    });
+    return () => {
+      window.removeEventListener("EXPO_LS_EVENT", unsubscribe);
+    };
   }, []);
 
   const [Invoice, setInvoice] = useState("");
@@ -57,6 +66,11 @@ const Page = () => {
   const addObject = (obj) => {
     const copiedObject = JSON.parse(JSON.stringify(obj)); // * deep copy
     setContent((prevItems) => [...prevItems, copiedObject]);
+  };
+
+  const digLocalStorageQR = () => {
+    aliasRef.current.value = localStorage.getItem("EXPO_SCN_RESULT") || "";
+    DATA.Item_Alias = localStorage.getItem("EXPO_SCN_RESULT") || "";
   };
 
   const uploadItemList = async (d) => {
@@ -156,6 +170,8 @@ const Page = () => {
   };
 
   const pushContent = () => {
+    console.log(DATA);
+
     let isEmpty = false;
     for (const key in DATA) {
       if (DATA[key] === "") {
@@ -328,6 +344,7 @@ const Page = () => {
           className="input input-bordered input-secondary w-[320px] m-5 uppercase"
           placeholder="ENTER PART NUMBER"
           type="text"
+          ref={aliasRef}
           onChange={(e) => {
             DATA.Item_Alias = e.target?.value;
           }}
