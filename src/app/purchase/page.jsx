@@ -135,11 +135,12 @@ export default function page(props) {
       );
 
       if (result) {
-        toast.success("The result may not be accurate.");
+        toast.error("The result may not be accurate.");
       }
     }
 
     if (result?.value) {
+      toast.success("Scan complete");
       console.log("SCN_RES", result);
       setQrResult(`✔ ${result?.value}-${result?.pn}`);
 
@@ -177,6 +178,7 @@ export default function page(props) {
         });
       }
     } else {
+      toast.error("No match found");
       localSavedItemApi?.length === 0
         ? setQrResult(`❓ Oops! Kindly retry..`)
         : setQrResult(`❌ No match: ${res}`);
