@@ -20,6 +20,7 @@ import CustomMenuList from "../Dropdown/CustomMenuList";
 import { useRouter, useSearchParams } from "next/navigation";
 import purchasetype from "../DB/Purchase/purchasetype";
 import { uploadItem } from "../AppScript/script";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function page(props) {
   const searchParams = useSearchParams();
@@ -83,6 +84,7 @@ export default function page(props) {
   // * handle QR search feature
 
   const digLocalStorageQR = () => {
+    const loading = toast.loading("Searching...");
     let localSavedItemApi = [];
 
     if (localSavedItemApi?.length === 0) {
@@ -99,25 +101,42 @@ export default function page(props) {
 
     const res = localStorage.getItem("EXPO_SCN_RESULT");
     let result = localSavedItemApi.find(
-      (obj) => obj.pn !== "" && res.includes(obj.pn)
+      (obj) => obj.pn !== "" && res == String(obj?.pn)?.trim()
     );
 
     if (!result) {
+      console.log("Type 1 scanning...");
       result = localSavedItemApi.find(
         (obj) => obj.pn !== "" && JSON.stringify(obj?.value).includes(res)
       );
     }
 
     if (!result) {
+      console.log("Type 2 scanning...");
+
       result = localSavedItemApi.find(
         (obj) => obj.pn !== "" && JSON.stringify(obj?.pn).includes(res)
       );
     }
 
     if (!result) {
-      result = localSavedItemApi.find(
-        (obj) => obj.pn !== "" && JSON.stringify(obj).includes(res)
+      console.log("Type 3 scanning...");
+
+      result = localSavedItemApi.find((obj) =>
+        JSON.stringify(obj).includes(res)
       );
+    }
+
+    if (!result) {
+      console.log("Type 4 scanning...");
+
+      result = localSavedItemApi.find(
+        (obj) => obj.pn !== "" && res.includes(obj.pn)
+      );
+
+      if (result) {
+        toast.success("The result may not be accurate.");
+      }
     }
 
     if (result?.value) {
@@ -162,6 +181,8 @@ export default function page(props) {
         ? setQrResult(`❓ Oops! Kindly retry..`)
         : setQrResult(`❌ No match: ${res}`);
     }
+
+    toast.remove(loading);
   };
 
   // * handle the modal
@@ -853,6 +874,7 @@ export default function page(props) {
 
   return (
     <>
+      <Toaster />
       <dialog id="purchase_modal_1" className="modal">
         <form method="dialog" className="modal-box">
           <h3 className="font-bold text-lg">{modalMessage?.title}</h3>
