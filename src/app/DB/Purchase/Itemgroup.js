@@ -56,6 +56,7 @@ const Itemgroup = [
   { value: "DEVENDRA" },
   { value: "DONALDSON" },
   { value: "DYNASEAL" },
+  { value: "EATON" },
   { value: "EICHER" },
   { value: "ELCHICO" },
   { value: "ELECTRICAL" },
