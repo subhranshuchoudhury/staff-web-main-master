@@ -9,7 +9,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@yudiel/react-qr-scanner": "^1.1.10",
     "autoprefixer": "10.4.14",
     "json-as-xlsx": "^2.5.3",
     "mongoose": "^7.4.0",
@@ -25,8 +24,6 @@
     "tailwindcss": "3.3.2"
   },
   "devDependencies": {
-    "daisyui": "^3.1.0",
-    "i": "^0.3.7",
-    "npm": "^9.7.1"
+    "daisyui": "^3.1.0"
   }
 }
