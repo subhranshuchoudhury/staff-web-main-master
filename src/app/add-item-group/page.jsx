@@ -34,6 +34,8 @@ export default function page() {
 
   const getTheList = async () => {
     setLoading(true);
+    const savedData = JSON.parse(localStorage.getItem("GROUP_DATA") || "[]");
+    setGroupData(savedData);
     try {
       const response = await fetch(
         "https://script.google.com/macros/s/AKfycbxmPVf5TSB83HA_CPj8Eu6vHKEAVHk25ufoNQmrvsetWqQUCCRuSPXEm4vbLCrUtBwP/exec"
