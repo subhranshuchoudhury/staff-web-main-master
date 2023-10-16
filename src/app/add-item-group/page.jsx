@@ -107,7 +107,7 @@ export default function page() {
                     className="hover:bg-cyan-500 hover:cursor-not-allowed"
                     key={index}
                   >
-                    <td>{index}</td>
+                    <td>{index + 1}</td>
 
                     <td>{item.value}</td>
                   </tr>
