@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Select, { createFilter } from "react-select";
-import Itemgroup from "../../DB/Purchase/Itemgroup";
+// import Itemgroup from "../../DB/Purchase/Itemgroup";
 import unitypes from "../../DB/Purchase/unitypes";
 import gstAmount from "../../DB/Purchase/gstamount";
 import Image from "next/image";
@@ -30,9 +30,38 @@ const Page = () => {
     };
   }, []);
 
+  useEffect(() => {
+    getItemGroup();
+  }, []);
+
   const [Invoice, setInvoice] = useState("");
   const [PartyName, setPartyName] = useState("");
   const [PageLoaded, setPageLoaded] = useState(false);
+  const [itemGroupDATA, setItemGroupDATA] = useState([]);
+  const [Loading, setLoading] = useState(true);
+
+  const getItemGroup = async () => {
+    const getLocalData = JSON.parse(localStorage.getItem("GROUP_DATA") || "[]");
+    setItemGroupDATA(getLocalData);
+    try {
+      const response = await fetch(
+        "https://script.google.com/macros/s/AKfycbxmPVf5TSB83HA_CPj8Eu6vHKEAVHk25ufoNQmrvsetWqQUCCRuSPXEm4vbLCrUtBwP/exec"
+      );
+      if (response.status === 200) {
+        const data = await response.json();
+
+        // * save in local storage
+
+        setItemGroupDATA(data);
+        localStorage.setItem("GROUP_DATA", JSON.stringify(data));
+      }
+      setLoading(false);
+    } catch (error) {
+      setLoading(false);
+      console.log(error);
+      toast.error("Something went wrong");
+    }
+  };
 
   const getInvoice = () => {
     const inv = localStorage.getItem("US_INV_REFERER") || "";
@@ -328,6 +357,11 @@ const Page = () => {
           </div>
         </form>
       </dialog>
+      <div className="text-center">
+        {Loading && (
+          <span className="loading loading-infinity w-[80px] text-sky-500"></span>
+        )}
+      </div>
       <p className="glass text-center text-[40px] font-mono mb-9 rounded-xl m-5">
         ADD ITEM
       </p>
@@ -382,7 +416,7 @@ const Page = () => {
         className="w-full m-auto p-5 text-blue-800 font-bold"
         filterOption={createFilter({ ignoreAccents: false })}
         components={{ Option: CustomOption, MenuList: CustomMenuList }}
-        options={Itemgroup}
+        options={itemGroupDATA}
         getOptionLabel={(option) => `${option["value"]}`}
         onChange={(e) => {
           DATA.Item_Group = e?.value;

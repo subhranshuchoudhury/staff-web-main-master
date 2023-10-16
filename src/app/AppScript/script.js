@@ -138,3 +138,34 @@ export const uploadParty = async (item) => {
     return "400";
   }
 };
+
+export const postItemGroup = async (item) => {
+  const payload = JSON.stringify({
+    group_name: item,
+  });
+
+  const options = {
+    cache: "no-store",
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: payload,
+  };
+
+  try {
+    const response = await fetch(
+      "https://script.google.com/macros/s/AKfycbxmPVf5TSB83HA_CPj8Eu6vHKEAVHk25ufoNQmrvsetWqQUCCRuSPXEm4vbLCrUtBwP/exec",
+      options
+    );
+
+    const data = await response.text();
+
+    if (data?.trim() === "Data saved") {
+      return "200";
+    } else {
+      return "400";
+    }
+  } catch (error) {
+    console.log(error);
+    return "400";
+  }
+};

@@ -48,6 +48,9 @@ export default function RootLayout({ children }) {
                   <Link href={"/purchase/item"}>Add New Item</Link>
                 </li>
                 <li>
+                  <Link href={"/add-item-group"}>Add Item Group</Link>
+                </li>
+                <li>
                   <Link href={"/sale"}>Sale</Link>
                 </li>
 
