@@ -100,7 +100,10 @@ export default function Page() {
   const isFormValidated = (form) => {
     for (let key in form) {
       if (form[key] === null || form[key] === undefined || form[key] === "") {
-        if (key === "purc_price") continue;
+        if (key === "purc_price") {
+          form[key] = 0;
+          continue;
+        }
         handleModalMessage({
           name: "message",
           value: `📜 The field "${key
@@ -244,7 +247,7 @@ export default function Page() {
       item_name: formData?.item,
       qty: formData?.quantity,
       mrp: parseFloat(formData?.mrp),
-      purc_price: parseFloat(formData?.purc_price),
+      purc_price: parseFloat(formData?.purc_price || 0),
       location: formData?.location,
     };
 
