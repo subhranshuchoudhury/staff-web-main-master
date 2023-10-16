@@ -68,7 +68,7 @@ export default function page() {
       <p className="text-center text-2xl font-bold">ADD ITEM GROUP</p>
 
       <div className="flex justify-center">
-        <div className="mt-10">
+        <div className="mt-10 flex justify-center items-center flex-row flex-wrap">
           <input
             type="text"
             onChange={(e) => setInputData(e.target.value)}
@@ -79,7 +79,7 @@ export default function page() {
 
           <button
             onClick={uploadGroup}
-            className="bg-blue-600 p-3 rounded-lg uppercase"
+            className="bg-blue-600 h-11 p-3 rounded-lg uppercase"
           >
             Submit
           </button>
