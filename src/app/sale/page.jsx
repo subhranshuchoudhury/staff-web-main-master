@@ -293,6 +293,7 @@ export default function Page() {
         value: `✔ Exporting excel successful.`,
       });
       window.saleModal_1.showModal();
+      localStorage.removeItem("SALE_TEMP_CONTENT");
 
       sendPurchaseHistory(data);
     };
@@ -351,6 +352,9 @@ export default function Page() {
     };
 
     setExcelContent((prevArray) => [...prevArray, tempContent]);
+
+    // * Save the temp content to local storage for backup
+    localStorageBackup(tempContent);
 
     isMrpMismatched(formData?.selectedItemRow, formData?.mrp); // * update the mrp field if any changes happened in the mrp field.
 
@@ -446,6 +450,58 @@ export default function Page() {
     }
   };
 
+  const localStorageBackup = (tempContent) => {
+    const checkLocal = localStorage.getItem("SALE_TEMP_CONTENT");
+    let localContent = [];
+    if (checkLocal !== null && checkLocal !== undefined) {
+      localContent = JSON.parse(checkLocal || "[]");
+      localContent.push(tempContent);
+    } else {
+      localContent.push(tempContent);
+    }
+
+    localStorage.setItem("SALE_TEMP_CONTENT", JSON.stringify(localContent));
+  };
+
+  useEffect(() => {
+    if (localStorage.getItem("SALE_TEMP_CONTENT") === null) return;
+    const localContent = JSON.parse(
+      localStorage.getItem("SALE_TEMP_CONTENT") || "[]"
+    );
+    window.saleModal_3.showModal();
+  }, []);
+
+  const userRestoreConfirmation = (accepted) => {
+    if (accepted) {
+      const localContent = JSON.parse(
+        localStorage.getItem("SALE_TEMP_CONTENT") || "[]"
+      );
+      setExcelContent(localContent);
+      handleChange({
+        target: {
+          name: "vehicleNo",
+          value: localContent[0]?.narration,
+        },
+      });
+
+      handleChange({
+        target: {
+          name: "seriesType",
+          value: localContent[0]?.vchSeries,
+        },
+      });
+
+      // handleChange({
+      //   target: {
+      //     name: "saleDate",
+      //     value: localContent[0]?.billDate,
+      //   },
+      // });
+    } else {
+      localStorage.removeItem("SALE_TEMP_CONTENT");
+    }
+  };
+
   // ****
   return (
     <>
@@ -483,6 +539,32 @@ export default function Page() {
             <button className="btn btn-success">Edit</button>
             <button onClick={addContent} className="btn btn-error">
               Ok
+            </button>
+          </div>
+        </form>
+      </dialog>
+
+      {/* Backup confirmation modal */}
+
+      <dialog id="saleModal_3" className="modal">
+        <form method="dialog" className="modal-box">
+          <h3 className="font-bold text-lg">Unsaved data found!</h3>
+          <p className="py-4">
+            System found some unsaved data, if you want to restore, click on
+            "Accept" otherwise "deny" it to delete.
+          </p>
+          <div className="modal-action">
+            <button
+              onClick={() => userRestoreConfirmation(false)}
+              className="btn bg-red-600"
+            >
+              Deny
+            </button>
+            <button
+              onClick={() => userRestoreConfirmation(true)}
+              className="btn bg-green-600"
+            >
+              Accept
             </button>
           </div>
         </form>
@@ -771,6 +853,7 @@ export default function Page() {
             });
 
             setExcelContent([]);
+            localStorage.removeItem("SALE_TEMP_CONTENT");
           }}
           className="text-white hover:bg-blue-900"
         >
