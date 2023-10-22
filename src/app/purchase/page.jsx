@@ -389,6 +389,21 @@ export default function page(props) {
     retrievedArray && window.purchase_modal_2.showModal();
   };
 
+  // * Duplicate check
+
+  const isDuplicate = (item) => {
+    const result = excelContent.find(
+      (obj) =>
+        obj?.itemName === item?.itemName &&
+        obj?.itemName !== null &&
+        obj?.itemName !== undefined
+    );
+    if (result) {
+      return true;
+    }
+    return false;
+  };
+
   // * This function used for get & set the data from new item addition page.
 
   const retrieveDataFromNewItem = (searchBar) => {
@@ -624,13 +639,22 @@ export default function page(props) {
     }
 
     const modalConfirmedAdd = () => {
+      if (isDuplicate(tempContent)) {
+        handleModal(
+          "⚠ Duplicate!",
+          `The item "${tempContent.itemName}" is already in the list.`,
+          "Okay"
+        );
+        window.purchase_modal_1.showModal();
+        return;
+      }
       setExcelContent((prevArray) => [...prevArray, tempContent]);
 
       // * saving the data to localStorage
       storeNotDownload(tempContent);
 
       // * show the modal
-      handleModal("Success", "Content Added Successfully!", "Okay");
+      handleModal("Success ✅", "Content Added Successfully!", "Okay");
       window.purchase_modal_1.showModal();
 
       // * check if price need to be updated

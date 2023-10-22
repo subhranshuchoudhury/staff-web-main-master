@@ -94,6 +94,22 @@ export default function Page() {
   const [ExcelContent, setExcelContent] = useState([]);
   const [qrResult, setQrResult] = useState("...");
 
+  // * Duplicate check
+
+  const isDuplicate = (item) => {
+    console.log(ExcelContent, item);
+    const result = ExcelContent.find(
+      (obj) =>
+        obj?.itemName === item &&
+        obj?.itemName !== null &&
+        obj?.itemName !== undefined
+    );
+    if (result) {
+      return true;
+    }
+    return false;
+  };
+
   // * for uncommon useState alternative
 
   const handleChange = (event) => {
@@ -822,7 +838,17 @@ export default function Page() {
         </button>
         <button
           onClick={() => {
-            if (isFormValidated(formData)) window.saleModal_2.showModal();
+            if (isFormValidated(formData)) {
+              if (isDuplicate(formData?.item)) {
+                handleModalMessage({
+                  name: "message",
+                  value: `❌ Item already added.`,
+                });
+                window.saleModal_1.showModal();
+              } else {
+                window.saleModal_2.showModal();
+              }
+            }
           }}
           className="text-white hover:bg-blue-900"
         >
