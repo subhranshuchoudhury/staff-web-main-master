@@ -846,8 +846,8 @@ export default function page(props) {
           // ? show modal
           handleModal("Uploaded ✔", "The document has been uploaded", "Okay");
           window.purchase_modal_1.showModal();
-          const isApp = localStorage.getItem("APP");
-          if (isApp === "true") {
+          const isApp = localStorage.getItem("EXPO_SCN_RESULT");
+          if (isApp !== null || isApp !== undefined) {
             router.push("/history/purchase/share/latest?download=1");
           }
         } else {
