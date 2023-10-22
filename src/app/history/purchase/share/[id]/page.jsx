@@ -11,6 +11,7 @@ export default function Page(props) {
   });
   const [LoadedWeb, setLoadedWeb] = useState(false);
   const [FileData, setFileData] = useState([]);
+  const [isDownloaded, setIsDownloaded] = useState(false);
 
   useEffect(() => {
     setLoadedWeb(true);
@@ -37,13 +38,14 @@ export default function Page(props) {
       const response = await fetch(url);
       const data = await response.json();
       setFileData(data?.purchases);
-      console.log(data?.purchases?.[0]?.sheetdata);
-      if (autoDownloadDetails?.download === "1")
+      console.log(JSON.parse(data?.purchases?.[0]?.sheetdata));
+      if (props.searchParams.download === "1") {
         DownloadExcel(
           data?.purchases?.[0]?.partyname,
           data?.purchases?.[0]?.invoice,
           JSON.parse(data?.purchases?.[0]?.sheetdata)
         );
+      }
     } catch (error) {
       console.error(error);
     }
@@ -57,7 +59,9 @@ export default function Page(props) {
       writeOptions: {},
       RTL: false,
     };
-    let callback = function () {};
+    let callback = function () {
+      setIsDownloaded(true);
+    };
     xlsx(data, settings, callback);
   };
 
@@ -98,7 +102,9 @@ export default function Page(props) {
       </div>
       {autoDownloadDetails?.download === "1" ? (
         <div className="animate-pulse text-yellow-400">
-          The file will download automatically.
+          {isDownloaded
+            ? "✅File Downloaded"
+            : "Downloading File, Please Wait..."}
         </div>
       ) : (
         <div
