@@ -846,6 +846,10 @@ export default function page(props) {
           // ? show modal
           handleModal("Uploaded ✔", "The document has been uploaded", "Okay");
           window.purchase_modal_1.showModal();
+          const isApp = localStorage.getItem("APP");
+          if (isApp === "true") {
+            router.push("/history/purchase/share/latest?download=1");
+          }
         } else {
           handleModal(
             "Uploaded Failed ❌",
