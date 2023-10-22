@@ -57,6 +57,9 @@ export default function RootLayout({ children }) {
                 <li>
                   <Link href={"/history"}>History</Link>
                 </li>
+                <li>
+                  <Link href={"/test"}>TEST (Dev)</Link>
+                </li>
               </ul>
             </div>
           </div>
