@@ -48,6 +48,7 @@ export default function page(props) {
   const [partyData, setPartyData] = useState([]);
   const [itemData, setItemData] = useState([]);
   const [qrResult, setQrResult] = useState("...");
+  const [duplicateConfirmation, setDuplicateConfirmation] = useState(false);
   const [formData, setFormData] = useState({
     partyName: null,
     invoiceNo: null,
@@ -639,15 +640,6 @@ export default function page(props) {
     }
 
     const modalConfirmedAdd = () => {
-      if (isDuplicate(tempContent)) {
-        handleModal(
-          "⚠ Duplicate!",
-          `The item "${tempContent.itemName}" is already in the list.`,
-          "Okay"
-        );
-        window.purchase_modal_1.showModal();
-        return;
-      }
       setExcelContent((prevArray) => [...prevArray, tempContent]);
 
       // * saving the data to localStorage
@@ -703,37 +695,71 @@ export default function page(props) {
       }
     };
 
-    handleConfirmationModal(
-      "Confirmation",
-      "Are you sure you want to add this content?",
-      "Yes",
-      "No",
-      [
-        {
-          data: `🎫 Discount: ${disc}%`,
-          style: "text-xl font-bold text-orange-500",
-        },
-        {
-          data: `🗺 Location: ${formData?.itemLocation}`,
-          style: "text-xl font-bold",
-        },
-        {
-          data: `📜 Invoice: ${formData?.invoiceNo}`,
-          style: "text-xl font-bold",
-        },
-        {
-          data: `Party: ${formData?.partyName}`,
-          style: "text-sm",
-        },
-        {
-          data: `Item: ${formData?.itemPartNo}`,
-          style: "text-sm",
-        },
-      ],
-      modalConfirmedAdd,
-      () => {}
-    );
-    window.purchase_modal_2.showModal();
+    if (isDuplicate(tempContent)) {
+      handleConfirmationModal(
+        "Duplicate ❓",
+        "The item is already added. Do you want to add again?",
+        "Yes",
+        "No",
+        [
+          {
+            data: `🎫 Discount: ${disc}%`,
+            style: "text-xl font-bold text-red-500",
+          },
+          {
+            data: `🗺 Location: ${formData?.itemLocation}`,
+            style: "text-xl font-bold",
+          },
+          {
+            data: `📜 Invoice: ${formData?.invoiceNo}`,
+            style: "text-xl font-bold",
+          },
+          {
+            data: `Party: ${formData?.partyName}`,
+            style: "text-sm",
+          },
+          {
+            data: `Item: ${formData?.itemPartNo}`,
+            style: "text-sm",
+          },
+        ],
+        modalConfirmedAdd,
+        () => {}
+      );
+      window.purchase_modal_2.showModal();
+    } else {
+      handleConfirmationModal(
+        "Confirmation",
+        "Are you sure you want to add this content?",
+        "Yes",
+        "No",
+        [
+          {
+            data: `🎫 Discount: ${disc}%`,
+            style: "text-xl font-bold text-orange-500",
+          },
+          {
+            data: `🗺 Location: ${formData?.itemLocation}`,
+            style: "text-xl font-bold",
+          },
+          {
+            data: `📜 Invoice: ${formData?.invoiceNo}`,
+            style: "text-xl font-bold",
+          },
+          {
+            data: `Party: ${formData?.partyName}`,
+            style: "text-sm",
+          },
+          {
+            data: `Item: ${formData?.itemPartNo}`,
+            style: "text-sm",
+          },
+        ],
+        modalConfirmedAdd,
+        () => {}
+      );
+      window.purchase_modal_2.showModal();
+    }
   };
 
   // * create Excel file
@@ -912,6 +938,30 @@ export default function page(props) {
           <div className="modal-action">
             {/* if there is a button in form, it will close the modal */}
             <button className="btn">{modalMessage?.button}</button>
+          </div>
+        </form>
+      </dialog>
+
+      <dialog id="isDuplicate_modal_1" className="modal">
+        <form method="dialog" className="modal-box">
+          <h3 className="font-bold text-lg">{modalMessage?.title}</h3>
+          <p className="py-4">{modalMessage?.message}</p>
+          <div className="modal-action">
+            {/* if there is a button in form, it will close the modal */}
+            <button
+              onClick={() => {
+                setDuplicateConfirmation(true);
+              }}
+              className="btn bg-green-500"
+            >
+              Add
+            </button>
+            <button
+              onClick={() => setDuplicateConfirmation(false)}
+              className="btn bg-red-500"
+            >
+              Remove
+            </button>
           </div>
         </form>
       </dialog>
