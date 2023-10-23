@@ -320,6 +320,11 @@ const Page = () => {
             title: "✔ Done",
             btn: "Ok",
           });
+
+          const isApp = localStorage.getItem("EXPO_SCN_RESULT");
+          if (isApp !== null || isApp !== undefined) {
+            router.push("/history/purchase/share/latest?download=1");
+          }
         } else {
           setModalMessage({
             message: `❌ Saved to cloud failed.`,
