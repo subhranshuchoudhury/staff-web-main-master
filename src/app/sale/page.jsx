@@ -539,7 +539,7 @@ export default function Page() {
 
       <dialog id="saleModal_2" className="modal">
         <form method="dialog" className="modal-box">
-          <h3 className="font-bold text-lg">Confirmation ?</h3>
+          <h3 className="font-bold text-lg">{modalMessage?.message}</h3>
           <p className="py-4 text-warning">Press "OK" to add the item.</p>
           <div className="text-white">
             <b className="block mb-2 text-warning">Summary: </b>
@@ -842,12 +842,16 @@ export default function Page() {
               if (isDuplicate(formData?.item)) {
                 handleModalMessage({
                   name: "message",
-                  value: `❌ Item already added.`,
+                  value: `❌ Duplicate Item.`,
                 });
-                window.saleModal_1.showModal();
-              } else {
                 window.saleModal_2.showModal();
+                return;
               }
+              handleModalMessage({
+                name: "message",
+                value: `⚠ Confirmation`,
+              });
+              window.saleModal_2.showModal();
             }
           }}
           className="text-white hover:bg-blue-900"

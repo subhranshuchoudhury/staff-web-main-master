@@ -48,7 +48,6 @@ export default function page(props) {
   const [partyData, setPartyData] = useState([]);
   const [itemData, setItemData] = useState([]);
   const [qrResult, setQrResult] = useState("...");
-  const [duplicateConfirmation, setDuplicateConfirmation] = useState(false);
   const [formData, setFormData] = useState({
     partyName: null,
     invoiceNo: null,
@@ -938,30 +937,6 @@ export default function page(props) {
           <div className="modal-action">
             {/* if there is a button in form, it will close the modal */}
             <button className="btn">{modalMessage?.button}</button>
-          </div>
-        </form>
-      </dialog>
-
-      <dialog id="isDuplicate_modal_1" className="modal">
-        <form method="dialog" className="modal-box">
-          <h3 className="font-bold text-lg">{modalMessage?.title}</h3>
-          <p className="py-4">{modalMessage?.message}</p>
-          <div className="modal-action">
-            {/* if there is a button in form, it will close the modal */}
-            <button
-              onClick={() => {
-                setDuplicateConfirmation(true);
-              }}
-              className="btn bg-green-500"
-            >
-              Add
-            </button>
-            <button
-              onClick={() => setDuplicateConfirmation(false)}
-              className="btn bg-red-500"
-            >
-              Remove
-            </button>
           </div>
         </form>
       </dialog>
