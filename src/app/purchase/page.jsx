@@ -21,6 +21,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import purchasetype from "../DB/Purchase/purchasetype";
 import { uploadItem } from "../AppScript/script";
 import toast, { Toaster } from "react-hot-toast";
+import { choiceIGST } from "../DB/Purchase/choice";
 
 export default function page(props) {
   const searchParams = useSearchParams();
@@ -64,6 +65,7 @@ export default function page(props) {
     amount: null,
     finalDisc: "ERROR!",
     selectedItemRow: -1,
+    isIGST: false
   });
   const [modalMessage, setModalMessage] = useState({
     title: "",
@@ -77,8 +79,8 @@ export default function page(props) {
     button_1: "",
     button_2: "",
     messages: [],
-    btn_f_1: () => {},
-    btn_f_2: () => {},
+    btn_f_1: () => { },
+    btn_f_2: () => { },
   });
 
   // * handle QR search feature
@@ -723,7 +725,7 @@ export default function page(props) {
           },
         ],
         modalConfirmedAdd,
-        () => {}
+        () => { }
       );
       window.purchase_modal_2.showModal();
     } else {
@@ -755,7 +757,7 @@ export default function page(props) {
           },
         ],
         modalConfirmedAdd,
-        () => {}
+        () => { }
       );
       window.purchase_modal_2.showModal();
     }
@@ -1111,15 +1113,37 @@ export default function page(props) {
                 }}
                 value={
                   formData?.purchaseType && {
-                    label: `${
-                      formData?.purchaseType === "DNM"
-                        ? "Discount Not Mentioned"
-                        : "Discount Mentioned"
-                    }`,
+                    label: `${formData?.purchaseType === "DNM"
+                      ? "Discount Not Mentioned"
+                      : "Discount Mentioned"
+                      }`,
                     value: formData.purchaseType,
                   }
                 }
                 defaultValue={{ label: "Discount Not Mentioned", value: "DNM" }}
+                isClearable={false}
+              />
+              {/* IGST Purchase Type */}
+              <Select
+                placeholder="PURCHASE TYPE (IGST) ?"
+                className="w-full m-auto p-5 text-blue-800 font-bold"
+                isSearchable={false}
+                options={choiceIGST}
+                onChange={(e) => {
+                  alert("This is under development.");
+                  return;
+                  handleFormChange({
+                    target: {
+                      name: "isIGST",
+                      value: e?.value,
+                    },
+                  });
+                }}
+                value={{
+                  label: formData?.isIGST ? "Choose IGST? (YES)" : "Choose IGST? (NO)",
+                  value: formData?.isIGST
+                }}
+                defaultValue={{ label: "Choose IGST? (NO)", value: "NO" }}
                 isClearable={false}
               />
               <input
