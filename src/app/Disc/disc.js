@@ -51,3 +51,15 @@ export const exclusiveDM = (MRP, Quantity, discPercent, gst) => {
 
   return newDisc;
 };
+
+export const IGSTnewDiscPercentage = (REGULAR_DISC, GST) => {
+
+  const newDisc = (REGULAR_DISC + GST) / (1 + (GST / 100));
+  return newDisc;
+
+}
+
+export const IGSTnewAmount = (PRICE, NEW_IGST_DISC, QUANTITY) => {
+  const newAmount = (PRICE - (PRICE * NEW_IGST_DISC)) * QUANTITY;
+  return newAmount;
+}
