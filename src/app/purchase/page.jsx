@@ -13,6 +13,8 @@ import {
   ExemptCalc,
   TotalAmountCalc,
   exclusiveDM,
+  IGSTnewAmount,
+  IGSTnewDiscPercentage,
 } from "../Disc/disc";
 import Image from "next/image";
 import CustomOption from "../Dropdown/CustomOption";
@@ -821,6 +823,30 @@ export default function page(props) {
       },
     ];
 
+    console.log(data);
+
+    if (formData?.isIGST) {
+
+      data[0].columns = data[0].columns.filter(col => col.value !== "cgst" && col.value !== "sgst");
+      data[0].columns.push({
+        label: "IGST PERCENT",
+        value: "igstPercent",
+        format: "0",
+      });
+
+      data[0].content.forEach((e, index) => {
+        data[0].content[index].igstPercent = parseInt(e?.sgst + e?.cgst);
+        data[0].content[index].disc = IGSTnewDiscPercentage(e?.disc, e?.igstPercent);
+        data[0].content[index].amount = IGSTnewAmount(e?.mrp, e?.disc, parseInt(e?.quantity), e?.igstPercent);
+        data[0].content[index].purchaseType = "IGST"
+      });
+
+
+
+      console.log(data[0])
+
+    }
+
     DownloadExcel(content[0]?.partyName, content[0]?.invoiceNo, data);
   };
 
@@ -929,6 +955,7 @@ export default function page(props) {
     }
   };
 
+
   return (
     <>
       <Toaster />
@@ -975,7 +1002,7 @@ export default function page(props) {
         </form>
       </dialog>
 
-      <p className="text-center text-2xl glass m-5 p-4">PURCHASE MODULE</p>
+      <p className="text-center text-2xl glass m-5 p-4">PURCHASE MODULE (TEST)</p>
       <div className="text-center m-auto">
         {loadingExcel && (
           <span className="loading loading-infinity w-[80px] text-sky-500"></span>
@@ -1130,8 +1157,8 @@ export default function page(props) {
                 isSearchable={false}
                 options={choiceIGST}
                 onChange={(e) => {
-                  alert("This is under development.");
-                  return;
+                  // alert("This is under development.");
+                  // return;
                   handleFormChange({
                     target: {
                       name: "isIGST",

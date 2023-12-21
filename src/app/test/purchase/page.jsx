@@ -835,11 +835,10 @@ export default function page(props) {
             });
 
             data[0].content.forEach((e, index) => {
-
-
                 data[0].content[index].igstPercent = parseInt(e?.sgst + e?.cgst);
                 data[0].content[index].disc = IGSTnewDiscPercentage(e?.disc, e?.igstPercent);
                 data[0].content[index].amount = IGSTnewAmount(e?.mrp, e?.disc, parseInt(e?.quantity), e?.igstPercent);
+                data[0].content[index].purchaseType = "IGST"
             });
 
 
