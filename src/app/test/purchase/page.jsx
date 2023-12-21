@@ -13,6 +13,8 @@ import {
     ExemptCalc,
     TotalAmountCalc,
     exclusiveDM,
+    IGSTnewDiscPercentage,
+    IGSTnewAmount,
 } from "../../Disc/disc";
 import Image from "next/image";
 import CustomOption from "../../Dropdown/CustomOption";
@@ -821,11 +823,28 @@ export default function page(props) {
             },
         ];
 
+        console.log(data);
+
         if (formData?.isIGST) {
-            data[0].columns.splice(data[0].columns.findIndex(obj => obj.label === "CGST"));
-            data[0].columns.splice(data[0].columns.findIndex(obj => obj.label === "SGST"));
+
+            data[0].columns = data[0].columns.filter(col => col.value !== "cgst" && col.value !== "sgst");
+            data[0].columns.push({
+                label: "IGST PERCENT",
+                value: "igstPercent",
+                format: "0",
+            });
+
+            data[0].content.forEach((e, index) => {
 
 
+                data[0].content[index].igstPercent = parseInt(e?.sgst + e?.cgst);
+                data[0].content[index].disc = IGSTnewDiscPercentage(e?.disc, e?.igstPercent);
+                data[0].content[index].amount = IGSTnewAmount(e?.mrp, e?.disc, parseInt(e?.quantity), e?.igstPercent);
+            });
+
+
+
+            console.log(data[0])
 
         }
 
@@ -936,6 +955,7 @@ export default function page(props) {
             console.log(error);
         }
     };
+
 
     return (
         <>

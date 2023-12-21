@@ -55,11 +55,11 @@ export const exclusiveDM = (MRP, Quantity, discPercent, gst) => {
 export const IGSTnewDiscPercentage = (REGULAR_DISC, GST) => {
 
   const newDisc = (REGULAR_DISC + GST) / (1 + (GST / 100));
-  return newDisc;
+  return Math.round(newDisc * 100) / 100;
 
 }
 
-export const IGSTnewAmount = (PRICE, NEW_IGST_DISC, QUANTITY) => {
-  const newAmount = (PRICE - (PRICE * NEW_IGST_DISC)) * QUANTITY;
-  return newAmount;
+export const IGSTnewAmount = (PRICE, NEW_IGST_DISC, QUANTITY, GST) => {
+  const newAmount = ((PRICE - PRICE * (NEW_IGST_DISC / 100)) * QUANTITY) * (1 + (GST / 100));
+  return (Math.round(newAmount * 100) / 100);
 }
