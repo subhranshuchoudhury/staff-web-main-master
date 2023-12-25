@@ -1002,7 +1002,7 @@ export default function page(props) {
         </form>
       </dialog>
 
-      <p className="text-center text-2xl glass m-5 p-4">PURCHASE MODULE (TEST)</p>
+      <p className="text-center text-2xl glass m-5 p-4">PURCHASE MODULE</p>
       <div className="text-center m-auto">
         {loadingExcel && (
           <span className="loading loading-infinity w-[80px] text-sky-500"></span>
