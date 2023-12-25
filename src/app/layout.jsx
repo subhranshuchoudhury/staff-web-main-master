@@ -50,12 +50,16 @@ export default function RootLayout({ children }) {
                 <li>
                   <Link href={"/add-item-group"}>Add Item Group</Link>
                 </li>
+
                 <li>
                   <Link href={"/sale"}>Sale</Link>
                 </li>
 
                 <li>
                   <Link href={"/history"}>History</Link>
+                </li>
+                <li>
+                  <Link href={"/settings"}>Settings</Link>
                 </li>
                 <li>
                   <Link href={"/test"}>TEST (Dev)</Link>
