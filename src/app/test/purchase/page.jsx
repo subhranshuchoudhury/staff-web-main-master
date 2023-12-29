@@ -15,6 +15,8 @@ import {
     exclusiveDM,
     IGSTnewDiscPercentage,
     IGSTnewAmount,
+    totalAmountFromUnitIn,
+    totalAmountFromUnitEx,
 } from "../../Disc/disc";
 import Image from "next/image";
 import CustomOption from "../../Dropdown/CustomOption";
@@ -67,7 +69,8 @@ export default function page(props) {
         amount: null,
         finalDisc: "ERROR!",
         selectedItemRow: -1,
-        isIGST: false
+        isIGST: false,
+        unitprice: null,
     });
     const [modalMessage, setModalMessage] = useState({
         title: "",
@@ -270,11 +273,13 @@ export default function page(props) {
                 const item_data = data[0];
                 const party_data = data[1];
 
+
                 const indexedItems = item_data.map((obj, row) => ({
                     ...obj,
                     row,
                 }));
 
+                console.log(indexedItems)
                 setItemData(indexedItems);
                 setPartyData(party_data);
 
@@ -899,8 +904,8 @@ export default function page(props) {
                     // ? show modal
                     handleModal("Uploaded ✔", "The document has been uploaded", "Okay");
                     window.purchase_modal_1.showModal();
-                    const isApp = localStorage.getItem("EXPO_SCN_RESULT");
-                    if (isApp !== null || isApp !== undefined) {
+                    const isApp = JSON.parse(localStorage.getItem("SETTINGS_isApp") || false);
+                    if (isApp) {
                         router.push("/history/purchase/share/latest?download=1");
                     }
                 } else {
@@ -935,7 +940,6 @@ export default function page(props) {
             updateMrp(row, newMrp);
         }
     };
-
     const updateMrp = async (row, mrp) => {
         const payload = {
             updateRow: parseInt(row) + 2,
@@ -954,6 +958,39 @@ export default function page(props) {
             console.log(error);
         }
     };
+    const isUnitPriceMisMatched = (row, newUnitprice) => {
+        // Find the object with the specified row number
+        var obj = itemData.find(function (o) {
+            return o.row == row;
+        });
+
+        // Check if the object was found and if the new MRP value is different from the previous MRP value
+        if (obj && obj.unitprice != newUnitprice) {
+            updateUnitPrice(row, newUnitprice);
+        }
+    };
+
+
+    const updateUnitPrice = async (row, unitprice) => {
+        const payload = {
+            updateRow: parseInt(row) + 2,
+            unitprice,
+        };
+
+        try {
+            const response = await uploadItem(payload);
+
+            if (response === "200") {
+                console.log("UNIT PRICE UPDATED");
+            } else {
+                console.log("UNIT PRICE NOT UPDATED");
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+
 
 
     return (
@@ -1002,7 +1039,7 @@ export default function page(props) {
                 </form>
             </dialog>
 
-            <p className="text-center text-2xl glass m-5 p-4">PURCHASE MODULE (TEST)</p>
+            <p className="text-center text-2xl glass m-5 p-4">PURCHASE MODULE</p>
             <div className="text-center m-auto">
                 {loadingExcel && (
                     <span className="loading loading-infinity w-[80px] text-sky-500"></span>
@@ -1221,6 +1258,7 @@ export default function page(props) {
                                         value: e?.loc || "N/A",
                                     },
                                 });
+
                                 handleFormChange({
                                     target: {
                                         name: "mrp",
@@ -1245,6 +1283,18 @@ export default function page(props) {
                                         },
                                     });
                                 }
+
+                                handleFormChange({
+                                    target: {
+                                        name: "unitprice",
+                                        value:
+                                            isNaN(e?.unitprice) || e?.unitprice === ""
+                                                ? null
+                                                : Number(e?.unitprice),
+                                    },
+                                });
+
+
                             }}
                             getOptionLabel={(option) =>
                                 `${option["value"]} ${option["pn"] || ""}`
@@ -1265,12 +1315,29 @@ export default function page(props) {
                         />
                     )}
 
+
+
                     <div>
                         <input
                             onChange={(e) => {
                                 handleFormChange({
                                     target: { name: "quantity", value: e.target.value },
                                 });
+
+                                if (formData?.unitprice) {
+                                    if (formData?.gstType !== "Inclusive") {
+                                        handleFormChange({
+                                            target: {
+                                                name: "amount", value: totalAmountFromUnitEx(formData?.unitprice, e.target.value)
+                                            },
+                                        });
+                                    } else {
+                                        handleFormChange({
+                                            target: { name: "amount", value: totalAmountFromUnitIn(formData?.unitprice, e.target.value, formData?.gstPercentage?.replace("%", "")) },
+                                        });
+                                    }
+                                }
+
                             }}
                             className="input input-bordered input-secondary w-[295px] m-5"
                             placeholder="Quantity"
@@ -1323,7 +1390,7 @@ export default function page(props) {
                         });
                     }}
                     value={formData?.amount || ""}
-                    className="input input-bordered input-secondary w-[295px] m-5"
+                    className={["input input-bordered  w-[295px] m-5", formData?.unitprice ? "input-primary" : "input-secondary"].join(" ")}
                     placeholder="Total Amount"
                     type="number"
                     hidden={formData?.purchaseType === "DM"}
@@ -1331,6 +1398,10 @@ export default function page(props) {
                         e.target.blur();
                     }}
                 />
+
+                {
+                    <p>Unit Price: {formData?.unitprice ?? "N/A"}</p>
+                }
 
                 <br />
             </div>

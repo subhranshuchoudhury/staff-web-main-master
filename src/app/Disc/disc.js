@@ -63,3 +63,24 @@ export const IGSTnewAmount = (PRICE, NEW_IGST_DISC, QUANTITY, GST) => {
   const newAmount = ((PRICE - PRICE * (NEW_IGST_DISC / 100)) * QUANTITY) * (1 + (GST / 100));
   return (Math.round(newAmount * 100) / 100);
 }
+
+export const unitPriceCalcEX = (TOTAL_AMOUNT, QUANTITY) => {
+  const unitprice = Number(TOTAL_AMOUNT) / Number(QUANTITY);
+  return Math.round(unitprice * 100) / 100;
+};
+
+export const unitPriceCalcIN = (TOTAL_AMOUNT, QUANTITY, GST) => {
+  const unitprice = (Number(TOTAL_AMOUNT) / Number(QUANTITY)) * (1 + (GST / 100));
+  return Math.round(unitprice * 100) / 100;
+};
+
+export const totalAmountFromUnitEx = (UNIT_PRICE, QUANTITY) => {
+  const totalAmount = Number(UNIT_PRICE) * Number(QUANTITY);
+  return Math.round(totalAmount * 100) / 100;
+}
+
+export const totalAmountFromUnitIn = (UNIT_PRICE, QUANTITY, GST) => {
+  console.log(GST)
+  const totalAmount = (Number(UNIT_PRICE) / (1 + (GST / 100))) * Number(QUANTITY);
+  return Math.round(totalAmount * 100) / 100;
+}
