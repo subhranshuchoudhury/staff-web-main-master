@@ -95,6 +95,7 @@ export const uploadItem = async (item) => {
       options
     );
 
+
     const data = await response.text();
 
     if (data?.trim() === "Data saved") {

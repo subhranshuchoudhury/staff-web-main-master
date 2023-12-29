@@ -17,6 +17,8 @@ import {
     IGSTnewAmount,
     totalAmountFromUnitIn,
     totalAmountFromUnitEx,
+    unitPriceCalcEX,
+    unitPriceCalcIN,
 } from "../../Disc/disc";
 import Image from "next/image";
 import CustomOption from "../../Dropdown/CustomOption";
@@ -660,6 +662,7 @@ export default function page(props) {
             // * check if price need to be updated
 
             isMrpMismatched(formData?.selectedItemRow, formData?.mrp);
+            isUnitPriceMisMatched(formData?.selectedItemRow, formData?.unitprice);
 
             // * clearing some fields
 
@@ -671,6 +674,12 @@ export default function page(props) {
                     value: null,
                 },
             });
+            handleFormChange({
+                target: {
+                    name: "unitprice",
+                    value: null,
+                }
+            })
             handleFormChange({
                 target: {
                     name: "quantity",
@@ -1388,6 +1397,20 @@ export default function page(props) {
                         handleFormChange({
                             target: { name: "amount", value: e.target.value },
                         });
+
+
+                        if (formData?.gstType !== "Inclusive") {
+                            handleFormChange({
+                                target: {
+                                    name: "unitprice", value: unitPriceCalcEX(e.target.value, formData?.quantity)
+                                },
+                            });
+                        } else {
+                            handleFormChange({
+                                target: { name: "unitprice", value: unitPriceCalcIN(e.target.value, formData?.quantity, formData?.gstPercentage?.replace("%", "")) },
+                            });
+                        }
+
                     }}
                     value={formData?.amount || ""}
                     className={["input input-bordered  w-[295px] m-5", formData?.unitprice ? "input-primary" : "input-secondary"].join(" ")}

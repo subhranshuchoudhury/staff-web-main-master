@@ -65,6 +65,8 @@ export const IGSTnewAmount = (PRICE, NEW_IGST_DISC, QUANTITY, GST) => {
 }
 
 export const unitPriceCalcEX = (TOTAL_AMOUNT, QUANTITY) => {
+
+  console.log(TOTAL_AMOUNT, QUANTITY)
   const unitprice = Number(TOTAL_AMOUNT) / Number(QUANTITY);
   return Math.round(unitprice * 100) / 100;
 };
