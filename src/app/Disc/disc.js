@@ -83,6 +83,6 @@ export const totalAmountFromUnitEx = (UNIT_PRICE, QUANTITY) => {
 
 export const totalAmountFromUnitIn = (UNIT_PRICE, QUANTITY, GST) => {
   console.log(GST)
-  const totalAmount = (Number(UNIT_PRICE) / (1 + (GST / 100))) * Number(QUANTITY);
+  const totalAmount = (Number(UNIT_PRICE) * (1 + (GST / 100))) * Number(QUANTITY);
   return Math.round(totalAmount * 100) / 100;
 }
