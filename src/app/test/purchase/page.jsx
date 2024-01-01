@@ -15,10 +15,10 @@ import {
     exclusiveDM,
     IGSTnewDiscPercentage,
     IGSTnewAmount,
+    unitPriceCalcExclDISC,
     totalAmountFromUnitIn,
     totalAmountFromUnitEx,
-    unitPriceCalcEX,
-    unitPriceCalcIN,
+    unitPriceCalcEXemptInclDISC,
 } from "../../Disc/disc";
 import Image from "next/image";
 import CustomOption from "../../Dropdown/CustomOption";
@@ -72,7 +72,6 @@ export default function page(props) {
         finalDisc: "ERROR!",
         selectedItemRow: -1,
         isIGST: false,
-        unitprice: null,
         dynamicdisc: null
     });
     const [modalMessage, setModalMessage] = useState({
@@ -523,6 +522,10 @@ export default function page(props) {
 
     const isFormValidated = (form) => {
         for (let key in form) {
+
+            if (key === "dynamicdisc") continue;
+
+
             if (form[key] === null || form[key] === undefined || form[key] === "") {
                 handleModal(
                     "❌ Error",
@@ -634,6 +637,13 @@ export default function page(props) {
             sgst: cgst,
         };
 
+        handleFormChange({
+            target: {
+                name: "dynamicdisc",
+                value: disc,
+            }
+        })
+
         if (excelContent?.length === 0) {
             // credit days function
 
@@ -663,8 +673,7 @@ export default function page(props) {
             // * check if price need to be updated
 
             isMrpMismatched(formData?.selectedItemRow, formData?.mrp);
-            isUnitPriceMisMatched(formData?.selectedItemRow, formData?.unitprice);
-            isDynamicdiscMissMatched(formData?.selectedItemRow, formData?.dynamicdisc);
+            isDynamicdiscMissMatched(formData?.selectedItemRow, disc);
 
             // * clearing some fields
 
@@ -676,18 +685,15 @@ export default function page(props) {
                     value: null,
                 },
             });
-            handleFormChange({
-                target: {
-                    name: "unitprice",
-                    value: null,
-                }
-            });
+
             handleFormChange({
                 target: {
                     name: "dynamicdisc",
                     value: null,
                 }
             });
+
+
             handleFormChange({
                 target: {
                     name: "quantity",
@@ -975,39 +981,14 @@ export default function page(props) {
             console.log(error);
         }
     };
-    const isUnitPriceMisMatched = (row, newUnitprice) => {
-        // Find the object with the specified row number
-        var obj = itemData.find(function (o) {
-            return o.row == row;
-        });
-
-        // Check if the object was found and if the new MRP value is different from the previous MRP value
-        if (obj && obj.unitprice != newUnitprice) {
-            updateUnitPrice(row, newUnitprice);
-        }
-    };
 
 
-    const updateUnitPrice = async (row, unitprice) => {
-        const payload = {
-            updateRow: parseInt(row) + 2,
-            unitprice,
-        };
 
-        try {
-            const response = await uploadItem(payload);
 
-            if (response === "200") {
-                console.log("UNIT PRICE UPDATED");
-            } else {
-                console.log("UNIT PRICE NOT UPDATED");
-            }
-        } catch (error) {
-            console.log(error);
-        }
-    }
 
     const isDynamicdiscMissMatched = (row, newDynamicdisc) => {
+
+        console.log("row", row, "newDynamicdisc", newDynamicdisc)
         // Find the object with the specified row number
         var obj = itemData.find(function (o) {
             return o.row == row;
@@ -1020,6 +1001,7 @@ export default function page(props) {
     }
 
     const updateDynamicdisc = async (row, dynamicdisc) => {
+        alert("dynamicdisc", dynamicdisc)
         const payload = {
             updateRow: parseInt(row) + 2,
             dynamicdisc,
@@ -1332,15 +1314,18 @@ export default function page(props) {
                                     });
                                 }
 
-                                handleFormChange({
-                                    target: {
-                                        name: "dynamicdisc",
-                                        value:
-                                            isNaN(e?.dynamicdisc) || e?.dynamicdisc === ""
-                                                ? null
-                                                : Number(e?.dynamicdisc),
-                                    },
-                                });
+                                if (e?.dynamicdisc) {
+                                    alert("Dynamic Disc Available");
+                                    handleFormChange({
+                                        target: {
+                                            name: "dynamicdisc",
+                                            value:
+                                                isNaN(e?.dynamicdisc) || e?.dynamicdisc === "" ? null : Number(e?.dynamicdisc),
+                                        },
+                                    });
+                                }
+
+
 
 
                             }}
@@ -1372,34 +1357,38 @@ export default function page(props) {
                                     target: { name: "quantity", value: e.target.value },
                                 });
 
-                                // if (formData?.unitprice) {
-                                //     if (formData?.gstType !== "Inclusive") {
-                                //         handleFormChange({
-                                //             target: {
-                                //                 name: "amount", value: totalAmountFromUnitEx(formData?.unitprice, e.target.value)
-                                //             },
-                                //         });
-                                //     } else {
-                                //         handleFormChange({
-                                //             target: { name: "amount", value: totalAmountFromUnitIn(formData?.unitprice, e.target.value, formData?.gstPercentage?.replace("%", "")) },
-                                //         });
-                                //     }
-                                // }
-
                                 if (formData?.dynamicdisc) {
-                                    if (formData?.gstType !== "Inclusive") {
+
+
+                                    let unitPrice = 0;
+
+                                    if (formData?.gstType === "Exclusive") {
+                                        unitPrice = unitPriceCalcExclDISC(formData?.mrp, formData?.dynamicdisc, formData?.gstPercentage);
+                                    } else {
+                                        unitPrice = unitPriceCalcEXemptInclDISC(formData?.mrp, formData?.dynamicdisc);
+                                    }
+
+                                    if (formData?.gstType === "Inclusive") {
                                         handleFormChange({
                                             target: {
-                                                name: "amount", value: totalAmountFromUnitEx(formData?.unitprice, e.target.value)
+                                                name: "amount",
+                                                value: totalAmountFromUnitIn(unitPrice, e.target.value, formData?.gstPercentage?.replace("%", "")),
                                             },
-                                        });
-                                    } else {
-                                        handleFormChange({
-                                            target: { name: "amount", value: totalAmountFromUnitIn(formData?.unitprice, e.target.value, formData?.gstPercentage?.replace("%", "")) },
-                                        });
-                                    }
-                                }
+                                        })
 
+                                    } else {
+
+                                        handleFormChange({
+                                            target: {
+                                                name: "amount",
+                                                value: totalAmountFromUnitEx(unitPrice, e.target.value),
+                                            },
+                                        })
+
+                                    }
+
+
+                                }
                             }}
                             className="input input-bordered input-secondary w-[295px] m-5"
                             placeholder="Quantity"
@@ -1452,21 +1441,11 @@ export default function page(props) {
                         });
 
 
-                        if (formData?.gstType !== "Inclusive") {
-                            handleFormChange({
-                                target: {
-                                    name: "unitprice", value: unitPriceCalcEX(e.target.value, formData?.quantity)
-                                },
-                            });
-                        } else {
-                            handleFormChange({
-                                target: { name: "unitprice", value: unitPriceCalcIN(e.target.value, formData?.quantity, formData?.gstPercentage?.replace("%", "")) },
-                            });
-                        }
+
 
                     }}
                     value={formData?.amount || ""}
-                    className={["input input-bordered  w-[295px] m-5", formData?.unitprice ? "input-primary" : "input-secondary"].join(" ")}
+                    className={["input input-bordered  w-[295px] m-5", formData?.dynamicdisc !== "N/A" ? "input-primary" : "input-secondary"].join(" ")}
                     placeholder="Total Amount"
                     type="number"
                     hidden={formData?.purchaseType === "DM"}
@@ -1476,7 +1455,7 @@ export default function page(props) {
                 />
 
                 {
-                    <p>Unit Price: {formData?.unitprice ?? "N/A"}</p>
+                    <p>RECORDED DISC%: {formData?.dynamicdisc ?? "N/A"}</p>
                 }
 
                 <br />

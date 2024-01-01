@@ -64,16 +64,16 @@ export const IGSTnewAmount = (PRICE, NEW_IGST_DISC, QUANTITY, GST) => {
   return (Math.round(newAmount * 100) / 100);
 };
 
-export const unitPriceCalcEX = (TOTAL_AMOUNT, QUANTITY) => {
+// export const unitPriceCalcEX = (TOTAL_AMOUNT, QUANTITY) => {
 
-  const unitprice = Number(TOTAL_AMOUNT) / Number(QUANTITY);
-  return Math.round(unitprice * 100) / 100;
-};
+//   const unitprice = Number(TOTAL_AMOUNT) / Number(QUANTITY);
+//   return Math.round(unitprice * 100) / 100;
+// };
 
-export const unitPriceCalcIN = (TOTAL_AMOUNT, QUANTITY, GST) => {
-  const unitprice = (Number(TOTAL_AMOUNT) / Number(QUANTITY)) / (1 + (GST / 100));
-  return Math.round(unitprice * 100) / 100;
-};
+// export const unitPriceCalcIN = (TOTAL_AMOUNT, QUANTITY, GST) => {
+//   const unitprice = (Number(TOTAL_AMOUNT) / Number(QUANTITY)) / (1 + (GST / 100));
+//   return Math.round(unitprice * 100) / 100;
+// };
 
 export const totalAmountFromUnitEx = (UNIT_PRICE, QUANTITY) => {
   const totalAmount = Number(UNIT_PRICE) * Number(QUANTITY);
@@ -87,7 +87,12 @@ export const totalAmountFromUnitIn = (UNIT_PRICE, QUANTITY, GST) => {
 
 // Disc% Auto-populate
 
-export const unitPriceCalcEXemptIncl = (MRP, DISC) => {
+export const unitPriceCalcEXemptInclDISC = (MRP, DISC) => {
   const unitprice = Number(MRP) - (Number(MRP) * (Number(DISC) / 100));
+  return Math.round(unitprice * 100) / 100;
+}
+
+export const unitPriceCalcExclDISC = (MRP, DISC, GST) => {
+  const unitprice = (Number(MRP) - (Number(MRP) * (Number(DISC) / 100))) / (1 + (Number(GST) / 100));
   return Math.round(unitprice * 100) / 100;
 }
