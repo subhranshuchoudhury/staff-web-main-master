@@ -57,12 +57,12 @@ export const IGSTnewDiscPercentage = (REGULAR_DISC, GST) => {
   const newDisc = (REGULAR_DISC + GST) / (1 + (GST / 100));
   return Math.round(newDisc * 100) / 100;
 
-}
+};
 
 export const IGSTnewAmount = (PRICE, NEW_IGST_DISC, QUANTITY, GST) => {
   const newAmount = ((PRICE - PRICE * (NEW_IGST_DISC / 100)) * QUANTITY) * (1 + (GST / 100));
   return (Math.round(newAmount * 100) / 100);
-}
+};
 
 export const unitPriceCalcEX = (TOTAL_AMOUNT, QUANTITY) => {
 
@@ -78,9 +78,16 @@ export const unitPriceCalcIN = (TOTAL_AMOUNT, QUANTITY, GST) => {
 export const totalAmountFromUnitEx = (UNIT_PRICE, QUANTITY) => {
   const totalAmount = Number(UNIT_PRICE) * Number(QUANTITY);
   return Math.round(totalAmount * 100) / 100;
-}
+};
 
 export const totalAmountFromUnitIn = (UNIT_PRICE, QUANTITY, GST) => {
   const totalAmount = (Number(UNIT_PRICE) * (1 + (GST / 100))) * Number(QUANTITY);
   return Math.round(totalAmount * 100) / 100;
+};
+
+// Disc% Auto-populate
+
+export const unitPriceCalcEXemptIncl = (MRP, DISC) => {
+  const unitprice = Number(MRP) - (Number(MRP) * (Number(DISC) / 100));
+  return Math.round(unitprice * 100) / 100;
 }

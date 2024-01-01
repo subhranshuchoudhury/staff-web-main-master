@@ -73,6 +73,7 @@ export default function page(props) {
         selectedItemRow: -1,
         isIGST: false,
         unitprice: null,
+        dynamicdisc: null
     });
     const [modalMessage, setModalMessage] = useState({
         title: "",
@@ -663,6 +664,7 @@ export default function page(props) {
 
             isMrpMismatched(formData?.selectedItemRow, formData?.mrp);
             isUnitPriceMisMatched(formData?.selectedItemRow, formData?.unitprice);
+            isDynamicdiscMissMatched(formData?.selectedItemRow, formData?.dynamicdisc);
 
             // * clearing some fields
 
@@ -679,7 +681,13 @@ export default function page(props) {
                     name: "unitprice",
                     value: null,
                 }
-            })
+            });
+            handleFormChange({
+                target: {
+                    name: "dynamicdisc",
+                    value: null,
+                }
+            });
             handleFormChange({
                 target: {
                     name: "quantity",
@@ -999,6 +1007,37 @@ export default function page(props) {
         }
     }
 
+    const isDynamicdiscMissMatched = (row, newDynamicdisc) => {
+        // Find the object with the specified row number
+        var obj = itemData.find(function (o) {
+            return o.row == row;
+        });
+
+        // Check if the object was found and if the new MRP value is different from the previous MRP value
+        if (obj && obj.dynamicdisc != newDynamicdisc) {
+            updateDynamicdisc(row, newDynamicdisc);
+        }
+    }
+
+    const updateDynamicdisc = async (row, dynamicdisc) => {
+        const payload = {
+            updateRow: parseInt(row) + 2,
+            dynamicdisc,
+        };
+
+        try {
+            const response = await uploadItem(payload);
+
+            if (response === "200") {
+                console.log("DYNAMIC DISCOUNT UPDATED");
+            } else {
+                console.log("DYNAMIC DISCOUNT NOT UPDATED");
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
 
 
 
@@ -1295,11 +1334,11 @@ export default function page(props) {
 
                                 handleFormChange({
                                     target: {
-                                        name: "unitprice",
+                                        name: "dynamicdisc",
                                         value:
-                                            isNaN(e?.unitprice) || e?.unitprice === ""
+                                            isNaN(e?.dynamicdisc) || e?.dynamicdisc === ""
                                                 ? null
-                                                : Number(e?.unitprice),
+                                                : Number(e?.dynamicdisc),
                                     },
                                 });
 
@@ -1333,7 +1372,21 @@ export default function page(props) {
                                     target: { name: "quantity", value: e.target.value },
                                 });
 
-                                if (formData?.unitprice) {
+                                // if (formData?.unitprice) {
+                                //     if (formData?.gstType !== "Inclusive") {
+                                //         handleFormChange({
+                                //             target: {
+                                //                 name: "amount", value: totalAmountFromUnitEx(formData?.unitprice, e.target.value)
+                                //             },
+                                //         });
+                                //     } else {
+                                //         handleFormChange({
+                                //             target: { name: "amount", value: totalAmountFromUnitIn(formData?.unitprice, e.target.value, formData?.gstPercentage?.replace("%", "")) },
+                                //         });
+                                //     }
+                                // }
+
+                                if (formData?.dynamicdisc) {
                                     if (formData?.gstType !== "Inclusive") {
                                         handleFormChange({
                                             target: {
