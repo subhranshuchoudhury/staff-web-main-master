@@ -16,8 +16,6 @@ import {
     IGSTnewDiscPercentage,
     IGSTnewAmount,
     unitPriceCalcExclDISC,
-    totalAmountFromUnitIn,
-    totalAmountFromUnitEx,
     unitPriceCalcEXemptInclDISC,
 } from "../../Disc/disc";
 import Image from "next/image";

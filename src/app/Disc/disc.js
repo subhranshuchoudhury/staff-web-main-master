@@ -93,7 +93,6 @@ export const unitPriceCalcEXemptInclDISC = (MRP, DISC) => {
 }
 
 export const unitPriceCalcExclDISC = (MRP, DISC, GST) => {
-  console.log(MRP, DISC, GST);
   const unitprice = (Number(MRP) - (Number(MRP) * (Number(DISC) / 100))) / (1 + (Number(GST) / 100));
   return Math.round(unitprice * 100) / 100;
 }
