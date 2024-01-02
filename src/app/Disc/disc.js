@@ -75,15 +75,15 @@ export const IGSTnewAmount = (PRICE, NEW_IGST_DISC, QUANTITY, GST) => {
 //   return Math.round(unitprice * 100) / 100;
 // };
 
-export const totalAmountFromUnitEx = (UNIT_PRICE, QUANTITY) => {
-  const totalAmount = Number(UNIT_PRICE) * Number(QUANTITY);
-  return Math.round(totalAmount * 100) / 100;
-};
+// export const totalAmountFromUnitEx = (UNIT_PRICE, QUANTITY) => {
+//   const totalAmount = Number(UNIT_PRICE) * Number(QUANTITY);
+//   return Math.round(totalAmount * 100) / 100;
+// };
 
-export const totalAmountFromUnitIn = (UNIT_PRICE, QUANTITY, GST) => {
-  const totalAmount = (Number(UNIT_PRICE) * (1 + (GST / 100))) * Number(QUANTITY);
-  return Math.round(totalAmount * 100) / 100;
-};
+// export const totalAmountFromUnitIn = (UNIT_PRICE, QUANTITY, GST) => {
+//   const totalAmount = (Number(UNIT_PRICE) * (1 + (GST / 100))) * Number(QUANTITY);
+//   return Math.round(totalAmount * 100) / 100;
+// };
 
 // Disc% Auto-populate
 
@@ -93,6 +93,7 @@ export const unitPriceCalcEXemptInclDISC = (MRP, DISC) => {
 }
 
 export const unitPriceCalcExclDISC = (MRP, DISC, GST) => {
+  console.log(MRP, DISC, GST);
   const unitprice = (Number(MRP) - (Number(MRP) * (Number(DISC) / 100))) / (1 + (Number(GST) / 100));
   return Math.round(unitprice * 100) / 100;
 }

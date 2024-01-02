@@ -281,7 +281,7 @@ export default function page(props) {
                     row,
                 }));
 
-                console.log(indexedItems)
+                // console.log(indexedItems)
                 setItemData(indexedItems);
                 setPartyData(party_data);
 
@@ -851,7 +851,7 @@ export default function page(props) {
             },
         ];
 
-        console.log(data);
+        // console.log(data);
 
         if (formData?.isIGST) {
 
@@ -871,7 +871,7 @@ export default function page(props) {
 
 
 
-            console.log(data[0])
+            // console.log(data[0])
 
         }
 
@@ -988,7 +988,7 @@ export default function page(props) {
 
     const isDynamicdiscMissMatched = (row, newDynamicdisc) => {
 
-        console.log("row", row, "newDynamicdisc", newDynamicdisc)
+        // console.log("row", row, "newDynamicdisc", newDynamicdisc)
         // Find the object with the specified row number
         var obj = itemData.find(function (o) {
             return o.row == row;
@@ -1315,7 +1315,6 @@ export default function page(props) {
                                 }
 
                                 if (e?.dynamicdisc) {
-                                    alert("Dynamic Disc Available");
                                     handleFormChange({
                                         target: {
                                             name: "dynamicdisc",
@@ -1357,35 +1356,26 @@ export default function page(props) {
                                     target: { name: "quantity", value: e.target.value },
                                 });
 
-                                if (formData?.dynamicdisc) {
+                                if (formData?.dynamicdisc && !isNaN(formData?.dynamicdisc)) {
 
 
                                     let unitPrice = 0;
 
                                     if (formData?.gstType === "Exclusive") {
-                                        unitPrice = unitPriceCalcExclDISC(formData?.mrp, formData?.dynamicdisc, formData?.gstPercentage);
+                                        unitPrice = unitPriceCalcExclDISC(formData?.mrp, formData?.dynamicdisc, formData?.gstPercentage?.replace("%", ""));
+
                                     } else {
                                         unitPrice = unitPriceCalcEXemptInclDISC(formData?.mrp, formData?.dynamicdisc);
                                     }
 
-                                    if (formData?.gstType === "Inclusive") {
-                                        handleFormChange({
-                                            target: {
-                                                name: "amount",
-                                                value: totalAmountFromUnitIn(unitPrice, e.target.value, formData?.gstPercentage?.replace("%", "")),
-                                            },
-                                        })
+                                    handleFormChange({
+                                        target: {
+                                            name: "amount",
+                                            value: unitPrice * e.target.value,
+                                        },
+                                    })
 
-                                    } else {
 
-                                        handleFormChange({
-                                            target: {
-                                                name: "amount",
-                                                value: totalAmountFromUnitEx(unitPrice, e.target.value),
-                                            },
-                                        })
-
-                                    }
 
 
                                 }
