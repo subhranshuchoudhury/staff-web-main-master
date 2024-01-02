@@ -15,6 +15,8 @@ import {
   exclusiveDM,
   IGSTnewAmount,
   IGSTnewDiscPercentage,
+  unitPriceCalcExclDISC,
+  unitPriceCalcEXemptInclDISC,
 } from "../Disc/disc";
 import Image from "next/image";
 import CustomOption from "../Dropdown/CustomOption";
@@ -67,7 +69,8 @@ export default function page(props) {
     amount: null,
     finalDisc: "ERROR!",
     selectedItemRow: -1,
-    isIGST: false
+    isIGST: false,
+    dynamicdisc: null
   });
   const [modalMessage, setModalMessage] = useState({
     title: "",
@@ -270,11 +273,13 @@ export default function page(props) {
         const item_data = data[0];
         const party_data = data[1];
 
+
         const indexedItems = item_data.map((obj, row) => ({
           ...obj,
           row,
         }));
 
+        // console.log(indexedItems)
         setItemData(indexedItems);
         setPartyData(party_data);
 
@@ -515,6 +520,10 @@ export default function page(props) {
 
   const isFormValidated = (form) => {
     for (let key in form) {
+
+      if (key === "dynamicdisc") continue;
+
+
       if (form[key] === null || form[key] === undefined || form[key] === "") {
         handleModal(
           "❌ Error",
@@ -626,6 +635,13 @@ export default function page(props) {
       sgst: cgst,
     };
 
+    handleFormChange({
+      target: {
+        name: "dynamicdisc",
+        value: disc,
+      }
+    })
+
     if (excelContent?.length === 0) {
       // credit days function
 
@@ -655,6 +671,7 @@ export default function page(props) {
       // * check if price need to be updated
 
       isMrpMismatched(formData?.selectedItemRow, formData?.mrp);
+      isDynamicdiscMissMatched(formData?.selectedItemRow, disc);
 
       // * clearing some fields
 
@@ -666,6 +683,15 @@ export default function page(props) {
           value: null,
         },
       });
+
+      handleFormChange({
+        target: {
+          name: "dynamicdisc",
+          value: null,
+        }
+      });
+
+
       handleFormChange({
         target: {
           name: "quantity",
@@ -823,7 +849,7 @@ export default function page(props) {
       },
     ];
 
-    console.log(data);
+    // console.log(data);
 
     if (formData?.isIGST) {
 
@@ -843,7 +869,7 @@ export default function page(props) {
 
 
 
-      console.log(data[0])
+      // console.log(data[0])
 
     }
 
@@ -935,7 +961,6 @@ export default function page(props) {
       updateMrp(row, newMrp);
     }
   };
-
   const updateMrp = async (row, mrp) => {
     const payload = {
       updateRow: parseInt(row) + 2,
@@ -954,6 +979,46 @@ export default function page(props) {
       console.log(error);
     }
   };
+
+
+
+
+
+  const isDynamicdiscMissMatched = (row, newDynamicdisc) => {
+
+    // console.log("row", row, "newDynamicdisc", newDynamicdisc)
+    // Find the object with the specified row number
+    var obj = itemData.find(function (o) {
+      return o.row == row;
+    });
+
+    // Check if the object was found and if the new MRP value is different from the previous MRP value
+    if (obj && obj.dynamicdisc != newDynamicdisc) {
+      updateDynamicdisc(row, newDynamicdisc);
+    }
+  }
+
+  const updateDynamicdisc = async (row, dynamicdisc) => {
+    alert("dynamicdisc", dynamicdisc)
+    const payload = {
+      updateRow: parseInt(row) + 2,
+      dynamicdisc,
+    };
+
+    try {
+      const response = await uploadItem(payload);
+
+      if (response === "200") {
+        console.log("DYNAMIC DISCOUNT UPDATED");
+      } else {
+        console.log("DYNAMIC DISCOUNT NOT UPDATED");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+
 
 
   return (
@@ -1221,6 +1286,7 @@ export default function page(props) {
                     value: e?.loc || "N/A",
                   },
                 });
+
                 handleFormChange({
                   target: {
                     name: "mrp",
@@ -1245,6 +1311,20 @@ export default function page(props) {
                     },
                   });
                 }
+
+                if (e?.dynamicdisc) {
+                  handleFormChange({
+                    target: {
+                      name: "dynamicdisc",
+                      value:
+                        isNaN(e?.dynamicdisc) || e?.dynamicdisc === "" ? null : Number(e?.dynamicdisc),
+                    },
+                  });
+                }
+
+
+
+
               }}
               getOptionLabel={(option) =>
                 `${option["value"]} ${option["pn"] || ""}`
@@ -1265,12 +1345,38 @@ export default function page(props) {
             />
           )}
 
+
+
           <div>
             <input
               onChange={(e) => {
                 handleFormChange({
                   target: { name: "quantity", value: e.target.value },
                 });
+
+                if (formData?.dynamicdisc && !isNaN(formData?.dynamicdisc)) {
+
+
+                  let unitPrice = 0;
+
+                  if (formData?.gstType === "Exclusive") {
+                    unitPrice = unitPriceCalcExclDISC(formData?.mrp, formData?.dynamicdisc, formData?.gstPercentage?.replace("%", ""));
+
+                  } else {
+                    unitPrice = unitPriceCalcEXemptInclDISC(formData?.mrp, formData?.dynamicdisc);
+                  }
+
+                  handleFormChange({
+                    target: {
+                      name: "amount",
+                      value: unitPrice * e.target.value,
+                    },
+                  })
+
+
+
+
+                }
               }}
               className="input input-bordered input-secondary w-[295px] m-5"
               placeholder="Quantity"
@@ -1321,9 +1427,13 @@ export default function page(props) {
             handleFormChange({
               target: { name: "amount", value: e.target.value },
             });
+
+
+
+
           }}
           value={formData?.amount || ""}
-          className="input input-bordered input-secondary w-[295px] m-5"
+          className={["input input-bordered  w-[295px] m-5", formData?.dynamicdisc !== "N/A" ? "input-primary" : "input-secondary"].join(" ")}
           placeholder="Total Amount"
           type="number"
           hidden={formData?.purchaseType === "DM"}
@@ -1331,6 +1441,10 @@ export default function page(props) {
             e.target.blur();
           }}
         />
+
+        {
+          <p>RECORDED DISC%: {formData?.dynamicdisc ?? "N/A"}</p>
+        }
 
         <br />
       </div>
