@@ -149,7 +149,7 @@ const Page = () => {
       if (localDownloadedList === null || localDownloadedList === undefined) {
         localStorage.setItem("ADI", JSON.stringify([{ id: id }]))
       } else {
-        let parsedList = JSON.parse(localDownloadedList) | [];
+        let parsedList = JSON.parse(localDownloadedList);
         parsedList.push({ id: id });
         localStorage.setItem("ADI", JSON.stringify(parsedList));
       }
