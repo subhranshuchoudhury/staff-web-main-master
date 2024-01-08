@@ -140,6 +140,33 @@ const Page = () => {
   const containsElement = (array, element) => {
     return array.includes(element) ? "checked" : "";
   };
+
+  const addInDownloadedList = (id) => {
+    if (!checkIsAlreadyDownload(id)) {
+      const localDownloadedList = localStorage.getItem("ADI");
+
+      if (localDownloadedList === null || localDownloadedList === undefined) {
+        localStorage.setItem("ADI", JSON.stringify([{ id: id }]))
+      } else {
+        let parsedList = JSON.parse(localDownloadedList) | [];
+        parsedList.push({ id: id });
+        localStorage.setItem("ADI", JSON.stringify(parsedList));
+      }
+    }
+  }
+
+  const checkIsAlreadyDownload = (id) => {
+    const localDownloadedList = localStorage.getItem("ADI");
+
+    if (localDownloadedList === null || localDownloadedList === undefined) {
+      return false;
+    } else {
+      const parsedList = JSON.parse(localDownloadedList)
+      const isPresent = parsedList.find((item) => item.id === id);
+      return isPresent ? true : false;
+
+    }
+  }
   return (
     <div>
       <div className="text-center pb-10">
@@ -225,6 +252,11 @@ const Page = () => {
                     </p>
                   </div>
                   <div className="flex justify-center flex-row flex-wrap">
+                    {
+                      checkIsAlreadyDownload(d._id) && <button className="btn btn-error animate-pulse m-1 hover:cursor-default">
+                        Downloaded
+                      </button>
+                    }
                     <button className="btn btn-accent m-1 hover:cursor-default">
                       {d?.desc}
                     </button>
@@ -257,12 +289,17 @@ const Page = () => {
                       DELETE 🗑
                     </button>
                     <button
-                      onClick={() =>
+                      onClick={() => {
                         DownloadExcel(
                           d?.partyname,
                           d?.invoice,
                           JSON.parse(d?.sheetdata)
-                        )
+                        );
+
+                        addInDownloadedList(d._id);
+                      }
+
+
                       }
                       className="btn bg-green-700 m-5"
                     >
