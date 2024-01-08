@@ -3,6 +3,8 @@
 import React, { useEffect, useState } from "react";
 import xlsx from "json-as-xlsx";
 import toast, { Toaster } from "react-hot-toast";
+import { useRouter } from "next/navigation";
+
 
 const Page = () => {
   const [SavedData, setSavedData] = useState([]);
@@ -11,6 +13,7 @@ const Page = () => {
   const [FilteredContent, setFilteredContent] = useState([]);
   const [selectedDocuments, setSelectedDocuments] = useState([]);
   const [deleting, setDeleting] = useState(false);
+  const router = useRouter();
   useEffect(() => {
     getSavedData();
   }, []);
@@ -299,6 +302,8 @@ const Page = () => {
                         );
 
                         addInDownloadedList(d._id);
+                        router.refresh();
+
                       }
 
 

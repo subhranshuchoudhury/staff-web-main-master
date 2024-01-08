@@ -999,7 +999,6 @@ export default function page(props) {
   }
 
   const updateDynamicdisc = async (row, dynamicdisc) => {
-    alert("dynamicdisc", dynamicdisc)
     const payload = {
       updateRow: parseInt(row) + 2,
       dynamicdisc,
