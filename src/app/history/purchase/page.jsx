@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import xlsx from "json-as-xlsx";
+import toast, { Toaster } from "react-hot-toast";
 
 const Page = () => {
   const [SavedData, setSavedData] = useState([]);
@@ -38,7 +39,7 @@ const Page = () => {
       setFilteredContent(data?.purchases);
       setLoading(false);
     } catch (error) {
-      alert("error while fetching saved data");
+      toast.error("error while fetching saved data");
       setLoading(false);
     }
   };
@@ -55,7 +56,7 @@ const Page = () => {
     fetch("/api/purchases", options)
       .then((response) => {
         if (response.status === 200) {
-          alert("🗑 Document has been deleted.");
+          toast.success("🗑 Document has been deleted.");
           getSavedData();
         }
       })
@@ -114,7 +115,7 @@ const Page = () => {
       RTL: false,
     };
     let callback = function () {
-      alert("✔ Download Successful!");
+      toast.success("✔ Download Successful!");
     };
     xlsx(data, settings, callback);
   };
@@ -169,6 +170,7 @@ const Page = () => {
   }
   return (
     <div>
+      <Toaster />
       <div className="text-center pb-10">
         <p className="text-3xl">PURCHASE HISTORY</p>
         {!Loading && (
