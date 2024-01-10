@@ -62,6 +62,7 @@ export default function page(props) {
     purchaseType: "DNM",
     mDiscPercentage: 0, // mention discount percentage
     itemPartNo: null,
+    itemPartNoOrg: null,
     itemLocation: null, // from item data
     quantity: null,
     mrp: null,
@@ -629,6 +630,7 @@ export default function page(props) {
       quantity: formData?.quantity,
       unit: formData?.unit,
       mrp: formData?.mrp,
+      itemPartNo: formData?.itemPartNoOrg,
       disc: disc,
       amount: amountField,
       cgst: cgst,
@@ -898,7 +900,7 @@ export default function page(props) {
 
 
       const tempObj = {
-        itemName: content[index]?.itemName?.split("-")[0] || content[index]?.itemName,
+        itemName: content[index]?.itemPartNo === "N/A" ? content[index]?.itemName : content[index]?.itemPartNo,
         discCode: output,
         location: content[index]?.itemLocation || "N/A",
         orgName: "Jyeshtha Motors",
@@ -1350,6 +1352,9 @@ export default function page(props) {
               onChange={(e) => {
                 handleFormChange({
                   target: { name: "itemPartNo", value: e.value },
+                });
+                handleFormChange({
+                  target: { name: "itemPartNoOrg", value: e.value || "N/A" },
                 });
                 handleFormChange({
                   target: {
