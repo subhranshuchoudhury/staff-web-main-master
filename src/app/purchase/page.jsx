@@ -1354,7 +1354,7 @@ export default function page(props) {
                   target: { name: "itemPartNo", value: e.value },
                 });
                 handleFormChange({
-                  target: { name: "itemPartNoOrg", value: e.value || "N/A" },
+                  target: { name: "itemPartNoOrg", value: e?.pn || "N/A" },
                 });
                 handleFormChange({
                   target: {
