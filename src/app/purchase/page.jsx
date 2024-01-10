@@ -633,6 +633,7 @@ export default function page(props) {
       amount: amountField,
       cgst: cgst,
       sgst: cgst,
+      itemLocation: formData?.itemLocation,
     };
 
     handleFormChange({
@@ -873,7 +874,63 @@ export default function page(props) {
 
     }
 
+    // Barcode Data
+
+    let barcodeContent = [];
+
+    for (let index = 0; index < content.length; index++) {
+
+      // format of disc: 10.65 -> 11, combine with today date to make it unique - 11100124
+      // Get current date
+      const currentDate = new Date();
+      const day = currentDate.getDate().toString().padStart(2, '0');
+      const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+      const year = currentDate.getFullYear().toString().slice(-2);
+
+      // Given disc value
+      const disc = content[index]?.disc;
+
+      // Round off the disc value
+      const roundedDisc = Math.round(disc);
+
+      // Format the output
+      const output = `${roundedDisc}${day}${month}${year}`;
+
+
+      const tempObj = {
+        itemName: content[index]?.itemName?.split("-")[0] || content[index]?.itemName,
+        discCode: output,
+        location: content[index]?.itemLocation || "N/A",
+        orgName: "Jyeshtha Motors",
+        coupon: "",
+      }
+
+      barcodeContent.push(tempObj);
+
+    }
+
+    // console.log("CONTENT", content, "BARCODE", barcodeContent)
+
+
+
+    let barcodeData = [
+      {
+        sheet: "Sheet1",
+        columns: [
+          { label: "Org Name", value: "orgName" },
+          { label: "Item Name", value: "itemName" },
+          { label: "Disc Code", value: "discCode" },
+          { label: "Location", value: "location" },
+          { label: "Coupon", value: "coupon" },
+
+        ],
+        content: barcodeContent,
+      },
+    ];
+
+
     DownloadExcel(content[0]?.partyName, content[0]?.invoiceNo, data);
+    DownloadBarcodeExcel(content[0]?.invoiceNo, barcodeData);
   };
 
   // * download the excel file
@@ -891,6 +948,21 @@ export default function page(props) {
       sendPurchaseHistory(fileName, invoice, data);
       // * clear the localStorage
       clearLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA");
+    };
+    xlsx(data, settings, callback);
+  };
+
+  const DownloadBarcodeExcel = (invoice, data) => {
+
+    const settings = {
+      fileName: `BARCODE-${invoice?.split("-")?.[1] || invoice}`,
+      extraLength: 3,
+      writeMode: "writeFile",
+      writeOptions: {},
+      RTL: false,
+    };
+    let callback = function () {
+
     };
     xlsx(data, settings, callback);
   };
