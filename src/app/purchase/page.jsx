@@ -71,7 +71,8 @@ export default function page(props) {
     finalDisc: "ERROR!",
     selectedItemRow: -1,
     isIGST: false,
-    dynamicdisc: null
+    dynamicdisc: null,
+    repetition: 1, // This is for print invoice duplication
   });
   const [modalMessage, setModalMessage] = useState({
     title: "",
@@ -636,6 +637,7 @@ export default function page(props) {
       cgst: cgst,
       sgst: cgst,
       itemLocation: formData?.itemLocation,
+      repetition: 1, // Quantity for print invoice duplication
     };
 
     handleFormChange({
@@ -661,7 +663,13 @@ export default function page(props) {
       tempContent.bill_ref_due_date = futureCreditDay;
     }
 
+    const repetitionModal = () => {
+      tempContent.repetition = parseInt(formData?.quantity);
+      askForConfirmation();
+    }
+
     const modalConfirmedAdd = () => {
+
       setExcelContent((prevArray) => [...prevArray, tempContent]);
 
       // * saving the data to localStorage
@@ -727,39 +735,9 @@ export default function page(props) {
       }
     };
 
-    if (isDuplicate(tempContent)) {
-      handleConfirmationModal(
-        "Duplicate ❓",
-        "The item is already added. Do you want to add again?",
-        "Yes",
-        "No",
-        [
-          {
-            data: `🎫 Discount: ${disc}%`,
-            style: "text-xl font-bold text-red-500",
-          },
-          {
-            data: `🗺 Location: ${formData?.itemLocation}`,
-            style: "text-xl font-bold",
-          },
-          {
-            data: `📜 Invoice: ${formData?.invoiceNo}`,
-            style: "text-xl font-bold",
-          },
-          {
-            data: `Party: ${formData?.partyName}`,
-            style: "text-sm",
-          },
-          {
-            data: `Item: ${formData?.itemPartNo}`,
-            style: "text-sm",
-          },
-        ],
-        modalConfirmedAdd,
-        () => { }
-      );
-      window.purchase_modal_2.showModal();
-    } else {
+    const askForConfirmation = () => {
+
+
       handleConfirmationModal(
         "Confirmation",
         "Are you sure you want to add this content?",
@@ -791,6 +769,82 @@ export default function page(props) {
         () => { }
       );
       window.purchase_modal_2.showModal();
+    }
+
+    const askPrintPreference = () => {
+      // Duplication print invoice
+
+      handleConfirmationModal(
+        "Print Preference 🖨",
+        "Print on the basis of quantity ?",
+        "Yes",
+        "No",
+        [
+          {
+            data: `🎫 Discount: ${disc}%`,
+            style: "text-xl font-bold text-orange-500",
+          },
+          {
+            data: `🗺 Location: ${formData?.itemLocation}`,
+            style: "text-xl font-bold",
+          },
+          {
+            data: `📑 Quantity: ${formData?.quantity}`,
+            style: "text-xl font-bold",
+          },
+          {
+            data: `📜 Invoice: ${formData?.invoiceNo}`,
+            style: "text-xl font-bold",
+          },
+          {
+            data: `Item: ${formData?.itemPartNo}`,
+            style: "text-sm",
+          },
+        ],
+        repetitionModal,
+        askForConfirmation
+      );
+
+      window.print_modal_1.showModal();
+    }
+
+    if (isDuplicate(tempContent)) {
+      handleConfirmationModal(
+        "Duplicate ❓",
+        "The item is already added. Do you want to add again?",
+        "Yes",
+        "No",
+        [
+          {
+            data: `🎫 Discount: ${disc}%`,
+            style: "text-xl font-bold text-red-500",
+          },
+          {
+            data: `🗺 Location: ${formData?.itemLocation}`,
+            style: "text-xl font-bold",
+          },
+          {
+            data: `📜 Invoice: ${formData?.invoiceNo}`,
+            style: "text-xl font-bold",
+          },
+          {
+            data: `Party: ${formData?.partyName}`,
+            style: "text-sm",
+          },
+          {
+            data: `Item: ${formData?.itemPartNo}`,
+            style: "text-sm",
+          },
+        ],
+        askPrintPreference,
+        () => { }
+      );
+      window.purchase_modal_2.showModal();
+    } else {
+
+      askPrintPreference();
+
+
     }
   };
 
@@ -882,6 +936,8 @@ export default function page(props) {
 
     for (let index = 0; index < content.length; index++) {
 
+      console.log("INDEX", content[index])
+
       // format of disc: 10.65 -> 11, combine with today date to make it unique - 11100124
       // Get current date
       const currentDate = new Date();
@@ -907,11 +963,12 @@ export default function page(props) {
         coupon: "",
       }
 
-      barcodeContent.push(tempObj);
-
+      for (let j = 0; j < content[index].repetition; j++) {
+        barcodeContent.push(tempObj);
+      }
     }
 
-    // console.log("CONTENT", content, "BARCODE", barcodeContent)
+    console.log("CONTENT", content, "BARCODE", barcodeContent)
 
 
 
@@ -1125,13 +1182,13 @@ export default function page(props) {
           <div className="modal-action">
             {/* if there is a button in form, it will close the modal */}
             <button
-              onClick={() => modalConfirmation?.btn_f_1()}
+              onClick={() => modalConfirmation?.btn_f_1("Hello")}
               className="btn"
             >
               {modalConfirmation?.button_1}
             </button>
             <button
-              onClick={() => modalConfirmation?.btn_f_2()}
+              onClick={() => modalConfirmation?.btn_f_2("Hii")}
               className="btn"
             >
               {modalConfirmation?.button_2}
@@ -1139,6 +1196,40 @@ export default function page(props) {
           </div>
         </form>
       </dialog>
+
+      <dialog id="print_modal_1" className="modal">
+        <form method="dialog" className="modal-box">
+          <h3 className="font-bold text-lg">{modalConfirmation?.title}</h3>
+          <p className="py-4">{modalConfirmation?.message}</p>
+          {
+            // * if there is a message array, it will show the message
+            modalConfirmation?.messages?.map((e, i) => {
+              return (
+                <p key={i} className={[`${e?.style} text-teal-700`]}>
+                  {e?.data}
+                </p>
+              );
+            })
+          }
+          <div className="modal-action">
+            {/* if there is a button in form, it will close the modal */}
+            <button
+              onClick={() => modalConfirmation?.btn_f_1("Hello")}
+              className="btn"
+            >
+              {modalConfirmation?.button_1}
+            </button>
+            <button
+              onClick={() => modalConfirmation?.btn_f_2("Hii")}
+              className="btn"
+            >
+              {modalConfirmation?.button_2}
+            </button>
+          </div>
+        </form>
+      </dialog>
+
+
 
       <p className="text-center text-2xl glass m-5 p-4">PURCHASE MODULE</p>
       <div className="text-center m-auto">
