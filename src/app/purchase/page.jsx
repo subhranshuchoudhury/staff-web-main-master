@@ -668,7 +668,14 @@ export default function page(props) {
 
     const repetitionModal = (value) => {
 
-      tempContent.repetition = value;
+      if (value === "") { //  when user clears all the value it will go back to default.
+
+        tempContent.repetition = parseInt(formData.quantity);
+      } else {
+
+        tempContent.repetition = value;
+      }
+
 
     }
 
@@ -741,7 +748,7 @@ export default function page(props) {
 
     const askForConfirmation = (choice) => {
 
-      alert(choice)
+
 
       if (choice === "NO")
         tempContent.repetition = 0
