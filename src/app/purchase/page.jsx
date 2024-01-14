@@ -53,6 +53,7 @@ export default function page(props) {
   const [partyData, setPartyData] = useState([]);
   const [itemData, setItemData] = useState([]);
   const [qrResult, setQrResult] = useState("...");
+  const [printQuantity, setPrintQuantity] = useState(-1);
   const [formData, setFormData] = useState({
     partyName: null,
     invoiceNo: null,
@@ -72,7 +73,6 @@ export default function page(props) {
     selectedItemRow: -1,
     isIGST: false,
     dynamicdisc: null,
-    repetition: 1, // This is for print invoice duplication
   });
   const [modalMessage, setModalMessage] = useState({
     title: "",
@@ -88,6 +88,7 @@ export default function page(props) {
     messages: [],
     btn_f_1: () => { },
     btn_f_2: () => { },
+    norm_f_3: () => { }
   });
 
   // * handle QR search feature
@@ -209,7 +210,8 @@ export default function page(props) {
     button_2,
     messages,
     f1,
-    f2
+    f2,
+    f3
   ) => {
     setModalConfirmation({
       title,
@@ -219,6 +221,7 @@ export default function page(props) {
       messages,
       btn_f_1: f1,
       btn_f_2: f2,
+      norm_f_3: f3
     });
   };
 
@@ -637,7 +640,7 @@ export default function page(props) {
       cgst: cgst,
       sgst: cgst,
       itemLocation: formData?.itemLocation,
-      repetition: 1, // Quantity for print invoice duplication
+      repetition: parseInt(formData?.quantity), // Quantity for print invoice duplication
     };
 
     handleFormChange({
@@ -663,9 +666,10 @@ export default function page(props) {
       tempContent.bill_ref_due_date = futureCreditDay;
     }
 
-    const repetitionModal = () => {
-      tempContent.repetition = parseInt(formData?.quantity);
-      askForConfirmation();
+    const repetitionModal = (value) => {
+
+      tempContent.repetition = value;
+
     }
 
     const modalConfirmedAdd = () => {
@@ -735,7 +739,12 @@ export default function page(props) {
       }
     };
 
-    const askForConfirmation = () => {
+    const askForConfirmation = (choice) => {
+
+      alert(choice)
+
+      if (choice === "NO")
+        tempContent.repetition = 0
 
 
       handleConfirmationModal(
@@ -788,21 +797,10 @@ export default function page(props) {
             data: `🗺 Location: ${formData?.itemLocation}`,
             style: "text-xl font-bold",
           },
-          {
-            data: `📑 Quantity: ${formData?.quantity}`,
-            style: "text-xl font-bold",
-          },
-          {
-            data: `📜 Invoice: ${formData?.invoiceNo}`,
-            style: "text-xl font-bold",
-          },
-          {
-            data: `Item: ${formData?.itemPartNo}`,
-            style: "text-sm",
-          },
         ],
-        repetitionModal,
-        askForConfirmation
+        askForConfirmation,
+        askForConfirmation,
+        repetitionModal
       );
 
       window.print_modal_1.showModal();
@@ -936,7 +934,6 @@ export default function page(props) {
 
     for (let index = 0; index < content.length; index++) {
 
-      console.log("INDEX", content[index])
 
       // format of disc: 10.65 -> 11, combine with today date to make it unique - 11100124
       // Get current date
@@ -959,7 +956,7 @@ export default function page(props) {
         itemName: content[index]?.itemPartNo === "N/A" ? content[index]?.itemName : content[index]?.itemPartNo,
         discCode: output,
         location: content[index]?.itemLocation || "N/A",
-        orgName: "Jyeshtha Motors",
+        // orgName: "Jyeshtha Motors",
         coupon: "",
       }
 
@@ -976,7 +973,7 @@ export default function page(props) {
       {
         sheet: "Sheet1",
         columns: [
-          { label: "Org Name", value: "orgName" },
+          // { label: "Org Name", value: "orgName" },
           { label: "Item Name", value: "itemName" },
           { label: "Disc Code", value: "discCode" },
           { label: "Location", value: "location" },
@@ -1211,16 +1208,22 @@ export default function page(props) {
               );
             })
           }
+          <label className="text-yellow-300">Quantity</label>
+          <input onWheel={(e) => {
+            e.target.blur();
+          }} className="input input-bordered input-secondary m-5 uppercase w-[295px]" placeholder={`No. of prints ${formData?.quantity}`} type="number" name="repetitionPrint" onChange={(e) => {
+            modalConfirmation.norm_f_3(parseInt(e.target.value));
+          }} />
           <div className="modal-action">
             {/* if there is a button in form, it will close the modal */}
             <button
-              onClick={() => modalConfirmation?.btn_f_1("Hello")}
+              onClick={() => modalConfirmation?.btn_f_1("YES")}
               className="btn"
             >
               {modalConfirmation?.button_1}
             </button>
             <button
-              onClick={() => modalConfirmation?.btn_f_2("Hii")}
+              onClick={() => modalConfirmation?.btn_f_2("NO")}
               className="btn"
             >
               {modalConfirmation?.button_2}
@@ -1520,6 +1523,8 @@ export default function page(props) {
                 handleFormChange({
                   target: { name: "quantity", value: e.target.value },
                 });
+
+
 
                 if (formData?.dynamicdisc && !isNaN(formData?.dynamicdisc)) {
 
