@@ -668,7 +668,9 @@ export default function page(props) {
 
     const repetitionModal = (value) => {
 
-      if (value === "") { //  when user clears all the value it will go back to default.
+      if (isNaN(value)) { //  when user clears all the value it will go back to default.
+
+        console.log("RESET")
 
         tempContent.repetition = parseInt(formData.quantity);
       } else {
