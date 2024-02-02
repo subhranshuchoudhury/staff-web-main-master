@@ -626,6 +626,7 @@ export default function page(props) {
     const tempContent = {
       billSeries: bill,
       billDate: dateToFormattedString(formData?.invoiceDate),
+      originDate: formData?.invoiceDate,
       purchaseType: purchaseType,
       partyName: formData?.partyName,
       eligibility: eligibility,
@@ -946,7 +947,7 @@ export default function page(props) {
 
       // format of disc: 10.65 -> 11, combine with today date to make it unique - 11100124
       // Get current date
-      const currentDate = new Date();
+      const currentDate = new Date(content[index]?.originDate);
       const day = currentDate.getDate().toString().padStart(2, '0');
       const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
       const year = currentDate.getFullYear().toString().slice(-2);
