@@ -1540,7 +1540,11 @@ export default function page(props) {
             </div>
           )}
           <form className="animate-pulse" onSubmit={(e) => { e.preventDefault(); barCodeScanner() }}>
-            <input type="text" placeholder="BARCODE SCAN 🔎" onChange={(e) => { setBarcodeScannedData(e.target.value) }} className="m-5 p-5 glass rounded-sm w-[295px] text-center" />
+            <input onFocus={(e) => {
+              e.target.value = "";
+              setBarcodeScannedData("");
+              blur()
+            }} type="text" placeholder="BARCODE SCAN 🔎" onChange={(e) => { setBarcodeScannedData(e.target.value) }} className="m-5 p-5 glass rounded-sm w-[295px] text-center" />
           </form>
           <p className="text-center m-5 glass rounded-sm">{qrResult}</p>
 
