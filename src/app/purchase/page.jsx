@@ -52,8 +52,8 @@ export default function page(props) {
   const [excelContent, setExcelContent] = useState([]);
   const [partyData, setPartyData] = useState([]);
   const [itemData, setItemData] = useState([]);
-  const [qrResult, setQrResult] = useState("...");
-  const [printQuantity, setPrintQuantity] = useState(-1);
+  const [qrResult, setQrResult] = useState("");
+  const [barcodeScannedData, setBarcodeScannedData] = useState(null);
   const [formData, setFormData] = useState({
     partyName: null,
     invoiceNo: null,
@@ -110,6 +110,110 @@ export default function page(props) {
     // * This function will get the local item whenever the event "EXPO_LS_EVENT" triggered.
 
     const res = localStorage.getItem("EXPO_SCN_RESULT");
+    let result = localSavedItemApi.find(
+      (obj) => obj.pn !== "" && res == String(obj?.pn)?.trim()
+    );
+
+    if (!result) {
+      console.log("Type 1 scanning...");
+      result = localSavedItemApi.find(
+        (obj) => obj.pn !== "" && JSON.stringify(obj?.value).includes(res)
+      );
+    }
+
+    if (!result) {
+      console.log("Type 2 scanning...");
+
+      result = localSavedItemApi.find(
+        (obj) => obj.pn !== "" && JSON.stringify(obj?.pn).includes(res)
+      );
+    }
+
+    if (!result) {
+      console.log("Type 3 scanning...");
+
+      result = localSavedItemApi.find((obj) =>
+        JSON.stringify(obj).includes(res)
+      );
+    }
+
+    if (!result) {
+      console.log("Type 4 scanning...");
+
+      result = localSavedItemApi.find(
+        (obj) => obj.pn !== "" && res.includes(obj.pn)
+      );
+
+      if (result) {
+        toast.error("The result may not be accurate.");
+      }
+    }
+
+    if (result?.value) {
+      toast.success("Scan complete");
+      console.log("SCN_RES", result);
+      setQrResult(`✔ ${result?.value}-${result?.pn}`);
+
+      // * setting the matched value
+
+      handleFormChange({
+        target: { name: "itemPartNo", value: result?.value },
+      });
+      handleFormChange({
+        target: {
+          name: "itemLocation",
+          value: result?.loc?.toUpperCase(),
+        },
+      });
+      handleFormChange({
+        target: {
+          name: "mrp",
+          value: result?.mrp,
+        },
+      });
+
+      handleFormChange({
+        target: {
+          name: "selectedItemRow",
+          value: result?.row,
+        },
+      });
+
+      if (formData?.gstType !== "Exempt") {
+        handleFormChange({
+          target: {
+            name: "gstPercentage",
+            value: `${result?.gst}%`,
+          },
+        });
+      }
+    } else {
+      toast.error("No match found");
+      localSavedItemApi?.length === 0
+        ? setQrResult(`❓ Oops! Kindly retry..`)
+        : setQrResult(`❌ No match: ${res}`);
+    }
+
+    toast.remove(loading);
+  };
+
+  const barCodeScanner = () => {
+    const loading = toast.loading("Searching...");
+    let localSavedItemApi = [];
+
+    if (localSavedItemApi?.length === 0) {
+      setQrResult("🔍 Searching...");
+    }
+
+    const setLocalITEM_API = (data) => {
+      localSavedItemApi = data;
+    };
+
+    checkLocalStorageSaved("ITEM_API_DATA", setLocalITEM_API);
+
+    // * This function will get the local item whenever the event "EXPO_LS_EVENT" triggered.
+
+    const res = barcodeScannedData;
     let result = localSavedItemApi.find(
       (obj) => obj.pn !== "" && res == String(obj?.pn)?.trim()
     );
@@ -1435,7 +1539,9 @@ export default function page(props) {
               />
             </div>
           )}
-
+          <form className="animate-pulse" onSubmit={(e) => { e.preventDefault(); barCodeScanner() }}>
+            <input type="text" placeholder="BARCODE SCAN 🔎" onChange={(e) => { setBarcodeScannedData(e.target.value) }} className="m-5 p-5 glass rounded-sm w-[295px] text-center" />
+          </form>
           <p className="text-center m-5 glass rounded-sm">{qrResult}</p>
 
           {itemData?.length > 0 && (
