@@ -261,23 +261,6 @@ export default function page(props) {
 
       // * setting the matched value
 
-      if (PrevScanData === result?.value) {
-        // increment the quantity
-        handleFormChange({
-          target: {
-            name: "quantity",
-            value: parseInt(formData?.quantity) + 1,
-          },
-        });
-      } else {
-        handleFormChange({
-          target: {
-            name: "quantity",
-            value: 1,
-          },
-        });
-      }
-
       setPrevScanData(result?.value)
       setBarcodeScannedData("");
 
@@ -311,6 +294,53 @@ export default function page(props) {
             value: `${result?.gst}%`,
           },
         });
+      }
+
+      if (result?.dynamicdisc) {
+        handleFormChange({
+          target: {
+            name: "dynamicdisc",
+            value:
+              isNaN(result?.dynamicdisc) || result?.dynamicdisc === "" ? null : Number(result?.dynamicdisc),
+          },
+        });
+      }
+
+      let newQuantity = 0;
+
+      if (PrevScanData === result?.value) {
+        // increment the quantity
+        newQuantity = parseInt(formData?.quantity) + 1;
+
+      } else {
+        newQuantity = 1;
+      }
+
+      handleFormChange({
+        target: {
+          name: "quantity",
+          value: newQuantity,
+        },
+      });
+
+      if (result?.dynamicdisc && !isNaN(result?.dynamicdisc)) {
+
+
+        let unitPrice = 0;
+
+        if (result?.gstType === "Exclusive") {
+          unitPrice = unitPriceCalcExclDISC(result?.mrp, result?.dynamicdisc, result?.gstPercentage?.replace("%", ""));
+
+        } else {
+          unitPrice = unitPriceCalcEXemptInclDISC(result?.mrp, result?.dynamicdisc);
+        }
+
+        handleFormChange({
+          target: {
+            name: "amount",
+            value: unitPrice * newQuantity,
+          },
+        })
       }
     } else {
       toast.error("No match found");
