@@ -54,6 +54,7 @@ export default function page(props) {
   const [itemData, setItemData] = useState([]);
   const [qrResult, setQrResult] = useState("");
   const [barcodeScannedData, setBarcodeScannedData] = useState(null);
+  const [PrevScanData, setPrevScanData] = useState(null)
   const [formData, setFormData] = useState({
     partyName: null,
     invoiceNo: null,
@@ -65,7 +66,7 @@ export default function page(props) {
     itemPartNo: null,
     itemPartNoOrg: null,
     itemLocation: null, // from item data
-    quantity: null,
+    quantity: 0,
     mrp: null,
     gstPercentage: null,
     amount: null,
@@ -259,6 +260,26 @@ export default function page(props) {
       setQrResult(`✔ ${result?.value}-${result?.pn}`);
 
       // * setting the matched value
+
+      if (PrevScanData === result?.value) {
+        // increment the quantity
+        handleFormChange({
+          target: {
+            name: "quantity",
+            value: parseInt(formData?.quantity) + 1,
+          },
+        });
+      } else {
+        handleFormChange({
+          target: {
+            name: "quantity",
+            value: 1,
+          },
+        });
+      }
+
+      setPrevScanData(result?.value)
+      setBarcodeScannedData("");
 
       handleFormChange({
         target: { name: "itemPartNo", value: result?.value },
@@ -1540,7 +1561,7 @@ export default function page(props) {
             </div>
           )}
           <form className="animate-pulse" onSubmit={(e) => { e.preventDefault(); barCodeScanner() }}>
-            <input onFocus={(e) => {
+            <input value={barcodeScannedData || ""} onFocus={(e) => {
               e.target.value = "";
               setBarcodeScannedData("");
               blur()
