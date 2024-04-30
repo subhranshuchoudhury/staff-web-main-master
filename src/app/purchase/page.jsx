@@ -307,15 +307,12 @@ export default function page(props) {
       }
 
       let newQuantity = 0;
-
       if (PrevScanData === result?.value) {
         // increment the quantity
         newQuantity = parseInt(formData?.quantity) + 1;
-
       } else {
         newQuantity = 1;
       }
-
       handleFormChange({
         target: {
           name: "quantity",
