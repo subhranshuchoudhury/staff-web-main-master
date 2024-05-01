@@ -21,13 +21,13 @@ export const POST = async (req) => {
         checkConnection();
         const bodyData = await req.json();
 
-        const searchItem = bodyData.searchItem;
+        const searchItem = bodyData.searchItem.toUpperCase();
 
-        const result = await SimilarItem.find({
-            similarList: { $in: { searchItem } }
-        })
+        console.log(searchItem);
 
-        return NextResponse.json(result, { status: 200 });
+        const item = await SimilarItem.findOne({ 'similarList.itemName': searchItem }).select('itemName');
+
+        return NextResponse.json(item, { status: 200 });
 
     } catch (error) {
         console.log(error);
