@@ -16,8 +16,10 @@ import {
     exclusiveDM,
     IGSTnewAmount,
     IGSTnewDiscPercentage,
-    unitPriceCalcExclDISC,
-    unitPriceCalcEXemptInclDISC,
+    getMRPExclusive,
+    getMRPInclusiveExempt
+    // unitPriceCalcExclDISC,
+    // unitPriceCalcEXemptInclDISC,
 } from "../../Disc/disc";
 import Image from "next/image";
 import CustomOption from "../../Dropdown/CustomOption";
@@ -34,9 +36,9 @@ export default function page(props) {
 
     useEffect(() => {
         getExcelData();
-        // checkNotDownload(searchParams.get("fromNewItem"));
-        // retrieveDataFromNewItem(searchParams.get("fromNewItem")); // * Retrieve data from the new item page.
-        // setUnsavedState(); // * for gstType, DNM etc. field
+        checkNotDownload(searchParams.get("fromNewItem"));
+        retrieveDataFromNewItem(searchParams.get("fromNewItem")); // * Retrieve data from the new item page.
+        setUnsavedState(); // * for gstType, DNM etc. field
         // const unsubscribe = window.addEventListener("EXPO_LS_EVENT", function () {
         //     // * This is for the expo app, using for scanning bar codes.
         //     digLocalStorageQR(); // * This function is in the app.js file.
@@ -52,9 +54,9 @@ export default function page(props) {
     const [excelContent, setExcelContent] = useState([]);
     const [partyData, setPartyData] = useState([]);
     const [itemData, setItemData] = useState([]);
-    const [qrResult, setQrResult] = useState("");
-    const [barcodeScannedData, setBarcodeScannedData] = useState(null);
-    const [PrevScanData, setPrevScanData] = useState(null)
+    // const [qrResult, setQrResult] = useState("");
+    // const [barcodeScannedData, setBarcodeScannedData] = useState(null);
+    // const [PrevScanData, setPrevScanData] = useState(null)
     const [formData, setFormData] = useState({
         partyName: null,
         invoiceNo: null,
@@ -198,13 +200,19 @@ export default function page(props) {
     //     toast.remove(loading);
     // };
 
-    const barCodeScanner = () => {
-        const loading = toast.loading("Searching...");
+    const ExcelItemFinder = (itemOrPartNo) => {
+
+        /*
+        First we have to search the item in the partNo field of our excel file.
+        If it is found then directly assign the details.
+        If it is not found then search it on 
+        */
+        const loading = toast.loading("🔍 Searching...");
         let localSavedItemApi = [];
 
-        if (localSavedItemApi?.length === 0) {
-            setQrResult("🔍 Searching...");
-        }
+        // if (localSavedItemApi?.length === 0) {
+        //     setQrResult("🔍 Searching...");
+        // }
 
         const setLocalITEM_API = (data) => {
             localSavedItemApi = data;
@@ -212,9 +220,8 @@ export default function page(props) {
 
         checkLocalStorageSaved("ITEM_API_DATA", setLocalITEM_API);
 
-        // * This function will get the local item whenever the event "EXPO_LS_EVENT" triggered.
 
-        const res = barcodeScannedData;
+        const res = itemOrPartNo; // This will provide to our function
         let result = localSavedItemApi.find(
             (obj) => obj.pn !== "" && res == String(obj?.pn)?.trim()
         );
@@ -234,35 +241,33 @@ export default function page(props) {
             );
         }
 
-        if (!result) {
-            console.log("Type 3 scanning...");
+        // if (!result) {
+        //     console.log("Type 3 scanning...");
 
-            result = localSavedItemApi.find((obj) =>
-                JSON.stringify(obj).includes(res)
-            );
-        }
+        //     result = localSavedItemApi.find((obj) =>
+        //         JSON.stringify(obj).includes(res)
+        //     );
+        // }
 
-        if (!result) {
-            console.log("Type 4 scanning...");
+        // if (!result) {
+        //     console.log("Type 4 scanning...");
 
-            result = localSavedItemApi.find(
-                (obj) => obj.pn !== "" && res.includes(obj.pn)
-            );
+        //     result = localSavedItemApi.find(
+        //         (obj) => obj.pn !== "" && res.includes(obj.pn)
+        //     );
 
-            if (result) {
-                toast.error("The result may not be accurate.");
-            }
-        }
+        //     if (result) {
+        //         toast.error("The result may not be accurate.");
+        //     }
+        // }
 
         if (result?.value) {
-            toast.success("Scan complete");
+            toast.success("Scan completed");
             console.log("SCN_RES", result);
-            setQrResult(`✔ ${result?.value}-${result?.pn}`);
-
+            // setQrResult(`✔ ${result?.value}-${result?.pn}`);
             // * setting the matched value
-
-            setPrevScanData(result?.value)
-            setBarcodeScannedData("");
+            // setPrevScanData(result?.value)
+            // setBarcodeScannedData("");
 
             handleFormChange({
                 target: { name: "itemPartNo", value: result?.value },
@@ -273,12 +278,12 @@ export default function page(props) {
                     value: result?.loc?.toUpperCase(),
                 },
             });
-            handleFormChange({
-                target: {
-                    name: "mrp",
-                    value: result?.mrp,
-                },
-            });
+            // handleFormChange({
+            //     target: {
+            //         name: "mrp",
+            //         value: result?.mrp,
+            //     },
+            // });
 
             handleFormChange({
                 target: {
@@ -306,47 +311,46 @@ export default function page(props) {
                 });
             }
 
-            let newQuantity = 0;
-            if (PrevScanData === result?.value) {
-                // increment the quantity
-                newQuantity = parseInt(formData?.quantity) + 1;
-            } else {
-                newQuantity = 1;
-            }
-            handleFormChange({
-                target: {
-                    name: "quantity",
-                    value: newQuantity,
-                },
-            });
+            // let newQuantity = 0;
+            // if (PrevScanData === result?.value) {
+            //     // increment the quantity
+            //     newQuantity = parseInt(formData?.quantity) + 1;
+            // } else {
+            //     newQuantity = 1;
+            // }
+            // handleFormChange({
+            //     target: {
+            //         name: "quantity",
+            //         value: newQuantity,
+            //     },
+            // });
 
             if (result?.dynamicdisc && !isNaN(result?.dynamicdisc)) {
 
+                alert("Dynamically Calculated")
+                // let unitPrice = 0;
 
-                let unitPrice = 0;
+                // if (result?.gstType === "Exclusive") {
+                //     unitPrice = unitPriceCalcExclDISC(result?.mrp, result?.dynamicdisc, result?.gstPercentage?.replace("%", ""));
 
-                if (result?.gstType === "Exclusive") {
-                    unitPrice = unitPriceCalcExclDISC(result?.mrp, result?.dynamicdisc, result?.gstPercentage?.replace("%", ""));
+                // } else {
+                //     unitPrice = unitPriceCalcEXemptInclDISC(result?.mrp, result?.dynamicdisc);
+                // }
 
-                } else {
-                    unitPrice = unitPriceCalcEXemptInclDISC(result?.mrp, result?.dynamicdisc);
-                }
-
-                handleFormChange({
-                    target: {
-                        name: "amount",
-                        value: unitPrice * newQuantity,
-                    },
-                })
+                // handleFormChange({
+                //     target: {
+                //         name: "amount",
+                //         value: unitPrice * newQuantity,
+                //     },
+                // })
             }
         } else {
-            toast.error("No match found");
             localSavedItemApi?.length === 0
-                ? setQrResult(`❓ Oops! Kindly retry..`)
-                : setQrResult(`❌ No match: ${res}`);
+                ? toast.error("No item is found in your localstorage.")
+                : toast.error("No match found, choose manually")
         }
 
-        toast.remove(loading);
+        toast.dismiss(loading);
     };
 
     // * handle the modal
@@ -387,6 +391,7 @@ export default function page(props) {
 
     // * save the current state: (date, gstType, DNM)
 
+    // New item return page handle
     // const saveStateField = () => {
     //     const tempObj = {
     //         partyName: formData?.partyName,
@@ -461,28 +466,28 @@ export default function page(props) {
         }
     };
 
-    // const setLocalStorage = (key, value) => {
-    //     localStorage.setItem(key, JSON.stringify(value));
-    // };
+    const setLocalStorage = (key, value) => {
+        localStorage.setItem(key, JSON.stringify(value));
+    };
 
-    // const getLocalStorage = (key) => {
-    //     const storage = localStorage.getItem(key);
-    //     if (storage !== null && storage !== undefined) {
-    //         return JSON.parse(storage);
-    //     } else {
-    //         return null;
-    //     }
-    // };
+    const getLocalStorage = (key) => {
+        const storage = localStorage.getItem(key);
+        if (storage !== null && storage !== undefined) {
+            return JSON.parse(storage);
+        } else {
+            return null;
+        }
+    };
 
-    // const getLocalStorageString = (key) => {
-    //     const storage = localStorage.getItem(key);
-    //     if (storage !== null || storage !== undefined) return storage;
-    //     return null;
-    // };
+    const getLocalStorageString = (key) => {
+        const storage = localStorage.getItem(key);
+        if (storage !== null || storage !== undefined) return storage;
+        return null;
+    };
 
-    // const clearLocalStorage = (key) => {
-    //     localStorage.removeItem(key);
-    // };
+    const clearLocalStorage = (key) => {
+        localStorage.removeItem(key);
+    };
 
     const storeNotDownload = (obj) => {
         const retrievedArray = getLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA") || [];
@@ -490,70 +495,70 @@ export default function page(props) {
         setLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA", retrievedArray);
     };
 
-    // const checkNotDownload = (searchBar) => {
-    //     const retrievedArray = getLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA");
-    //     const agreed = () => {
-    //         if (retrievedArray !== null && retrievedArray !== undefined) {
-    //             setExcelContent(retrievedArray);
-    //             const constantFields = retrievedArray[0];
-    //             let dateString = constantFields?.billDate || "26-08-2003";
-    //             let dateParts = dateString.split("-");
-    //             let dateObject = new Date(dateParts[2], dateParts[1] - 1, dateParts[0]);
-    //             handleFormChange({
-    //                 target: {
-    //                     name: "invoiceNo",
-    //                     value: constantFields?.invoiceNo,
-    //                 },
-    //             });
-    //             handleFormChange({
-    //                 target: {
-    //                     name: "partyName",
-    //                     value: constantFields?.partyName,
-    //                 },
-    //             });
-    //             handleFormChange({
-    //                 target: {
-    //                     name: "invoiceDate",
-    //                     value: dateObject,
-    //                 },
-    //             });
-    //         }
-    //     };
+    const checkNotDownload = (searchBar) => {
+        const retrievedArray = getLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA");
+        const agreed = () => {
+            if (retrievedArray !== null && retrievedArray !== undefined) {
+                setExcelContent(retrievedArray);
+                const constantFields = retrievedArray[0];
+                let dateString = constantFields?.billDate || "26-08-2003";
+                let dateParts = dateString.split("-");
+                let dateObject = new Date(dateParts[2], dateParts[1] - 1, dateParts[0]);
+                handleFormChange({
+                    target: {
+                        name: "invoiceNo",
+                        value: constantFields?.invoiceNo,
+                    },
+                });
+                handleFormChange({
+                    target: {
+                        name: "partyName",
+                        value: constantFields?.partyName,
+                    },
+                });
+                handleFormChange({
+                    target: {
+                        name: "invoiceDate",
+                        value: dateObject,
+                    },
+                });
+            }
+        };
 
-    //     if (searchBar === "true") {
-    //         agreed();
-    //         return;
-    //     }
+        if (searchBar === "true") {
+            agreed();
+            return;
+        }
 
-    //     handleConfirmationModal(
-    //         "Confirmation ❓",
-    //         "Do you want to load the previous unsaved data?",
-    //         "Yes",
-    //         "No",
-    //         [
-    //             {
-    //                 data: `📜 Invoice: ${retrievedArray?.[0]?.invoiceNo}`,
-    //                 style: "text-xl font-bold",
-    //             },
-    //             {
-    //                 data: `🤵 Party: ${retrievedArray?.[0]?.partyName}`,
-    //                 style: "text-sm",
-    //             },
-    //             {
-    //                 data: `📑 Total: ${retrievedArray?.length} items`,
-    //                 style: "text-sm",
-    //             },
-    //             {
-    //                 data: `📅 Date: ${retrievedArray?.[0]?.billDate}`,
-    //                 style: "text-sm",
-    //             },
-    //         ],
+        handleConfirmationModal(
+            "Confirmation ❓",
+            "Do you want to load the previous unsaved data?",
+            "Yes",
+            "No",
+            [
+                {
+                    data: `📜 Invoice: ${retrievedArray?.[0]?.invoiceNo}`,
+                    style: "text-xl font-bold",
+                },
+                {
+                    data: `🤵 Party: ${retrievedArray?.[0]?.partyName}`,
+                    style: "text-sm",
+                },
+                {
+                    data: `📑 Total: ${retrievedArray?.length} items`,
+                    style: "text-sm",
+                },
+                {
+                    data: `📅 Date: ${retrievedArray?.[0]?.billDate}`,
+                    style: "text-sm",
+                },
+            ],
 
-    //         agreed,
-    //         () => clearLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA")
-    //     );
-    //     retrievedArray && window.purchase_modal_2.showModal();
-    // };
+            agreed,
+            () => clearLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA")
+        );
+        retrievedArray && window.purchase_modal_2.showModal();
+    };
 
     // * Duplicate check
 
@@ -572,106 +577,106 @@ export default function page(props) {
 
     // * This function used for get & set the data from new item addition page.
 
-    // const retrieveDataFromNewItem = (searchBar) => {
-    //     // ? These will be the values from the new item page.
+    const retrieveDataFromNewItem = (searchBar) => {
+        // ? These will be the values from the new item page.
 
-    //     const retrievedArray =
-    //         JSON.parse(localStorage.getItem("US_ADDED_ITEMS")) || []; // * US_ADDED_ITEMS is the unsaved new added items.
+        const retrievedArray =
+            JSON.parse(localStorage.getItem("US_ADDED_ITEMS")) || []; // * US_ADDED_ITEMS is the unsaved new added items.
 
-    //     if (searchBar === "true" && retrievedArray?.length > 0) {
-    //         // * if the user comes from the new item page, then it will set the values from the new item page.
-    //         const lastItemIndex = retrievedArray?.length - 1;
-    //         const loc = retrievedArray?.[lastItemIndex]?.Loc?.toUpperCase();
-    //         const mrp = retrievedArray?.[lastItemIndex]?.MRP;
-    //         const gst = retrievedArray?.[lastItemIndex]?.Tax_Category;
-    //         const item = retrievedArray?.[lastItemIndex]?.Item_Name?.toUpperCase();
-    //         const party = getLocalStorageString("US_PN_REFERER")?.toUpperCase();
-    //         const invoice = getLocalStorageString("US_INV_REFERER")?.toUpperCase();
-    //         const credit = 0; // ! credit days is not available in the new item page.
+        if (searchBar === "true" && retrievedArray?.length > 0) {
+            // * if the user comes from the new item page, then it will set the values from the new item page.
+            const lastItemIndex = retrievedArray?.length - 1;
+            const loc = retrievedArray?.[lastItemIndex]?.Loc?.toUpperCase();
+            const mrp = retrievedArray?.[lastItemIndex]?.MRP;
+            const gst = retrievedArray?.[lastItemIndex]?.Tax_Category;
+            const item = retrievedArray?.[lastItemIndex]?.Item_Name?.toUpperCase();
+            const party = getLocalStorageString("US_PN_REFERER")?.toUpperCase();
+            const invoice = getLocalStorageString("US_INV_REFERER")?.toUpperCase();
+            const credit = 0; // ! credit days is not available in the new item page.
 
-    //         handleFormChange({
-    //             target: { name: "itemLocation", value: loc },
-    //         });
+            handleFormChange({
+                target: { name: "itemLocation", value: loc },
+            });
 
-    //         handleFormChange({
-    //             target: { name: "mrp", value: mrp },
-    //         });
+            handleFormChange({
+                target: { name: "mrp", value: mrp },
+            });
 
-    //         handleFormChange({
-    //             target: { name: "gstPercentage", value: gst },
-    //         });
+            handleFormChange({
+                target: { name: "gstPercentage", value: gst },
+            });
 
-    //         handleFormChange({
-    //             target: { name: "itemPartNo", value: item },
-    //         });
+            handleFormChange({
+                target: { name: "itemPartNo", value: item },
+            });
 
-    //         if (excelContent?.length === 0) {
-    //             // * if the excel content is empty, then only it will change the party name, invoice no & credit days.
-    //             handleFormChange({
-    //                 target: { name: "partyName", value: party },
-    //             });
+            if (excelContent?.length === 0) {
+                // * if the excel content is empty, then only it will change the party name, invoice no & credit days.
+                handleFormChange({
+                    target: { name: "partyName", value: party },
+                });
 
-    //             handleFormChange({
-    //                 target: { name: "invoiceNo", value: invoice },
-    //             });
+                handleFormChange({
+                    target: { name: "invoiceNo", value: invoice },
+                });
 
-    //             handleFormChange({
-    //                 target: { name: "creditDays", value: credit },
-    //             });
-    //         }
-    //     }
-    // };
+                handleFormChange({
+                    target: { name: "creditDays", value: credit },
+                });
+            }
+        }
+    };
 
-    // const setUnsavedState = () => {
-    //     // * other unsaved state data
+    const setUnsavedState = () => {
+        // * other unsaved state data
 
-    //     const unsavedFieldData = getLocalStorage("US_STATE_PURCHASE");
+        const unsavedFieldData = getLocalStorage("US_STATE_PURCHASE");
 
-    //     const localDate = localStorage.getItem("US_INV_DATE");
-    //     if (localDate !== null && localDate !== undefined) {
-    //         const dateObject = new Date(localDate);
-    //         handleFormChange({
-    //             target: {
-    //                 name: "invoiceDate",
-    //                 value: dateObject,
-    //             },
-    //         });
-    //     }
+        const localDate = localStorage.getItem("US_INV_DATE");
+        if (localDate !== null && localDate !== undefined) {
+            const dateObject = new Date(localDate);
+            handleFormChange({
+                target: {
+                    name: "invoiceDate",
+                    value: dateObject,
+                },
+            });
+        }
 
-    //     handleFormChange({
-    //         target: {
-    //             name: "gstType",
-    //             value: unsavedFieldData?.gstType,
-    //         },
-    //     });
-    //     // handleFormChange({
-    //     //   target: {
-    //     //     name: "invoiceDate",
-    //     //     value: parsedDate,
-    //     //   },
-    //     // });
+        handleFormChange({
+            target: {
+                name: "gstType",
+                value: unsavedFieldData?.gstType,
+            },
+        });
+        // handleFormChange({
+        //   target: {
+        //     name: "invoiceDate",
+        //     value: parsedDate,
+        //   },
+        // });
 
-    //     if (unsavedFieldData?.purchasetype === "DM") {
-    //         handleFormChange({
-    //             target: {
-    //                 name: "amount",
-    //                 value: 0,
-    //             },
-    //         });
-    //         handleFormChange({
-    //             target: {
-    //                 name: "purchaseType",
-    //                 value: unsavedFieldData?.purchasetype,
-    //             },
-    //         });
-    //         handleFormChange({
-    //             target: {
-    //                 name: "mDiscPercentage",
-    //                 value: unsavedFieldData?.mDiscPercentage,
-    //             },
-    //         });
-    //     }
-    // };
+        if (unsavedFieldData?.purchasetype === "DM") {
+            handleFormChange({
+                target: {
+                    name: "amount",
+                    value: 0,
+                },
+            });
+            handleFormChange({
+                target: {
+                    name: "purchaseType",
+                    value: unsavedFieldData?.purchasetype,
+                },
+            });
+            handleFormChange({
+                target: {
+                    name: "mDiscPercentage",
+                    value: unsavedFieldData?.mDiscPercentage,
+                },
+            });
+        }
+    };
 
     // * form validation
 
@@ -852,7 +857,7 @@ export default function page(props) {
 
             // * clearing some fields
 
-            setQrResult("...");
+            // setQrResult("...");
 
             handleFormChange({
                 target: {
@@ -1357,10 +1362,6 @@ export default function page(props) {
         }
 
     }
-
-
-
-
     return (
         <>
             <Toaster />
@@ -1667,14 +1668,14 @@ export default function page(props) {
                                 />
                             </div>
                         )}
-                        <form className="animate-pulse" onSubmit={(e) => { e.preventDefault(); barCodeScanner() }}>
+                        {/* <form className="animate-pulse" onSubmit={(e) => { e.preventDefault(); barCodeScanner() }}>
                             <input value={barcodeScannedData || ""} onFocus={(e) => {
                                 e.target.value = "";
                                 setBarcodeScannedData("");
                                 blur()
                             }} type="text" placeholder="BARCODE SCAN 🔎" onChange={(e) => { setBarcodeScannedData(e.target.value) }} className="m-5 p-5 glass rounded-sm w-[295px] text-center" />
                         </form>
-                        <p className="text-center m-5 glass rounded-sm">{qrResult}</p>
+                        <p className="text-center m-5 glass rounded-sm">{qrResult}</p> */}
 
                         {itemData?.length > 0 && (
                             <Select
@@ -1687,8 +1688,8 @@ export default function page(props) {
                                     formData?.itemPartNo && {
                                         value: formData.itemPartNo,
                                         loc: formData?.itemLocation,
-                                        mrp: formData?.mrp,
                                         gst: formData?.gstPercentage,
+                                        // mrp: formData?.mrp, // We will generate it in this page.
                                     }
                                 }
                                 onChange={(e) => {
@@ -1705,12 +1706,12 @@ export default function page(props) {
                                         },
                                     });
 
-                                    handleFormChange({
-                                        target: {
-                                            name: "mrp",
-                                            value: isNaN(e?.mrp) || e?.mrp === "" ? null : e?.mrp, // * if mrp is not a number, then it will be null
-                                        },
-                                    });
+                                    // handleFormChange({
+                                    //     target: {
+                                    //         name: "mrp",
+                                    //         value: isNaN(e?.mrp) || e?.mrp === "" ? null : e?.mrp, // * if mrp is not a number, then it will be null
+                                    //     },
+                                    // });
 
                                     handleFormChange({
                                         target: {
@@ -1740,8 +1741,9 @@ export default function page(props) {
                                         });
                                     }
 
-
-
+                                    handleFormChange({
+                                        target: { name: "quantity", value: parseInt(ExcelJsonInput[0]["Qty"]) },
+                                    });
 
                                 }}
                                 getOptionLabel={(option) =>
@@ -1779,19 +1781,22 @@ export default function page(props) {
 
                                         let unitPrice = 0;
 
+                                        alert("NEW FUNCTION CALLED")
+
                                         if (formData?.gstType === "Exclusive") {
-                                            unitPrice = unitPriceCalcExclDISC(formData?.mrp, formData?.dynamicdisc, formData?.gstPercentage?.replace("%", ""));
+                                            // unitPrice = unitPriceCalcExclDISC(formData?.mrp, formData?.dynamicdisc, formData?.gstPercentage?.replace("%", ""));
 
                                         } else {
-                                            unitPrice = unitPriceCalcEXemptInclDISC(formData?.mrp, formData?.dynamicdisc);
+                                            // unitPrice = unitPriceCalcEXemptInclDISC(formData?.mrp, formData?.dynamicdisc);
                                         }
 
-                                        handleFormChange({
-                                            target: {
-                                                name: "amount",
-                                                value: unitPrice * e.target.value,
-                                            },
-                                        })
+                                        // Dynamic : This need to delete ig
+                                        // handleFormChange({
+                                        //     target: {
+                                        //         name: "amount",
+                                        //         value: unitPrice * e.target.value,
+                                        //     },
+                                        // })
 
 
 
@@ -1859,7 +1864,7 @@ export default function page(props) {
                     />
 
                     {
-                        <p>RECORDED DISC%: {formData?.dynamicdisc ?? "N/A"}</p>
+                        <p>SAVED DISC%: {formData?.dynamicdisc ?? "N/A"}</p>
                     }
 
                     <br />
