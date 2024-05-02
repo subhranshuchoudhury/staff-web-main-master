@@ -412,6 +412,7 @@ export default function page(props) {
     // * Load our excel document for Party & Item Data.
 
     const getExcelData = async () => {
+        const loading = toast.loading("Please wait while we fetching some files...")
         // * Check if data is already saved in localStorage
 
         checkLocalStorageSaved("PARTY_API_DATA", setPartyData);
@@ -446,13 +447,16 @@ export default function page(props) {
                 setPartyData(party_data);
 
                 setLoadingExcel(false);
+                toast.dismiss(loading)
 
                 localStorage.setItem("PARTY_API_DATA", JSON.stringify(party_data));
                 localStorage.setItem("ITEM_API_DATA", JSON.stringify(indexedItems));
             })
             .catch((error) => {
+                toast.dismiss(loading)
                 setLoadingExcel(true);
                 console.error(error);
+                toast.error("We are unable to load online files. Check your internet connection.")
             });
     };
 
@@ -1467,7 +1471,7 @@ export default function page(props) {
                     {
                         ExcelJsonInput.map((item, index) => {
                             return <div title={`Quantity: ${item["Qty"]}, Total Amount: ${item["Tot Amt"]}`} key={index}>
-                                <p className={["bg-purple-500 p-1 m-1 rounded-sm", index === 0 && "animate-pulse bg-amber-500"].join(" ")}>{ExcelJsonInput.length - index}: {item['Item/Part Number']}</p>
+                                <p className={["p-1 m-1 rounded-sm", index === 0 ? "animate-pulse bg-amber-500" : "bg-purple-500 "].join(" ")}>{ExcelJsonInput.length - index}: {item['Item/Part Number']}</p>
                             </div>
                         })
                     }
