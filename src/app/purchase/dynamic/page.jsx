@@ -343,6 +343,15 @@ export default function page(props) {
                 //         value: unitPrice * newQuantity,
                 //     },
                 // })
+
+                handleFormChange({
+                    target: {
+                        name: "quantity",
+                        value: parseInt(ExcelJsonInput[0]["Qty"]),
+                    },
+                });
+            } else {
+                alert("No Dynamic Disc available")
             }
         } else {
             localSavedItemApi?.length === 0
@@ -352,6 +361,9 @@ export default function page(props) {
 
         toast.dismiss(loading);
     };
+
+
+
 
     // * handle the modal
 
@@ -1593,6 +1605,7 @@ export default function page(props) {
                                     handleFormChange({
                                         target: { name: "gstType", value: e.value },
                                     });
+                                    ExcelItemFinder(ExcelJsonInput[0]["Item/Part Number"]);
                                 }}
                             />
                         )}
@@ -1769,9 +1782,28 @@ export default function page(props) {
                             />
                         )}
 
+                        {!loadingExcel && (
+                            <Select
+                                isDisabled={formData?.gstType === "Exempt"}
+                                placeholder="GST %"
+                                isSearchable={false}
+                                className="w-full m-auto p-5 text-blue-800 font-bold"
+                                options={gstAmount}
+                                getOptionLabel={(option) => `${option["value"]}`}
+                                value={
+                                    formData?.gstPercentage && { value: formData.gstPercentage }
+                                }
+                                onChange={(e) => {
+                                    handleFormChange({
+                                        target: { name: "gstPercentage", value: e.value },
+                                    });
+                                }}
+                            />
+                        )}
 
 
-                        <div>
+                        {/* This is the final fields that should be calculated */}
+                        <div className="border mb-5">
                             <input
                                 onChange={(e) => {
                                     handleFormChange({
@@ -1801,10 +1833,6 @@ export default function page(props) {
                                         //         value: unitPrice * e.target.value,
                                         //     },
                                         // })
-
-
-
-
                                     }
                                 }}
                                 className="input input-bordered input-secondary w-[295px] m-5"
@@ -1829,49 +1857,38 @@ export default function page(props) {
                                     e.target.blur();
                                 }}
                             />
-                        </div>
 
-                        {!loadingExcel && (
-                            <Select
-                                isDisabled={formData?.gstType === "Exempt"}
-                                placeholder="GST %"
-                                isSearchable={false}
-                                className="w-full m-auto p-5 text-blue-800 font-bold"
-                                options={gstAmount}
-                                getOptionLabel={(option) => `${option["value"]}`}
-                                value={
-                                    formData?.gstPercentage && { value: formData.gstPercentage }
-                                }
+                            <input
                                 onChange={(e) => {
                                     handleFormChange({
-                                        target: { name: "gstPercentage", value: e.value },
+                                        target: { name: "amount", value: e.target.value },
                                     });
                                 }}
+                                value={formData?.amount || ""}
+                                className={["input input-bordered  w-[295px] m-5", formData?.dynamicdisc !== "N/A" ? "input-primary" : "input-secondary"].join(" ")}
+                                placeholder="Total Amount"
+                                type="number"
+                                hidden={formData?.purchaseType === "DM"}
+                                onWheel={(e) => {
+                                    e.target.blur();
+                                }}
                             />
-                        )}
+
+                            {
+                                <p>SAVED DISC%: {formData?.dynamicdisc ?? "N/A"}</p>
+                            }
+
+                            <br />
+                        </div>
+
+                        <div>
+                            <button className="bg-blue-500 w-[295px] p-2 rounded-md">Calculate</button>
+                        </div>
+
+
                     </div>
 
-                    <input
-                        onChange={(e) => {
-                            handleFormChange({
-                                target: { name: "amount", value: e.target.value },
-                            });
-                        }}
-                        value={formData?.amount || ""}
-                        className={["input input-bordered  w-[295px] m-5", formData?.dynamicdisc !== "N/A" ? "input-primary" : "input-secondary"].join(" ")}
-                        placeholder="Total Amount"
-                        type="number"
-                        hidden={formData?.purchaseType === "DM"}
-                        onWheel={(e) => {
-                            e.target.blur();
-                        }}
-                    />
 
-                    {
-                        <p>SAVED DISC%: {formData?.dynamicdisc ?? "N/A"}</p>
-                    }
-
-                    <br />
                 </div>
             </div>
 
