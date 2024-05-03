@@ -29,7 +29,7 @@ import purchasetype from "../../DB/Purchase/gstamount";
 import { uploadItem } from "../../AppScript/script";
 import toast, { Toaster } from "react-hot-toast";
 import { choiceIGST } from "../../DB/Purchase/choice";
-
+// import * as excelTOJson from "convert-excel-to-json";
 export default function page(props) {
     const searchParams = useSearchParams();
     // * Use Effects
@@ -200,7 +200,13 @@ export default function page(props) {
     //     toast.remove(loading);
     // };
 
-    const ExcelItemFinder = (itemOrPartNo) => {
+    const ExcelItemFinder = (excelData) => {
+
+        if (excelData?.length === 0) {
+            return
+        }
+
+        const itemOrPartNo = excelData[0]["A"]
 
         /*
         First we have to search the item in the partNo field of our excel file.
@@ -262,8 +268,7 @@ export default function page(props) {
         // }
 
         if (result?.value) {
-            toast.success("Scan completed");
-            console.log("SCN_RES", result);
+            console.log("Excel Finder: ", result);
             // setQrResult(`✔ ${result?.value}-${result?.pn}`);
             // * setting the matched value
             // setPrevScanData(result?.value)
@@ -271,6 +276,9 @@ export default function page(props) {
 
             handleFormChange({
                 target: { name: "itemPartNo", value: result?.value },
+            });
+            handleFormChange({
+                target: { name: "itemPartNoOrg", value: result?.pn || "N/A" },
             });
             handleFormChange({
                 target: {
@@ -325,9 +333,23 @@ export default function page(props) {
             //     },
             // });
 
+            handleFormChange({
+                target: {
+                    name: "quantity",
+                    value: parseInt(excelData[0]["B"]),
+                },
+            });
+
+            handleFormChange({
+                target: {
+                    name: "amount",
+                    value: parseInt(excelData[0]["C"]),
+                },
+            });
+
             if (result?.dynamicdisc && !isNaN(result?.dynamicdisc)) {
 
-                alert("Dynamically Calculated")
+                // alert("Dynamically Calculated")
                 // let unitPrice = 0;
 
                 // if (result?.gstType === "Exclusive") {
@@ -344,14 +366,15 @@ export default function page(props) {
                 //     },
                 // })
 
+
+            } else {
+                toast.error("No Saved Disc% available")
                 handleFormChange({
                     target: {
-                        name: "quantity",
-                        value: parseInt(ExcelJsonInput[0]["Qty"]),
+                        name: "mrp",
+                        value: result?.mrp,
                     },
                 });
-            } else {
-                alert("No Dynamic Disc available")
             }
         } else {
             localSavedItemApi?.length === 0
@@ -424,7 +447,7 @@ export default function page(props) {
     // * Load our excel document for Party & Item Data.
 
     const getExcelData = async () => {
-        const loading = toast.loading("Please wait while we fetching some files...")
+        // const loading = toast.loading("Please wait while we fetching some files...")
         // * Check if data is already saved in localStorage
 
         checkLocalStorageSaved("PARTY_API_DATA", setPartyData);
@@ -459,13 +482,13 @@ export default function page(props) {
                 setPartyData(party_data);
 
                 setLoadingExcel(false);
-                toast.dismiss(loading)
+                // toast.dismiss(loading)
 
                 localStorage.setItem("PARTY_API_DATA", JSON.stringify(party_data));
                 localStorage.setItem("ITEM_API_DATA", JSON.stringify(indexedItems));
             })
             .catch((error) => {
-                toast.dismiss(loading)
+                // toast.dismiss(loading)
                 setLoadingExcel(true);
                 console.error(error);
                 toast.error("We are unable to load online files. Check your internet connection.")
@@ -863,7 +886,7 @@ export default function page(props) {
             storeNotDownload(tempContent);
 
             // * show the modal
-            handleModal("Success ✅", "Content Added Successfully!", "Okay");
+            handleModal("Success ✅", "Data Written Successfully!", "Okay");
             window.purchase_modal_1.showModal();
 
             // * check if price need to be updated
@@ -920,6 +943,12 @@ export default function page(props) {
                     },
                 });
             }
+
+            // remove 1st item from ExcelJsonInput
+            const excelJsonInput = ExcelJsonInput;
+            excelJsonInput.shift();
+            setExcelJsonInput(excelJsonInput);
+            ExcelItemFinder(excelJsonInput);
         };
 
         const askForConfirmation = (choice) => {
@@ -1358,6 +1387,7 @@ export default function page(props) {
         const selectedFile = e.target.files?.[0];
         const loading = toast.loading('Please wait while we are processing your file...');
 
+
         if (!selectedFile) {
             toast.error('Please select a excel file');
             return;
@@ -1370,14 +1400,130 @@ export default function page(props) {
             const workbook = XLSX.read(data, { type: "array" });
             const sheetName = workbook.SheetNames[0];
             const sheet = workbook.Sheets[sheetName];
-            excelData = XLSX.utils.sheet_to_json(sheet);
-            setExcelJsonInput(excelData)
-            console.log(excelData)
+
+            excelData = XLSX.utils.sheet_to_json(sheet, {
+                blankrows: false,
+                skipHidden: true,
+                header: "A",
+                raw: false,
+                rawNumbers: false,
+                defval: null,
+            });
+            // excelData.pop();
+            const transformedData = excelData.filter(obj => {
+                // Check if any of the values are blank or empty strings
+                return Object.values(obj).every(value => String(value).trim() !== "");
+            });
+            setExcelJsonInput(transformedData)
+            console.log(transformedData)
             toast.success('File processed successfully');
             toast.dismiss(loading);
+            ExcelItemFinder(transformedData)
         }
 
     }
+
+
+
+    const handleFinalCalculation = () => {
+
+        const gstType = formData?.gstType;
+        const dynamicdisc = formData?.dynamicdisc;
+        const totalAmount = formData.amount;
+        const quantity = formData.quantity;
+        const gstPercentage = formData.gstPercentage;
+
+        if (!gstType || !totalAmount || !quantity || !gstPercentage) {
+            toast.error('Please fill the required fields');
+            return;
+        }
+
+        if (dynamicdisc) {
+
+            console.log("GST TYPE", gstType)
+
+            if (gstType === "Exclusive") {
+                const mrp = getMRPExclusive(Number(totalAmount), Number(quantity), Number(dynamicdisc), Number(gstPercentage?.replace("%", "")));
+                console.log("MRP", mrp)
+                handleFormChange({
+                    target: {
+                        name: "mrp",
+                        value: mrp
+                    }
+                })
+            } else {
+                const mrp = getMRPInclusiveExempt(Number(totalAmount), Number(quantity), Number(dynamicdisc));
+                console.log("MRP", mrp)
+                handleFormChange({
+                    target: {
+                        name: "mrp",
+                        value: mrp
+                    }
+                })
+            }
+
+
+
+        } else {
+
+        }
+    }
+
+    // const convertExcelJSON = (excelData) => {
+    //     // Input array of objects
+    //     const test = excelData
+
+    //     console.log("TEST", test)
+
+    //     // Function to transform the array of objects
+    //     function transformArray(inputArray, keys) {
+    //         const outputArray = [];
+
+    //         // Create the first object dynamically based on the specified keys
+    //         const firstObject = {};
+    //         const arrKeys = Object.keys(test[0])
+    //         firstObject[keys[0]] = arrKeys[0]
+    //         firstObject[keys[1]] = arrKeys[1]
+    //         firstObject[keys[2]] = arrKeys[2]
+
+    //         outputArray.push(firstObject);
+
+    //         inputArray.forEach(obj => {
+    //             const newObj = {};
+
+    //             let isEmptyRow = false;
+
+    //             Object.keys(obj).forEach((key, index) => {
+    //                 console.log("Index", index)
+    //                 const strObj = String(obj[key]).trim();
+    //                 console.log("Obj Key", obj[key])
+    //                 if (strObj == "") {
+    //                     isEmptyRow = true;
+    //                     return; // Exit the loop if any field is empty
+    //                 }
+    //                 // Assign the value to the corresponding label dynamically based on the keys array
+    //                 const label = keys[index]; // Assuming keys start from 1
+    //                 newObj[label] = strObj;
+    //             });
+
+    //             if (!isEmptyRow) {
+    //                 outputArray.push(newObj);
+    //             }
+    //         });
+
+    //         return outputArray;
+    //     }
+
+    //     // Define the keys array
+    //     const keys = ["Qty", "Tot Amt", "A"];
+
+    //     // Transform the array
+    //     const transformedArray = transformArray(test, keys);
+
+    //     // Output the transformed array
+    //     return (transformedArray);
+
+    // }
     return (
         <>
             <Toaster />
@@ -1469,7 +1615,11 @@ export default function page(props) {
 
             <div className='m-auto text-center'>
                 {
-                    ExcelJsonInput.length === 0 && <input name='own' id='excelData' onChange={handleExcelFileInput} accept='application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' type="file" title='Your Excel File' className="file-input file-input-bordered file-input-warning w-full max-w-xs" />
+                    !loadingExcel && ExcelJsonInput.length === 0 ? <input name='own' id='excelData' onChange={handleExcelFileInput} accept='application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' type="file" title='Your Excel File' className="file-input file-input-bordered file-input-warning w-full max-w-xs" /> : null
+                }
+
+                {
+                    loadingExcel && <span className="loading loading-lg"></span>
                 }
 
             </div>
@@ -1482,8 +1632,8 @@ export default function page(props) {
 
                     {
                         ExcelJsonInput.map((item, index) => {
-                            return <div title={`Quantity: ${item["Qty"]}, Total Amount: ${item["Tot Amt"]}`} key={index}>
-                                <p className={["p-1 m-1 rounded-sm", index === 0 ? "animate-pulse bg-amber-500" : "bg-purple-500 "].join(" ")}>{ExcelJsonInput.length - index}: {item['Item/Part Number']}</p>
+                            return <div title={`Quantity: ${item["B"]}, Total Amount: ${item["C"]}`} key={index}>
+                                <p className={["p-1 m-1 rounded-sm", index === 0 ? "animate-pulse bg-amber-500" : "bg-purple-500 "].join(" ")}>{ExcelJsonInput.length - index}: {item['A']}</p>
                             </div>
                         })
                     }
@@ -1605,7 +1755,7 @@ export default function page(props) {
                                     handleFormChange({
                                         target: { name: "gstType", value: e.value },
                                     });
-                                    ExcelItemFinder(ExcelJsonInput[0]["Item/Part Number"]);
+                                    // ExcelItemFinder(ExcelJsonInput);
                                 }}
                             />
                         )}
@@ -1759,7 +1909,7 @@ export default function page(props) {
                                     }
 
                                     handleFormChange({
-                                        target: { name: "quantity", value: parseInt(ExcelJsonInput[0]["Qty"]) },
+                                        target: { name: "quantity", value: parseInt(ExcelJsonInput[0]["B"]) },
                                     });
 
                                 }}
@@ -1882,7 +2032,7 @@ export default function page(props) {
                         </div>
 
                         <div>
-                            <button className="bg-blue-500 w-[295px] p-2 rounded-md">Calculate</button>
+                            <button onClick={handleFinalCalculation} className="bg-blue-500 w-[295px] p-2 rounded-md">Calculate</button>
                         </div>
 
 
@@ -1934,7 +2084,7 @@ export default function page(props) {
                 <button
                     onClick={() => {
                         clearLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA");
-                        window.location.href = "/purchase";
+                        window.location.href = "/purchase/dynamic";
                     }}
                     className="text-white hover:bg-blue-900"
                 >
