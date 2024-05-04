@@ -267,6 +267,24 @@ export default function page(props) {
         //     }
         // }
 
+        handleFormChange({
+            target: {
+                name: "quantity",
+                value: parseInt(excelData[0]["B"]),
+            },
+        });
+
+        // amount conversion
+
+        handleFormChange({
+            target: {
+                name: "amount",
+                value: amountConversion(excelData[0]["C"]),
+            },
+        });
+
+        console.log("Total Amount in Excel: ", amountConversion(excelData[0]["C"]))
+
         if (result?.value) {
             console.log("Excel Finder: ", result);
             // setQrResult(`✔ ${result?.value}-${result?.pn}`);
@@ -333,19 +351,19 @@ export default function page(props) {
             //     },
             // });
 
-            handleFormChange({
-                target: {
-                    name: "quantity",
-                    value: parseInt(excelData[0]["B"]),
-                },
-            });
+            // handleFormChange({
+            //     target: {
+            //         name: "quantity",
+            //         value: parseInt(excelData[0]["B"]),
+            //     },
+            // });
 
-            handleFormChange({
-                target: {
-                    name: "amount",
-                    value: parseInt(excelData[0]["C"]),
-                },
-            });
+            // handleFormChange({
+            //     target: {
+            //         name: "amount",
+            //         value: parseInt(excelData[0]["C"]),
+            //     },
+            // });
 
             if (result?.dynamicdisc && !isNaN(result?.dynamicdisc)) {
 
@@ -384,6 +402,17 @@ export default function page(props) {
 
         toast.dismiss(loading);
     };
+
+    const amountConversion = (amount) => {
+        // 12,34,4.45
+        const regexPattern_1 = /^(\d{1,3}(,\d{3})*(\.\d+)?)$/
+        if (regexPattern_1.test(amount)) {
+            return parseFloat(amount.replace(/,/g, ''));
+        } else {
+            return parseFloat(amount)
+        }
+
+    }
 
 
 
@@ -2032,7 +2061,10 @@ export default function page(props) {
                         </div>
 
                         <div>
-                            <button onClick={handleFinalCalculation} className="bg-blue-500 w-[295px] p-2 rounded-md">Calculate</button>
+                            {
+                                formData?.dynamicdisc && <button onClick={handleFinalCalculation} className="bg-blue-500 w-[295px] p-2 rounded-md">Calculate</button>
+                            }
+
                         </div>
 
 
@@ -2067,6 +2099,7 @@ export default function page(props) {
                 </button>
                 <button
                     onClick={() => {
+                        // handleFinalCalculation();
                         if (isFormValidated(formData)) {
                             addSingleFormContent();
                         }

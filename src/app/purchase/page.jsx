@@ -161,6 +161,9 @@ export default function page(props) {
         target: { name: "itemPartNo", value: result?.value },
       });
       handleFormChange({
+        target: { name: "itemPartNoOrg", value: result?.pn || "N/A" },
+      });
+      handleFormChange({
         target: {
           name: "itemLocation",
           value: result?.loc?.toUpperCase(),
@@ -267,6 +270,11 @@ export default function page(props) {
       handleFormChange({
         target: { name: "itemPartNo", value: result?.value },
       });
+
+      handleFormChange({
+        target: { name: "itemPartNoOrg", value: result?.pn || "N/A" },
+      });
+
       handleFormChange({
         target: {
           name: "itemLocation",
