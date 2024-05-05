@@ -27,6 +27,10 @@ export const POST = async (req) => {
 
         const item = await SimilarItem.findOne({ 'similarList.itemName': searchItem }).select('itemName');
 
+        if (!item) {
+            return NextResponse.json({ message: "Item not found!" }, { status: 404 });
+        }
+
         return NextResponse.json(item, { status: 200 });
 
     } catch (error) {

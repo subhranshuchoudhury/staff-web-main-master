@@ -54,6 +54,7 @@ export default function page(props) {
     const [excelContent, setExcelContent] = useState([]);
     const [partyData, setPartyData] = useState([]);
     const [itemData, setItemData] = useState([]);
+    const [IsManualItemSelect, setIsManualItemSelect] = useState(false)
     // const [qrResult, setQrResult] = useState("");
     // const [barcodeScannedData, setBarcodeScannedData] = useState(null);
     // const [PrevScanData, setPrevScanData] = useState(null)
@@ -200,72 +201,130 @@ export default function page(props) {
     //     toast.remove(loading);
     // };
 
-    const ExcelItemFinder = (excelData) => {
+    const scanOwnExcelLocalStorage = (searchItem) => {
+        try {
+            if (searchItem?.length === 0) {
+                toast.error("No item name provided.")
+                return
+            }
+
+            console.log("Scanning: ", searchItem)
+
+            const itemOrPartNo = searchItem
+
+
+            let localSavedItemApi = [];
+
+
+
+            const setLocalITEM_API = (data) => {
+                localSavedItemApi = data;
+            };
+
+            checkLocalStorageSaved("ITEM_API_DATA", setLocalITEM_API);
+
+
+            const res = itemOrPartNo;
+            let result = localSavedItemApi.find(
+                (obj) => obj.pn !== "" && res == String(obj?.pn)?.trim()
+            );
+
+            if (!result) {
+                result = localSavedItemApi.find(
+                    (obj) => obj.pn !== "" && JSON.stringify(obj?.value).includes(res)
+                );
+            }
+
+            if (!result) {
+
+                result = localSavedItemApi.find(
+                    (obj) => obj.pn !== "" && JSON.stringify(obj?.pn).includes(res)
+                );
+            }
+
+            console.log("Local Storage Result: ", result)
+
+            if (result?.value) {
+                return {
+                    status: true,
+                    data: result
+                }
+            } else {
+                return {
+                    status: false,
+                    data: null
+                }
+            }
+        } catch (error) {
+            toast.error("Error in scanning the item.")
+            console.error(error)
+            return {
+                status: false,
+                data: null
+            }
+        }
+    };
+
+    const scanMongoStorage = async (searchItem) => {
+
+        const loading = toast.loading("Searching...", {
+            icon: "🔍"
+        })
+        try {
+
+            if (searchItem?.length === 0) {
+                toast.error("No item name provided.")
+                return
+            }
+
+
+            const resData = await findSimilarItemDB(searchItem)
+
+            toast.dismiss(loading)
+            if (resData) {
+                return scanOwnExcelLocalStorage(resData?.itemName)
+            } else {
+                return {
+                    status: false,
+                    data: null
+                }
+            }
+
+        } catch (error) {
+            toast.dismiss(loading)
+            toast.error("Error in scanning the item.")
+            console.error(error)
+            return {
+                status: false,
+                data: null
+            }
+
+        }
+    }
+
+    const ExcelItemFinder = async (excelData) => {
 
         if (excelData?.length === 0) {
             return
         }
 
+        setIsManualItemSelect(false)
+
+        let finalItemData = null; // default value
+
         const itemOrPartNo = excelData[0]["A"]
 
-        /*
-        First we have to search the item in the partNo field of our excel file.
-        If it is found then directly assign the details.
-        If it is not found then search it on 
-        */
-        const loading = toast.loading("🔍 Searching...");
-        let localSavedItemApi = [];
+        const resultOfLocalExcel = scanOwnExcelLocalStorage(itemOrPartNo)
 
-        // if (localSavedItemApi?.length === 0) {
-        //     setQrResult("🔍 Searching...");
-        // }
-
-        const setLocalITEM_API = (data) => {
-            localSavedItemApi = data;
-        };
-
-        checkLocalStorageSaved("ITEM_API_DATA", setLocalITEM_API);
-
-
-        const res = itemOrPartNo; // This will provide to our function
-        let result = localSavedItemApi.find(
-            (obj) => obj.pn !== "" && res == String(obj?.pn)?.trim()
-        );
-
-        if (!result) {
-            console.log("Type 1 scanning...");
-            result = localSavedItemApi.find(
-                (obj) => obj.pn !== "" && JSON.stringify(obj?.value).includes(res)
-            );
+        if (resultOfLocalExcel.status) {
+            finalItemData = resultOfLocalExcel.data
+        } else {
+            const resultOfMongo = await scanMongoStorage(itemOrPartNo)
+            console.log("Mongo Result: ", resultOfMongo)
+            if (resultOfMongo.status) {
+                finalItemData = resultOfMongo.data
+            }
         }
-
-        if (!result) {
-            console.log("Type 2 scanning...");
-
-            result = localSavedItemApi.find(
-                (obj) => obj.pn !== "" && JSON.stringify(obj?.pn).includes(res)
-            );
-        }
-
-        // if (!result) {
-        //     console.log("Type 3 scanning...");
-
-        //     result = localSavedItemApi.find((obj) =>
-        //         JSON.stringify(obj).includes(res)
-        //     );
-        // }
-
-        // if (!result) {
-        //     console.log("Type 4 scanning...");
-
-        //     result = localSavedItemApi.find(
-        //         (obj) => obj.pn !== "" && res.includes(obj.pn)
-        //     );
-
-        //     if (result) {
-        //         toast.error("The result may not be accurate.");
-        //     }
-        // }
 
         handleFormChange({
             target: {
@@ -283,25 +342,28 @@ export default function page(props) {
             },
         });
 
-        console.log("Total Amount in Excel: ", amountConversion(excelData[0]["C"]))
 
-        if (result?.value) {
-            console.log("Excel Finder: ", result);
+        if (finalItemData?.value) {
+            toast.success("Item found successfully.", {
+                icon: "✅"
+
+            })
+            console.log("Excel Finder: ", finalItemData);
             // setQrResult(`✔ ${result?.value}-${result?.pn}`);
             // * setting the matched value
             // setPrevScanData(result?.value)
             // setBarcodeScannedData("");
 
             handleFormChange({
-                target: { name: "itemPartNo", value: result?.value },
+                target: { name: "itemPartNo", value: finalItemData?.value },
             });
             handleFormChange({
-                target: { name: "itemPartNoOrg", value: result?.pn || "N/A" },
+                target: { name: "itemPartNoOrg", value: finalItemData?.pn || "N/A" },
             });
             handleFormChange({
                 target: {
                     name: "itemLocation",
-                    value: result?.loc?.toUpperCase(),
+                    value: finalItemData?.loc?.toUpperCase(),
                 },
             });
             // handleFormChange({
@@ -314,7 +376,7 @@ export default function page(props) {
             handleFormChange({
                 target: {
                     name: "selectedItemRow",
-                    value: result?.row,
+                    value: finalItemData?.row,
                 },
             });
 
@@ -322,23 +384,23 @@ export default function page(props) {
                 handleFormChange({
                     target: {
                         name: "gstPercentage",
-                        value: `${result?.gst}%`,
+                        value: `${finalItemData?.gst}%`,
                     },
                 });
             }
 
-            if (result?.dynamicdisc) {
+            if (finalItemData?.dynamicdisc) {
                 handleFormChange({
                     target: {
                         name: "dynamicdisc",
                         value:
-                            isNaN(result?.dynamicdisc) || result?.dynamicdisc === "" ? null : Number(result?.dynamicdisc),
+                            isNaN(finalItemData?.dynamicdisc) || finalItemData?.dynamicdisc === "" ? null : Number(finalItemData?.dynamicdisc),
                     },
                 });
             }
 
             // let newQuantity = 0;
-            // if (PrevScanData === result?.value) {
+            // if (PrevScanData === finalItemData?.value) {
             //     // increment the quantity
             //     newQuantity = parseInt(formData?.quantity) + 1;
             // } else {
@@ -365,16 +427,16 @@ export default function page(props) {
             //     },
             // });
 
-            if (result?.dynamicdisc && !isNaN(result?.dynamicdisc)) {
+            if (finalItemData?.dynamicdisc && !isNaN(finalItemData?.dynamicdisc)) {
 
                 // alert("Dynamically Calculated")
                 // let unitPrice = 0;
 
-                // if (result?.gstType === "Exclusive") {
-                //     unitPrice = unitPriceCalcExclDISC(result?.mrp, result?.dynamicdisc, result?.gstPercentage?.replace("%", ""));
+                // if (finalItemData?.gstType === "Exclusive") {
+                //     unitPrice = unitPriceCalcExclDISC(finalItemData?.mrp, finalItemData?.dynamicdisc, finalItemData?.gstPercentage?.replace("%", ""));
 
                 // } else {
-                //     unitPrice = unitPriceCalcEXemptInclDISC(result?.mrp, result?.dynamicdisc);
+                //     unitPrice = unitPriceCalcEXemptInclDISC(finalItemData?.mrp, finalItemData?.dynamicdisc);
                 // }
 
                 // handleFormChange({
@@ -390,17 +452,17 @@ export default function page(props) {
                 handleFormChange({
                     target: {
                         name: "mrp",
-                        value: result?.mrp,
+                        value: finalItemData?.mrp,
                     },
                 });
             }
         } else {
-            localSavedItemApi?.length === 0
-                ? toast.error("No item is found in your localstorage.")
-                : toast.error("No match found, choose manually")
+            setIsManualItemSelect(true)
+            toast.error("No match found, please add the item manually.", {
+                icon: "❌",
+            })
         }
 
-        toast.dismiss(loading);
     };
 
     const amountConversion = (amount) => {
@@ -412,6 +474,35 @@ export default function page(props) {
             return parseFloat(amount)
         }
 
+    }
+
+    const manualStoreSimilarItem = async (excelItem, actualItem) => {
+        const loading = toast.loading("Saving similar item...")
+        try {
+
+            const response = await fetch('/api/similaritem', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ itemName: actualItem, similarItem: excelItem })
+            })
+            toast.dismiss(loading)
+
+            if (response.status === 200) {
+                toast.success("Similar Item saved successfully.")
+            } else {
+                toast.error("Similar Item not saved.")
+            }
+
+
+        } catch (error) {
+
+            toast.error("Error in saving similar item.")
+            console.error(error)
+            toast.dismiss(loading)
+
+        }
     }
 
 
@@ -923,6 +1014,15 @@ export default function page(props) {
             isMrpMismatched(formData?.selectedItemRow, formData?.mrp);
             isDynamicdiscMissMatched(formData?.selectedItemRow, disc);
 
+            // update the similarList
+
+            if (IsManualItemSelect) {
+                console.log("Manual Item Select")
+                console.log("ExcelJsonInput: ", ExcelJsonInput[0]['A'])
+                console.log("Item Part No: ", formData?.itemPartNoOrg || formData?.itemPartNo)
+
+                manualStoreSimilarItem(ExcelJsonInput[0]['A'], formData?.itemPartNo)
+            }
             // * clearing some fields
 
             // setQrResult("...");
@@ -933,6 +1033,13 @@ export default function page(props) {
                     value: null,
                 },
             });
+
+            handleFormChange({
+                target: {
+                    name: "itemPartNoOrg",
+                    value: null,
+                }
+            })
 
             handleFormChange({
                 target: {
@@ -972,6 +1079,8 @@ export default function page(props) {
                     },
                 });
             }
+
+
 
             // remove 1st item from ExcelJsonInput
             const excelJsonInput = ExcelJsonInput;
@@ -1386,30 +1495,32 @@ export default function page(props) {
     const [SimilarData, setSimilarData] = useState([])
     const [ExcelJsonInput, setExcelJsonInput] = useState([])
 
-    const saveSimilarItemDB = async (itemName, similarItem) => {
-        const response = await fetch('/api/similaritem', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ itemName, similarItem })
-        })
-        const data = await response.json()
-        console.log(data)
-        setSimilarData(data)
-    }
+
 
     const findSimilarItemDB = async (similarItem) => {
-        const response = await fetch('/api/similaritem/searchitem', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ searchItem: similarItem })
-        })
-        const data = await response.json()
-        console.log(data)
-        setSimilarData(data)
+
+        try {
+
+            const response = await fetch('/api/similaritem/searchitem', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ searchItem: similarItem })
+            })
+            const data = await response.json()
+
+            console.log("SIMILAR DATA", data)
+
+            if (response.status === 200) {
+                return data
+            } else {
+                return null
+            }
+
+        } catch (error) {
+            return null
+        }
     }
 
     const handleExcelFileInput = (e) => {
@@ -2073,11 +2184,6 @@ export default function page(props) {
 
                 </div>
             </div>
-
-
-
-
-
 
             <div className="py-20"></div>
             {/* Bottom Nav Bar */}
