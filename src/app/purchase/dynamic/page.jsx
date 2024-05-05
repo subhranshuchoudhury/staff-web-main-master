@@ -1556,7 +1556,7 @@ export default function page(props) {
             });
             setExcelJsonInput(transformedData)
             console.log(transformedData)
-            toast.success('File processed successfully');
+            // toast.success('File processed successfully');
             toast.dismiss(loading);
             ExcelItemFinder(transformedData)
         }
