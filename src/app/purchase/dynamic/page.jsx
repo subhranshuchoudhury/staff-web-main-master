@@ -1609,7 +1609,7 @@ export default function page(props) {
         const gstPercentage = gstPercentageVal || formData.gstPercentage;
 
         if (!gstType || !totalAmount || !quantity || !gstPercentage) {
-            toast.error('Please fill the required fields');
+
             return;
         }
 
@@ -2090,6 +2090,8 @@ export default function page(props) {
                                     handleFormChange({
                                         target: { name: "quantity", value: parseInt(ExcelJsonInput[0]["B"]) },
                                     });
+
+                                    handleFinalCalculation(null, e?.dynamicdisc, null, parseInt(ExcelJsonInput[0]["B"]), isNaN(e?.gst) || e?.gst === "" ? null : `${e?.gst}%`)
 
                                 }}
                                 getOptionLabel={(option) =>
