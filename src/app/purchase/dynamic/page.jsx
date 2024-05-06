@@ -1956,7 +1956,7 @@ export default function page(props) {
                                             });
                                         }
                                         handleFormChange({
-                                            target: { name: "purchaseType", value: e.value },
+                                            target: { name: "purchaseType", value: e?.value || "DNM" },
                                         });
                                     }}
                                     value={
@@ -1969,7 +1969,7 @@ export default function page(props) {
                                         }
                                     }
                                     defaultValue={{ label: "Discount Not Mentioned", value: "DNM" }}
-                                    isClearable={false}
+                                    isClearable={true}
                                 />
                                 {/* IGST Purchase Type */}
                                 <Select
@@ -2136,7 +2136,7 @@ export default function page(props) {
 
 
                         {/* This is the final fields that should be calculated */}
-                        <div className="border mb-5">
+                        <div className="border mb-5 text-center">
                             <input
                                 onChange={(e) => {
                                     handleFormChange({
