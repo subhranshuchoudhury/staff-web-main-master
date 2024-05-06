@@ -57,6 +57,66 @@ export const POST = async (req) => {
     }
 };
 
+export const PATCH = async (req) => {
+    try {
+        checkConnection();
+        const bodyData = await req.json();
+
+        const prevItem = bodyData.prevItemName.toUpperCase();
+        const newItem = bodyData.newItemName.toUpperCase();
+        const similarItem = bodyData.similarItem.toUpperCase();
+
+        const updateItem = await SimilarItem.findOneAndUpdate({
+            itemName: prevItem,
+        }, {
+            $pull: {
+                similarList: { itemName: similarItem }
+            }
+        }, {
+            new: true
+        })
+
+        if (updateItem) {
+            console.log("Updated: ", updateItem);
+            // return NextResponse.json({ message: "Data updated successfully!" }, { status: 200 });
+        } else {
+            console.log("Not Updated!");
+            // return NextResponse.json({ message: "Data not updated!" }, { status: 400 });
+        }
+
+        // assign new item to the similar list
+
+        const findNewItem = await SimilarItem.findOne({
+            itemName: newItem
+        })
+
+        if (findNewItem) {
+            findNewItem.similarList.push({ itemName: similarItem });
+            const result = await findNewItem.save();
+            if (result) {
+                return NextResponse.json({ message: "Data updated successfully!" }, { status: 200 });
+            } else {
+                return NextResponse.json({ message: "Data not updated!" }, { status: 400 });
+            }
+        } else {
+            const payload = new SimilarItem({
+                itemName: newItem,
+                similarList: [{ itemName: newItem }, { itemName: similarItem }]
+            });
+            const result = await payload.save();
+            if (result) {
+                return NextResponse.json({ message: "Data updated successfully!" }, { status: 200 });
+            } else {
+                return NextResponse.json({ message: "Data not updated!" }, { status: 400 });
+            }
+        }
+
+    } catch (error) {
+        console.log(error);
+        return NextResponse.json({ message: "Server failure" }, { status: 500 });
+    }
+};
+
 export const GET = async () => {
     try {
         checkConnection();

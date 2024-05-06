@@ -55,6 +55,7 @@ export default function page(props) {
     const [partyData, setPartyData] = useState([]);
     const [itemData, setItemData] = useState([]);
     const [IsManualItemSelect, setIsManualItemSelect] = useState(false)
+    const [foundDBResult, setFoundDBResult] = useState(null)
     // const [qrResult, setQrResult] = useState("");
     // const [barcodeScannedData, setBarcodeScannedData] = useState(null);
     // const [PrevScanData, setPrevScanData] = useState(null)
@@ -267,7 +268,7 @@ export default function page(props) {
 
     const scanMongoStorage = async (searchItem) => {
 
-        const loading = toast.loading("Searching...", {
+        const loading = toast.loading("Please wait...", {
             icon: "🔍"
         })
         try {
@@ -307,7 +308,7 @@ export default function page(props) {
         if (excelData?.length === 0) {
             return
         }
-
+        setFoundDBResult(null)
         setIsManualItemSelect(false)
 
         let finalItemData = null; // default value
@@ -344,11 +345,12 @@ export default function page(props) {
 
 
         if (finalItemData?.value) {
-            toast.success("Item found successfully.", {
+            toast.success("Item found successfully", {
                 icon: "✅"
 
             })
             console.log("Excel Finder: ", finalItemData);
+            setFoundDBResult(finalItemData?.value)
             // setQrResult(`✔ ${result?.value}-${result?.pn}`);
             // * setting the matched value
             // setPrevScanData(result?.value)
@@ -458,9 +460,9 @@ export default function page(props) {
             }
         } else {
             setIsManualItemSelect(true)
-            toast.error("No match found, please add the item manually.", {
-                icon: "❌",
-            })
+            // toast.error("No match found, please add the item manually.", {
+            //     icon: "❌",
+            // })
         }
 
     };
@@ -476,7 +478,7 @@ export default function page(props) {
 
     }
 
-    const manualStoreSimilarItem = async (excelItem, actualItem) => {
+    const manualStoreSimilarItem = async (actualItem, excelItem) => {
         const loading = toast.loading("Saving similar item...")
         try {
 
@@ -493,6 +495,36 @@ export default function page(props) {
                 toast.success("Similar Item saved successfully.")
             } else {
                 toast.error("Similar Item not saved.")
+            }
+
+
+        } catch (error) {
+
+            toast.error("Error in saving similar item.")
+            console.error(error)
+            toast.dismiss(loading)
+
+        }
+    }
+
+    const manualUpdateSimilarItem = async (similarItem, actualItem) => {
+        const loading = toast.loading("Updating similar item...")
+        try {
+
+            const response = await fetch('/api/similaritem', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ prevItemName: foundDBResult, similarItem, newItemName: actualItem })
+            })
+            toast.dismiss(loading)
+
+            setFoundDBResult(null)
+            if (response.status === 200) {
+                toast.success("Update Item saved successfully.")
+            } else {
+                toast.error("Update Item not saved.")
             }
 
 
@@ -1021,7 +1053,10 @@ export default function page(props) {
                 console.log("ExcelJsonInput: ", ExcelJsonInput[0]['A'])
                 console.log("Item Part No: ", formData?.itemPartNoOrg || formData?.itemPartNo)
 
-                manualStoreSimilarItem(ExcelJsonInput[0]['A'], formData?.itemPartNo)
+                manualStoreSimilarItem(formData?.itemPartNo, ExcelJsonInput[0]['A'])
+            } else if (foundDBResult !== null && foundDBResult !== formData?.itemPartNo) {
+                console.log("Manually Changed: ", foundDBResult, formData?.itemPartNo)
+                manualUpdateSimilarItem(ExcelJsonInput[0]['A'], formData?.itemPartNo)
             }
             // * clearing some fields
 
@@ -1565,13 +1600,13 @@ export default function page(props) {
 
 
 
-    const handleFinalCalculation = () => {
+    const handleFinalCalculation = (gstTypeVal, dynamicdiscVal, totalAmountVal, quantityVal, gstPercentageVal) => {
 
-        const gstType = formData?.gstType;
-        const dynamicdisc = formData?.dynamicdisc;
-        const totalAmount = formData.amount;
-        const quantity = formData.quantity;
-        const gstPercentage = formData.gstPercentage;
+        const gstType = gstTypeVal || formData?.gstType;
+        const dynamicdisc = dynamicdiscVal || formData?.dynamicdisc;
+        const totalAmount = totalAmountVal || formData.amount;
+        const quantity = quantityVal || formData.quantity;
+        const gstPercentage = gstPercentageVal || formData.gstPercentage;
 
         if (!gstType || !totalAmount || !quantity || !gstPercentage) {
             toast.error('Please fill the required fields');
@@ -1896,6 +1931,10 @@ export default function page(props) {
                                         target: { name: "gstType", value: e.value },
                                     });
                                     // ExcelItemFinder(ExcelJsonInput);
+
+                                    // final calculation
+
+                                    handleFinalCalculation(e.value, null, null, null, null)
                                 }}
                             />
                         )}
@@ -2087,6 +2126,8 @@ export default function page(props) {
                                     handleFormChange({
                                         target: { name: "gstPercentage", value: e.value },
                                     });
+
+                                    handleFinalCalculation(null, null, null, null, e.value)
                                 }}
                             />
                         )}
@@ -2100,30 +2141,32 @@ export default function page(props) {
                                         target: { name: "quantity", value: e.target.value },
                                     });
 
+                                    handleFinalCalculation(null, null, null, e.target.value, null)
 
 
-                                    if (formData?.dynamicdisc && !isNaN(formData?.dynamicdisc)) {
+
+                                    // if (formData?.dynamicdisc && !isNaN(formData?.dynamicdisc)) {
 
 
-                                        let unitPrice = 0;
+                                    // let unitPrice = 0;
 
-                                        alert("NEW FUNCTION CALLED")
+                                    // alert("NEW FUNCTION CALLED")
 
-                                        if (formData?.gstType === "Exclusive") {
-                                            // unitPrice = unitPriceCalcExclDISC(formData?.mrp, formData?.dynamicdisc, formData?.gstPercentage?.replace("%", ""));
+                                    // if (formData?.gstType === "Exclusive") {
+                                    // unitPrice = unitPriceCalcExclDISC(formData?.mrp, formData?.dynamicdisc, formData?.gstPercentage?.replace("%", ""));
 
-                                        } else {
-                                            // unitPrice = unitPriceCalcEXemptInclDISC(formData?.mrp, formData?.dynamicdisc);
-                                        }
+                                    // } else {
+                                    // unitPrice = unitPriceCalcEXemptInclDISC(formData?.mrp, formData?.dynamicdisc);
+                                    // }
 
-                                        // Dynamic : This need to delete ig
-                                        // handleFormChange({
-                                        //     target: {
-                                        //         name: "amount",
-                                        //         value: unitPrice * e.target.value,
-                                        //     },
-                                        // })
-                                    }
+                                    // Dynamic : This need to delete ig
+                                    // handleFormChange({
+                                    //     target: {
+                                    //         name: "amount",
+                                    //         value: unitPrice * e.target.value,
+                                    //     },
+                                    // })
+                                    // }
                                 }}
                                 className="input input-bordered input-secondary w-[295px] m-5"
                                 placeholder="Quantity"
@@ -2153,6 +2196,8 @@ export default function page(props) {
                                     handleFormChange({
                                         target: { name: "amount", value: e.target.value },
                                     });
+
+                                    handleFinalCalculation(null, null, e.target.value, null, null)
                                 }}
                                 value={formData?.amount || ""}
                                 className={["input input-bordered  w-[295px] m-5", formData?.dynamicdisc !== "N/A" ? "input-primary" : "input-secondary"].join(" ")}
@@ -2171,12 +2216,12 @@ export default function page(props) {
                             <br />
                         </div>
 
-                        <div>
+                        {/* <div>
                             {
                                 formData?.dynamicdisc && <button onClick={handleFinalCalculation} className="bg-blue-500 w-[295px] p-2 rounded-md">Calculate</button>
                             }
 
-                        </div>
+                        </div> */}
 
 
                     </div>
