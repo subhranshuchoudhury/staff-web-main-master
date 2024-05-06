@@ -38,7 +38,7 @@ export default function page(props) {
         getExcelData();
         checkNotDownload(searchParams.get("fromNewItem"));
         retrieveDataFromNewItem(searchParams.get("fromNewItem")); // * Retrieve data from the new item page.
-        setUnsavedState(); // * for gstType, DNM etc. field
+        // setUnsavedState(); // * for gstType, DNM etc. field
         // const unsubscribe = window.addEventListener("EXPO_LS_EVENT", function () {
         //     // * This is for the expo app, using for scanning bar codes.
         //     digLocalStorageQR(); // * This function is in the app.js file.
@@ -818,56 +818,56 @@ export default function page(props) {
         }
     };
 
-    const setUnsavedState = () => {
-        // * other unsaved state data
+    // const setUnsavedState = () => {
+    //     // * other unsaved state data
 
-        const unsavedFieldData = getLocalStorage("US_STATE_PURCHASE");
+    //     const unsavedFieldData = getLocalStorage("US_STATE_PURCHASE");
 
-        const localDate = localStorage.getItem("US_INV_DATE");
-        if (localDate !== null && localDate !== undefined) {
-            const dateObject = new Date(localDate);
-            handleFormChange({
-                target: {
-                    name: "invoiceDate",
-                    value: dateObject,
-                },
-            });
-        }
+    //     const localDate = localStorage.getItem("US_INV_DATE");
+    //     if (localDate !== null && localDate !== undefined) {
+    //         const dateObject = new Date(localDate);
+    //         handleFormChange({
+    //             target: {
+    //                 name: "invoiceDate",
+    //                 value: dateObject,
+    //             },
+    //         });
+    //     }
 
-        handleFormChange({
-            target: {
-                name: "gstType",
-                value: unsavedFieldData?.gstType,
-            },
-        });
-        // handleFormChange({
-        //   target: {
-        //     name: "invoiceDate",
-        //     value: parsedDate,
-        //   },
-        // });
+    //     handleFormChange({
+    //         target: {
+    //             name: "gstType",
+    //             value: unsavedFieldData?.gstType,
+    //         },
+    //     });
+    //     // handleFormChange({
+    //     //   target: {
+    //     //     name: "invoiceDate",
+    //     //     value: parsedDate,
+    //     //   },
+    //     // });
 
-        if (unsavedFieldData?.purchasetype === "DM") {
-            handleFormChange({
-                target: {
-                    name: "amount",
-                    value: 0,
-                },
-            });
-            handleFormChange({
-                target: {
-                    name: "purchaseType",
-                    value: unsavedFieldData?.purchasetype,
-                },
-            });
-            handleFormChange({
-                target: {
-                    name: "mDiscPercentage",
-                    value: unsavedFieldData?.mDiscPercentage,
-                },
-            });
-        }
-    };
+    //     // if (unsavedFieldData?.purchasetype === "DM") {
+    //     //     handleFormChange({
+    //     //         target: {
+    //     //             name: "amount",
+    //     //             value: 0,
+    //     //         },
+    //     //     });
+    //     //     handleFormChange({
+    //     //         target: {
+    //     //             name: "purchaseType",
+    //     //             value: unsavedFieldData?.purchasetype,
+    //     //         },
+    //     //     });
+    //     //     handleFormChange({
+    //     //         target: {
+    //     //             name: "mDiscPercentage",
+    //     //             value: unsavedFieldData?.mDiscPercentage,
+    //     //         },
+    //     //     });
+    //     // }
+    // };
 
     // * form validation
 
