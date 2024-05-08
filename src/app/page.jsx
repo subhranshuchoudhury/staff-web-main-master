@@ -62,7 +62,31 @@ const Page = () => {
             width={50}
             height={50}
           />
-          <p>ADD NEW ITEM</p>
+          <p>ADD ITEM</p>
+        </div>
+        <div
+          onClick={() => routePath("/add-item-group")}
+          className="btn btn-info text-white w-44 h-28 m-5 shadow-2xl hover:shadow-white flex-col bg-transparent"
+        >
+          <Image
+            src="/assets/images/group.png"
+            alt="purchase"
+            width={50}
+            height={50}
+          />
+          <p>ADD GROUP</p>
+        </div>
+        <div
+          onClick={() => routePath("/purchase/party")}
+          className="btn btn-info text-white w-44 h-28 m-5 shadow-2xl hover:shadow-white flex-col bg-transparent"
+        >
+          <Image
+            src="/assets/images/group (1).png"
+            alt="purchase"
+            width={50}
+            height={50}
+          />
+          <p>ADD PARTY</p>
         </div>
         <div
           onClick={() => {
@@ -102,6 +126,18 @@ const Page = () => {
             height={50}
           />
           <p>HISTORY</p>
+        </div>
+        <div
+          onClick={() => routePath("/settings")}
+          className="btn btn-info text-white w-44 h-28 m-5 shadow-2xl hover:shadow-white flex-col bg-transparent"
+        >
+          <Image
+            src="/assets/images/settings.png"
+            alt="purchase"
+            width={50}
+            height={50}
+          />
+          <p>SETTINGS</p>
         </div>
       </div>
     </div>

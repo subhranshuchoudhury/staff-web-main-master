@@ -41,13 +41,13 @@ export default function RootLayout({ children }) {
                 tabIndex={0}
                 className="menu menu-sm dropdown-content mt-3 p-2 bg-blue-950  rounded-box w-52 z-20"
               >
-                <li>
+                {/* <li>
                   <Link href={"/purchase/party"}>Add New Party</Link>
-                </li>
+                </li> */}
                 {/* <li>
                   <Link href={"/purchase/item"}>Add New Item</Link>
                 </li> */}
-                <li>
+                {/* <li>
                   <Link href={"/add-item-group"}>Add Item Group</Link>
                 </li>
 
@@ -63,6 +63,24 @@ export default function RootLayout({ children }) {
                 </li>
                 <li>
                   <Link href={"/test"}>TEST (Dev)</Link>
+                </li> */}
+                <li>
+                  <Link href={"/"}>Home</Link>
+                </li>
+                <li>
+                  <Link href={"/purchase"}>Purchase</Link>
+                </li>
+                <li>
+                  <Link href={"/purchase/dynamic"}>Excel Purchase</Link>
+                </li>
+                <li>
+                  <Link href={"/add-item-group"}>Add Group</Link>
+                </li>
+                <li>
+                  <Link href={"/purchase/party"}>Add Party</Link>
+                </li>
+                <li>
+                  <Link href={"/history"}>History</Link>
                 </li>
               </ul>
             </div>
