@@ -44,9 +44,9 @@ export default function RootLayout({ children }) {
                 <li>
                   <Link href={"/purchase/party"}>Add New Party</Link>
                 </li>
-                <li>
+                {/* <li>
                   <Link href={"/purchase/item"}>Add New Item</Link>
-                </li>
+                </li> */}
                 <li>
                   <Link href={"/add-item-group"}>Add Item Group</Link>
                 </li>
@@ -70,7 +70,7 @@ export default function RootLayout({ children }) {
           <div className="navbar-center">
             <Link
               href="/"
-              className="btn btn-ghost normal-case text-2xl font-bold"
+              className="btn btn-ghost uppercase text-2xl"
             >
               Jyestha Motors
             </Link>

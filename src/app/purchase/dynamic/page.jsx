@@ -29,6 +29,7 @@ import purchasetype from "../../DB/Purchase/gstamount";
 import { uploadItem } from "../../AppScript/script";
 import toast, { Toaster } from "react-hot-toast";
 import { choiceIGST } from "../../DB/Purchase/choice";
+import AddItemModal from "../../../../components/addItemModal";
 // import * as excelTOJson from "convert-excel-to-json";
 export default function page(props) {
     const searchParams = useSearchParams();
@@ -36,8 +37,8 @@ export default function page(props) {
 
     useEffect(() => {
         getExcelData();
-        checkNotDownload(searchParams.get("fromNewItem"));
-        retrieveDataFromNewItem(searchParams.get("fromNewItem")); // * Retrieve data from the new item page.
+        // checkNotDownload(searchParams.get("fromNewItem"));
+        // retrieveDataFromNewItem(searchParams.get("fromNewItem")); // * Retrieve data from the new item page.
         // setUnsavedState(); // * for gstType, DNM etc. field
         // const unsubscribe = window.addEventListener("EXPO_LS_EVENT", function () {
         //     // * This is for the expo app, using for scanning bar codes.
@@ -49,7 +50,7 @@ export default function page(props) {
     }, []);
 
     // * useStates for storing data.
-
+    const [ShowAddItemPopUp, setShowAddItemPopUp] = useState(false)
     const [loadingExcel, setLoadingExcel] = useState(true); // * false for dev purpose
     const [excelContent, setExcelContent] = useState([]);
     const [partyData, setPartyData] = useState([]);
@@ -95,6 +96,10 @@ export default function page(props) {
         btn_f_2: () => { },
         norm_f_3: () => { }
     });
+
+    const handleAddItemPopUp = (value) => {
+        setShowAddItemPopUp(value)
+    }
 
     // * handle QR search feature
 
@@ -537,7 +542,38 @@ export default function page(props) {
         }
     }
 
+    const setDetailsOfAddItemModal = (itemData) => {
+        console.log("Item Modal Data", itemData)
+        handleFormChange({
+            target: { name: "itemLocation", value: itemData?.loc?.toUpperCase() },
+        });
 
+        handleFormChange({
+            target: { name: "mrp", value: itemData?.MRP },
+        });
+
+        handleFormChange({
+            target: { name: "gstPercentage", value: itemData?.Tax_Category },
+        });
+
+        handleFormChange({
+            target: { name: "itemPartNo", value: itemData?.Item_Name?.toUpperCase() },
+        });
+
+        handleFormChange({
+            target: { name: "itemPartNoOrg", value: itemData?.Item_Alias?.toUpperCase() || itemData?.Item_Name?.toUpperCase() },
+        });
+        handleFormChange({
+            target: { name: "itemLocation", value: itemData?.Loc?.toUpperCase() },
+        });
+
+
+        handleFormChange({
+            target: { name: "dynamicdisc", value: null },
+        })
+
+
+    }
 
 
     // * handle the modal
@@ -1527,7 +1563,6 @@ export default function page(props) {
 
     // Excel input handle and other dynamic functions
 
-    const [SimilarData, setSimilarData] = useState([])
     const [ExcelJsonInput, setExcelJsonInput] = useState([])
 
 
@@ -1782,6 +1817,12 @@ export default function page(props) {
                     </div>
                 </form>
             </dialog>
+
+            {
+                ShowAddItemPopUp && <AddItemModal handleFinalCalculation={handleFinalCalculation} setDetailsOfAddItemModal={setDetailsOfAddItemModal} handleAddItemPopUp={handleAddItemPopUp} />
+            }
+
+
 
             {/* Excel Input */}
 
@@ -2103,10 +2144,11 @@ export default function page(props) {
                                             onClick={() => {
                                                 // saveStateField(); // * saving the state of fields , fix: back button press from new item page.
                                                 // router.push("/purchase/item");
+                                                setShowAddItemPopUp(true);
                                             }}
                                             className="hover:cursor-pointer"
                                         >
-                                            No item found
+                                            Add item ➕
                                         </p>
                                     );
                                 }}

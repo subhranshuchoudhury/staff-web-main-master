@@ -41,6 +41,30 @@ const Page = () => {
           <p>PURCHASE</p>
         </div>
         <div
+          onClick={() => routePath("/purchase/dynamic")}
+          className="btn btn-info text-white w-44 h-28 m-5 shadow-2xl hover:shadow-white flex-col bg-transparent"
+        >
+          <Image
+            src="/assets/images/excel.png"
+            alt="purchase"
+            width={50}
+            height={50}
+          />
+          <p>EXCEL PURCHASE</p>
+        </div>
+        <div
+          onClick={() => routePath("/purchase/item")}
+          className="btn btn-info text-white w-44 h-28 m-5 shadow-2xl hover:shadow-white flex-col bg-transparent"
+        >
+          <Image
+            src="/assets/images/receipt-item.png"
+            alt="purchase"
+            width={50}
+            height={50}
+          />
+          <p>ADD NEW ITEM</p>
+        </div>
+        <div
           onClick={() => {
             routePath("/sale");
           }}
