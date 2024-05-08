@@ -19,8 +19,8 @@ const Page = () => {
 
   return (
     <div className="flex justify-center items-center flex-col">
-      <p className="glass text-center text-[40px] font-mono mb-9 rounded-xl w-full">
-        Welcome
+      <p className="glass text-center h-2 mb-9 rounded-xl w-1/2">
+
       </p>
       {Navigating ? (
         <div>

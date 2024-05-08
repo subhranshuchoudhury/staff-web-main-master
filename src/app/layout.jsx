@@ -2,18 +2,18 @@ import Link from "next/link";
 import "./globals.css";
 
 export const metadata = {
-  title: "Jyestha Motors",
-  description: "Dedicated web app for Jyestha Motors.",
+  title: "Jyeshtha Motors",
+  description: "Dedicated web app for Jyeshtha Motors.",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html data-theme="synthwave" lang="en">
       <head>
-        <title>Jyestha Motors PWA</title>
+        <title>Jyeshtha Motors PWA</title>
         <meta
           name="description"
-          content="Web App for managing Jyestha Motors shop."
+          content="Web App for managing Jyeshtha Motors shop."
         />
         <link rel="manifest" href="/manifest.json" />
       </head>
@@ -85,19 +85,19 @@ export default function RootLayout({ children }) {
               </ul>
             </div>
           </div>
-          <div className="navbar-center">
+          <div className="navbar-center mt-6">
             <Link
               href="/"
-              className="btn btn-ghost uppercase text-2xl"
+              className="btn btn-ghost uppercase font-mono glass text-xl"
             >
-              Jyestha Motors
+              Jyeshtha Motors
             </Link>
           </div>
           <div className="navbar-end"></div>
           <div className="dropdown dropdown-end">
             <label tabIndex={0} className="btn btn-ghost btn-circle avatar">
               <div className="w-10 rounded-full">
-                <img src="/assets/images/jyesthalogo.jpg" />
+                <img src="/assets/images/Jyeshthalogo.jpg" />
               </div>
             </label>
           </div>
