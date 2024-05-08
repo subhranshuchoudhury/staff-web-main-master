@@ -104,14 +104,14 @@ export const unitPriceCalcExclDISC = (MRP, DISC, GST) => {
 export const getMRPInclusiveExempt = (TOTAL_AMOUNT, QUANTITY, DISC) => {
   const unitAmount = TOTAL_AMOUNT / QUANTITY;
   const mrp = unitAmount / (1 - (DISC / 100))
-  return Math.round(mrp * 100) / 100
+  return Math.round(mrp)
 }
 
 export const getMRPExclusive = (TOTAL_AMOUNT, QUANTITY, DISC, GST) => {
   const unitAmount = TOTAL_AMOUNT / QUANTITY;
   const newUnitAmount = unitAmount * (1 + (GST / 100))
   const mrp = newUnitAmount / (1 - (DISC / 100))
-  return Math.round(mrp * 100) / 100
+  return Math.round(mrp)
 }
 
 
