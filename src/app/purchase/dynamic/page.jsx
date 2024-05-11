@@ -18,35 +18,20 @@ import {
     IGSTnewDiscPercentage,
     getMRPExclusive,
     getMRPInclusiveExempt
-    // unitPriceCalcExclDISC,
-    // unitPriceCalcEXemptInclDISC,
 } from "../../Disc/disc";
 import Image from "next/image";
 import CustomOption from "../../Dropdown/CustomOption";
 import CustomMenuList from "../../Dropdown/CustomMenuList";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import purchasetype from "../../DB/Purchase/gstamount";
 import { uploadItem } from "../../AppScript/script";
 import toast, { Toaster } from "react-hot-toast";
 import { choiceIGST } from "../../DB/Purchase/choice";
 import AddItemModal from "../../../../components/addItemModal";
-// import * as excelTOJson from "convert-excel-to-json";
 export default function page(props) {
-    const searchParams = useSearchParams();
-    // * Use Effects
 
     useEffect(() => {
         getExcelData();
-        // checkNotDownload(searchParams.get("fromNewItem"));
-        // retrieveDataFromNewItem(searchParams.get("fromNewItem")); // * Retrieve data from the new item page.
-        // setUnsavedState(); // * for gstType, DNM etc. field
-        // const unsubscribe = window.addEventListener("EXPO_LS_EVENT", function () {
-        //     // * This is for the expo app, using for scanning bar codes.
-        //     digLocalStorageQR(); // * This function is in the app.js file.
-        // });
-        // return () => {
-        //     window.removeEventListener("EXPO_LS_EVENT", unsubscribe);
-        // };
     }, []);
 
     // * useStates for storing data.
@@ -57,9 +42,7 @@ export default function page(props) {
     const [itemData, setItemData] = useState([]);
     const [IsManualItemSelect, setIsManualItemSelect] = useState(false)
     const [foundDBResult, setFoundDBResult] = useState(null)
-    // const [qrResult, setQrResult] = useState("");
-    // const [barcodeScannedData, setBarcodeScannedData] = useState(null);
-    // const [PrevScanData, setPrevScanData] = useState(null)
+    const [InputtedExcelItemCount, setInputtedExcelItemCount] = useState(0)
     const [formData, setFormData] = useState({
         partyName: null,
         invoiceNo: null,
@@ -101,111 +84,6 @@ export default function page(props) {
         setShowAddItemPopUp(value)
     }
 
-    // * handle QR search feature
-
-    // const digLocalStorageQR = () => {
-    //     const loading = toast.loading("Searching...");
-    //     let localSavedItemApi = [];
-
-    //     if (localSavedItemApi?.length === 0) {
-    //         setQrResult("🔍 Searching...");
-    //     }
-
-    //     const setLocalITEM_API = (data) => {
-    //         localSavedItemApi = data;
-    //     };
-
-    //     checkLocalStorageSaved("ITEM_API_DATA", setLocalITEM_API);
-
-    //     // * This function will get the local item whenever the event "EXPO_LS_EVENT" triggered.
-
-    //     const res = localStorage.getItem("EXPO_SCN_RESULT");
-    //     let result = localSavedItemApi.find(
-    //         (obj) => obj.pn !== "" && res == String(obj?.pn)?.trim()
-    //     );
-
-    //     if (!result) {
-    //         console.log("Type 1 scanning...");
-    //         result = localSavedItemApi.find(
-    //             (obj) => obj.pn !== "" && JSON.stringify(obj?.value).includes(res)
-    //         );
-    //     }
-
-    //     if (!result) {
-    //         console.log("Type 2 scanning...");
-
-    //         result = localSavedItemApi.find(
-    //             (obj) => obj.pn !== "" && JSON.stringify(obj?.pn).includes(res)
-    //         );
-    //     }
-
-    //     if (!result) {
-    //         console.log("Type 3 scanning...");
-
-    //         result = localSavedItemApi.find((obj) =>
-    //             JSON.stringify(obj).includes(res)
-    //         );
-    //     }
-
-    //     if (!result) {
-    //         console.log("Type 4 scanning...");
-
-    //         result = localSavedItemApi.find(
-    //             (obj) => obj.pn !== "" && res.includes(obj.pn)
-    //         );
-
-    //         if (result) {
-    //             toast.error("The result may not be accurate.");
-    //         }
-    //     }
-
-    //     if (result?.value) {
-    //         toast.success("Scan complete");
-    //         console.log("SCN_RES", result);
-    //         setQrResult(`✔ ${result?.value}-${result?.pn}`);
-
-    //         // * setting the matched value
-
-    //         handleFormChange({
-    //             target: { name: "itemPartNo", value: result?.value },
-    //         });
-    //         handleFormChange({
-    //             target: {
-    //                 name: "itemLocation",
-    //                 value: result?.loc?.toUpperCase(),
-    //             },
-    //         });
-    //         handleFormChange({
-    //             target: {
-    //                 name: "mrp",
-    //                 value: result?.mrp,
-    //             },
-    //         });
-
-    //         handleFormChange({
-    //             target: {
-    //                 name: "selectedItemRow",
-    //                 value: result?.row,
-    //             },
-    //         });
-
-    //         if (formData?.gstType !== "Exempt") {
-    //             handleFormChange({
-    //                 target: {
-    //                     name: "gstPercentage",
-    //                     value: `${result?.gst}%`,
-    //                 },
-    //             });
-    //         }
-    //     } else {
-    //         toast.error("No match found");
-    //         localSavedItemApi?.length === 0
-    //             ? setQrResult(`❓ Oops! Kindly retry..`)
-    //             : setQrResult(`❌ No match: ${res}`);
-    //     }
-
-    //     toast.remove(loading);
-    // };
 
     const scanOwnExcelLocalStorage = (searchItem) => {
         try {
@@ -356,10 +234,7 @@ export default function page(props) {
             })
             console.log("Excel Finder: ", finalItemData);
             setFoundDBResult(finalItemData?.value)
-            // setQrResult(`✔ ${result?.value}-${result?.pn}`);
-            // * setting the matched value
-            // setPrevScanData(result?.value)
-            // setBarcodeScannedData("");
+
 
             handleFormChange({
                 target: { name: "itemPartNo", value: finalItemData?.value },
@@ -373,12 +248,7 @@ export default function page(props) {
                     value: finalItemData?.loc?.toUpperCase(),
                 },
             });
-            // handleFormChange({
-            //     target: {
-            //         name: "mrp",
-            //         value: result?.mrp,
-            //     },
-            // });
+
 
             handleFormChange({
                 target: {
@@ -404,58 +274,7 @@ export default function page(props) {
                             isNaN(finalItemData?.dynamicdisc) || finalItemData?.dynamicdisc === "" ? null : Number(finalItemData?.dynamicdisc),
                     },
                 });
-            }
-
-            // let newQuantity = 0;
-            // if (PrevScanData === finalItemData?.value) {
-            //     // increment the quantity
-            //     newQuantity = parseInt(formData?.quantity) + 1;
-            // } else {
-            //     newQuantity = 1;
-            // }
-            // handleFormChange({
-            //     target: {
-            //         name: "quantity",
-            //         value: newQuantity,
-            //     },
-            // });
-
-            // handleFormChange({
-            //     target: {
-            //         name: "quantity",
-            //         value: parseInt(excelData[0]["B"]),
-            //     },
-            // });
-
-            // handleFormChange({
-            //     target: {
-            //         name: "amount",
-            //         value: parseInt(excelData[0]["C"]),
-            //     },
-            // });
-
-            if (finalItemData?.dynamicdisc && !isNaN(finalItemData?.dynamicdisc)) {
-
-                // alert("Dynamically Calculated")
-                // let unitPrice = 0;
-
-                // if (finalItemData?.gstType === "Exclusive") {
-                //     unitPrice = unitPriceCalcExclDISC(finalItemData?.mrp, finalItemData?.dynamicdisc, finalItemData?.gstPercentage?.replace("%", ""));
-
-                // } else {
-                //     unitPrice = unitPriceCalcEXemptInclDISC(finalItemData?.mrp, finalItemData?.dynamicdisc);
-                // }
-
-                // handleFormChange({
-                //     target: {
-                //         name: "amount",
-                //         value: unitPrice * newQuantity,
-                //     },
-                // })
-
-
             } else {
-                toast.error("No Saved Disc% available")
                 handleFormChange({
                     target: {
                         name: "mrp",
@@ -463,11 +282,18 @@ export default function page(props) {
                     },
                 });
             }
+
+            // final calculation if the item is not of index 0 ( means it is not the first item)
+
+            if (InputtedExcelItemCount > excelData?.length) {
+                handleFinalCalculation(null, finalItemData?.dynamicdisc, excelData[0]["C"], excelData[0]["B"], finalItemData?.gst)
+            }
+
         } else {
-            setIsManualItemSelect(true)
-            // toast.error("No match found, please add the item manually.", {
-            //     icon: "❌",
-            // })
+            toast.error("Item not found.", {
+                icon: "❌"
+            })
+
         }
 
     };
@@ -612,21 +438,6 @@ export default function page(props) {
         setFormData((values) => ({ ...values, [name]: value }));
     };
 
-    // * save the current state: (date, gstType, DNM)
-
-    // New item return page handle
-    // const saveStateField = () => {
-    //     const tempObj = {
-    //         partyName: formData?.partyName,
-    //         invoiceNo: formData?.invoiceNo,
-    //         invoiceDate: formData?.invoiceDate,
-    //         gstType: formData?.gstType,
-    //         purchasetype: formData?.purchaseType,
-    //         mDiscPercentage: formData?.mDiscPercentage,
-    //     };
-
-    //     localStorage.setItem("US_STATE_PURCHASE", JSON.stringify(tempObj));
-    // };
 
     // * router for navigation
 
@@ -706,11 +517,6 @@ export default function page(props) {
         }
     };
 
-    const getLocalStorageString = (key) => {
-        const storage = localStorage.getItem(key);
-        if (storage !== null || storage !== undefined) return storage;
-        return null;
-    };
 
     const clearLocalStorage = (key) => {
         localStorage.removeItem(key);
@@ -720,71 +526,6 @@ export default function page(props) {
         const retrievedArray = getLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA") || [];
         retrievedArray.push(obj);
         setLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA", retrievedArray);
-    };
-
-    const checkNotDownload = (searchBar) => {
-        const retrievedArray = getLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA");
-        const agreed = () => {
-            if (retrievedArray !== null && retrievedArray !== undefined) {
-                setExcelContent(retrievedArray);
-                const constantFields = retrievedArray[0];
-                let dateString = constantFields?.billDate || "26-08-2003";
-                let dateParts = dateString.split("-");
-                let dateObject = new Date(dateParts[2], dateParts[1] - 1, dateParts[0]);
-                handleFormChange({
-                    target: {
-                        name: "invoiceNo",
-                        value: constantFields?.invoiceNo,
-                    },
-                });
-                handleFormChange({
-                    target: {
-                        name: "partyName",
-                        value: constantFields?.partyName,
-                    },
-                });
-                handleFormChange({
-                    target: {
-                        name: "invoiceDate",
-                        value: dateObject,
-                    },
-                });
-            }
-        };
-
-        if (searchBar === "true") {
-            agreed();
-            return;
-        }
-
-        handleConfirmationModal(
-            "Confirmation ❓",
-            "Do you want to load the previous unsaved data?",
-            "Yes",
-            "No",
-            [
-                {
-                    data: `📜 Invoice: ${retrievedArray?.[0]?.invoiceNo}`,
-                    style: "text-xl font-bold",
-                },
-                {
-                    data: `🤵 Party: ${retrievedArray?.[0]?.partyName}`,
-                    style: "text-sm",
-                },
-                {
-                    data: `📑 Total: ${retrievedArray?.length} items`,
-                    style: "text-sm",
-                },
-                {
-                    data: `📅 Date: ${retrievedArray?.[0]?.billDate}`,
-                    style: "text-sm",
-                },
-            ],
-
-            agreed,
-            () => clearLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA")
-        );
-        retrievedArray && window.purchase_modal_2.showModal();
     };
 
     // * Duplicate check
@@ -802,108 +543,6 @@ export default function page(props) {
         return false;
     };
 
-    // * This function used for get & set the data from new item addition page.
-
-    const retrieveDataFromNewItem = (searchBar) => {
-        // ? These will be the values from the new item page.
-
-        const retrievedArray =
-            JSON.parse(localStorage.getItem("US_ADDED_ITEMS")) || []; // * US_ADDED_ITEMS is the unsaved new added items.
-
-        if (searchBar === "true" && retrievedArray?.length > 0) {
-            // * if the user comes from the new item page, then it will set the values from the new item page.
-            const lastItemIndex = retrievedArray?.length - 1;
-            const loc = retrievedArray?.[lastItemIndex]?.Loc?.toUpperCase();
-            const mrp = retrievedArray?.[lastItemIndex]?.MRP;
-            const gst = retrievedArray?.[lastItemIndex]?.Tax_Category;
-            const item = retrievedArray?.[lastItemIndex]?.Item_Name?.toUpperCase();
-            const party = getLocalStorageString("US_PN_REFERER")?.toUpperCase();
-            const invoice = getLocalStorageString("US_INV_REFERER")?.toUpperCase();
-            const credit = 0; // ! credit days is not available in the new item page.
-
-            handleFormChange({
-                target: { name: "itemLocation", value: loc },
-            });
-
-            handleFormChange({
-                target: { name: "mrp", value: mrp },
-            });
-
-            handleFormChange({
-                target: { name: "gstPercentage", value: gst },
-            });
-
-            handleFormChange({
-                target: { name: "itemPartNo", value: item },
-            });
-
-            if (excelContent?.length === 0) {
-                // * if the excel content is empty, then only it will change the party name, invoice no & credit days.
-                handleFormChange({
-                    target: { name: "partyName", value: party },
-                });
-
-                handleFormChange({
-                    target: { name: "invoiceNo", value: invoice },
-                });
-
-                handleFormChange({
-                    target: { name: "creditDays", value: credit },
-                });
-            }
-        }
-    };
-
-    // const setUnsavedState = () => {
-    //     // * other unsaved state data
-
-    //     const unsavedFieldData = getLocalStorage("US_STATE_PURCHASE");
-
-    //     const localDate = localStorage.getItem("US_INV_DATE");
-    //     if (localDate !== null && localDate !== undefined) {
-    //         const dateObject = new Date(localDate);
-    //         handleFormChange({
-    //             target: {
-    //                 name: "invoiceDate",
-    //                 value: dateObject,
-    //             },
-    //         });
-    //     }
-
-    //     handleFormChange({
-    //         target: {
-    //             name: "gstType",
-    //             value: unsavedFieldData?.gstType,
-    //         },
-    //     });
-    //     // handleFormChange({
-    //     //   target: {
-    //     //     name: "invoiceDate",
-    //     //     value: parsedDate,
-    //     //   },
-    //     // });
-
-    //     // if (unsavedFieldData?.purchasetype === "DM") {
-    //     //     handleFormChange({
-    //     //         target: {
-    //     //             name: "amount",
-    //     //             value: 0,
-    //     //         },
-    //     //     });
-    //     //     handleFormChange({
-    //     //         target: {
-    //     //             name: "purchaseType",
-    //     //             value: unsavedFieldData?.purchasetype,
-    //     //         },
-    //     //     });
-    //     //     handleFormChange({
-    //     //         target: {
-    //     //             name: "mDiscPercentage",
-    //     //             value: unsavedFieldData?.mDiscPercentage,
-    //     //         },
-    //     //     });
-    //     // }
-    // };
 
     // * form validation
 
@@ -1628,6 +1267,7 @@ export default function page(props) {
             console.log(transformedData)
             // toast.success('File processed successfully');
             toast.dismiss(loading);
+            setInputtedExcelItemCount(transformedData?.length)
             ExcelItemFinder(transformedData)
         }
 
@@ -1898,7 +1538,7 @@ export default function page(props) {
                                 noOptionsMessage={() => {
                                     return (
                                         <p
-                                            onClick={() => router.push("/party")}
+                                            // onClick={() => router.push("/party")}
                                             className="hover:cursor-pointer"
                                         >
                                             ➕ Add Party
