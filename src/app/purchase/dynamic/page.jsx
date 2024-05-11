@@ -1319,61 +1319,6 @@ export default function page(props) {
         }
     }
 
-    // const convertExcelJSON = (excelData) => {
-    //     // Input array of objects
-    //     const test = excelData
-
-    //     console.log("TEST", test)
-
-    //     // Function to transform the array of objects
-    //     function transformArray(inputArray, keys) {
-    //         const outputArray = [];
-
-    //         // Create the first object dynamically based on the specified keys
-    //         const firstObject = {};
-    //         const arrKeys = Object.keys(test[0])
-    //         firstObject[keys[0]] = arrKeys[0]
-    //         firstObject[keys[1]] = arrKeys[1]
-    //         firstObject[keys[2]] = arrKeys[2]
-
-    //         outputArray.push(firstObject);
-
-    //         inputArray.forEach(obj => {
-    //             const newObj = {};
-
-    //             let isEmptyRow = false;
-
-    //             Object.keys(obj).forEach((key, index) => {
-    //                 console.log("Index", index)
-    //                 const strObj = String(obj[key]).trim();
-    //                 console.log("Obj Key", obj[key])
-    //                 if (strObj == "") {
-    //                     isEmptyRow = true;
-    //                     return; // Exit the loop if any field is empty
-    //                 }
-    //                 // Assign the value to the corresponding label dynamically based on the keys array
-    //                 const label = keys[index]; // Assuming keys start from 1
-    //                 newObj[label] = strObj;
-    //             });
-
-    //             if (!isEmptyRow) {
-    //                 outputArray.push(newObj);
-    //             }
-    //         });
-
-    //         return outputArray;
-    //     }
-
-    //     // Define the keys array
-    //     const keys = ["Qty", "Tot Amt", "A"];
-
-    //     // Transform the array
-    //     const transformedArray = transformArray(test, keys);
-
-    //     // Output the transformed array
-    //     return (transformedArray);
-
-    // }
     return (
         <>
             <Toaster />
