@@ -286,7 +286,7 @@ export default function page(props) {
             // final calculation if the item is not of index 0 ( means it is not the first item)
 
             if (InputtedExcelItemCount > excelData?.length) {
-                handleFinalCalculation(null, finalItemData?.dynamicdisc, excelData[0]["C"], excelData[0]["B"], finalItemData?.gst)
+                handleFinalCalculation(formData?.gstType, finalItemData?.dynamicdisc, amountConversion(excelData[0]["C"]), excelData[0]["B"], finalItemData?.gst)
             }
 
         } else {
@@ -1302,6 +1302,7 @@ export default function page(props) {
                     }
                 })
             } else {
+                console.log(Number(totalAmount), Number(quantity), Number(dynamicdisc))
                 const mrp = getMRPInclusiveExempt(Number(totalAmount), Number(quantity), Number(dynamicdisc));
                 console.log("MRP", mrp)
                 handleFormChange({
