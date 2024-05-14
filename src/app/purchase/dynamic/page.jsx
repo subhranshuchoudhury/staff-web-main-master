@@ -245,7 +245,7 @@ export default function page(props) {
             handleFormChange({
                 target: {
                     name: "itemLocation",
-                    value: finalItemData?.loc?.toUpperCase(),
+                    value: finalItemData?.loc?.toUpperCase() || "N/A",
                 },
             });
 
@@ -369,10 +369,7 @@ export default function page(props) {
     }
 
     const setDetailsOfAddItemModal = (itemData) => {
-        console.log("Item Modal Data", itemData)
-        handleFormChange({
-            target: { name: "itemLocation", value: itemData?.loc?.toUpperCase() },
-        });
+
 
         handleFormChange({
             target: { name: "mrp", value: itemData?.MRP },
@@ -390,7 +387,7 @@ export default function page(props) {
             target: { name: "itemPartNoOrg", value: itemData?.Item_Alias?.toUpperCase() || itemData?.Item_Name?.toUpperCase() },
         });
         handleFormChange({
-            target: { name: "itemLocation", value: itemData?.Loc?.toUpperCase() },
+            target: { name: "itemLocation", value: itemData?.Loc?.toUpperCase() || "N/A" },
         });
 
 
