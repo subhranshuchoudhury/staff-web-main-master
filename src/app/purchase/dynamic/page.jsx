@@ -196,7 +196,7 @@ export default function page(props) {
 
         let finalItemData = null; // default value
 
-        const itemOrPartNo = excelData[0]["A"]
+        const itemOrPartNo = isNaN(excelData[0]["A"].replace("\r\n", "")) ? excelData[0]["A"] : excelData[0]["A"].replace("\r\n", "").toUpperCase()
 
         const resultOfLocalExcel = scanOwnExcelLocalStorage(itemOrPartNo)
 
