@@ -1416,7 +1416,7 @@ export default function page(props) {
 
             <div className='m-auto text-center'>
                 {
-                    !loadingExcel && ExcelJsonInput.length === 0 ? <input name='own' id='excelData' onChange={handleExcelFileInput} accept='application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' type="file" title='Your Excel File' className="file-input file-input-bordered file-input-warning w-full max-w-xs" /> : null
+                    !loadingExcel && ExcelJsonInput.length === 0 && InputtedExcelItemCount === 0 ? <input name='own' id='excelData' onChange={handleExcelFileInput} accept='application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' type="file" title='Your Excel File' className="file-input file-input-bordered file-input-warning w-full max-w-xs" /> : null
                 }
 
                 {
@@ -1444,7 +1444,7 @@ export default function page(props) {
 
 
 
-            <div className={[ExcelJsonInput.length == 0 && "hidden"].join(" ")}>
+            <div className={[InputtedExcelItemCount === 0 && ExcelJsonInput.length === 0 && "hidden"].join(" ")}>
                 <div className="text-center m-auto">
                     {loadingExcel && (
                         <span className="loading loading-infinity w-[80px] text-sky-500"></span>
