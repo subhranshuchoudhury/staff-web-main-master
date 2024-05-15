@@ -38,7 +38,7 @@ export default function page() {
             </div>
 
             {isLoaded && <div className='mt-6'>
-                <h3>Are you on website on app ? <span className='text-yellow-400'>{getLocalStorage("isApp") ? "(APP)" : "(Website)"}</span></h3>
+                <h3>Are you on website or app ? <span className='text-yellow-400'>{getLocalStorage("isApp") ? "(APP)" : "(Website)"}</span></h3>
                 <div className='mt-2'>
                     <button onClick={() => {
                         handleSettings("isApp", false)
