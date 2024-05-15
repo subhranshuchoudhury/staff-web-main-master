@@ -196,7 +196,9 @@ export default function page(props) {
 
         let finalItemData = null; // default value
 
-        const itemOrPartNo = isNaN(excelData[0]["A"].replace("\r\n", "")) ? excelData[0]["A"] : excelData[0]["A"].replace("\r\n", "").toUpperCase()
+        console.log("Excel Data: ", excelData)
+
+        const itemOrPartNo = isNaN(excelData[0]["A"].replace("\r\n", "").replace(" ", "")) ? excelData[0]["A"] : excelData[0]["A"].replace("\r\n", "").replace(" ", "")
 
         const resultOfLocalExcel = scanOwnExcelLocalStorage(itemOrPartNo)
 
@@ -1432,7 +1434,7 @@ export default function page(props) {
                     {
                         ExcelJsonInput.map((item, index) => {
                             return <div title={`Quantity: ${item["B"]}, Total Amount: ${item["C"]}`} key={index}>
-                                <p className={["p-1 m-1 rounded-sm", index === 0 ? "animate-pulse bg-amber-500" : "bg-purple-500 "].join(" ")}>{ExcelJsonInput.length - index}: {item['A']}</p>
+                                <p className={["p-1 m-1 rounded-sm", index === 0 ? "animate-pulse bg-amber-500" : "bg-purple-500 "].join(" ")}>{ExcelJsonInput.length - index}: {isNaN(item["A"].replace("\r\n", "").replace(" ", "")) ? item["A"] : item["A"].replace("\r\n", "").replace(" ", "")}</p>
                             </div>
                         })
                     }
