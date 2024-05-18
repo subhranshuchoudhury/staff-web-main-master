@@ -95,11 +95,11 @@ export const POST = async (req) => {
 
         if (result) {
             return NextResponse.json(
-                { message: "Data saved successfully!" },
+                { message: "Data saved successfully" },
                 { status: 200 }
             );
         } else {
-            return NextResponse.json({ message: "Data not saved!" }, { status: 400 });
+            return NextResponse.json({ message: "Data not saved" }, { status: 400 });
         }
 
 
