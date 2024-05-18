@@ -46,7 +46,7 @@ const Page = () => {
         >
           <Image
             src="/assets/images/excel.png"
-            alt="purchase"
+            alt="purchase-dynamic"
             width={50}
             height={50}
           />
@@ -58,11 +58,23 @@ const Page = () => {
         >
           <Image
             src="/assets/images/receipt-item.png"
-            alt="purchase"
+            alt="add-item"
             width={50}
             height={50}
           />
           <p>ADD ITEM</p>
+        </div>
+        <div
+          onClick={() => routePath("/similar-item")}
+          className="btn btn-info text-white w-44 h-28 m-5 shadow-2xl hover:shadow-white flex-col bg-transparent"
+        >
+          <Image
+            src="/assets/images/new-product.png"
+            alt="add-similar-item"
+            width={50}
+            height={50}
+          />
+          <p>ADD SIMILAR ITEM</p>
         </div>
         <div
           onClick={() => routePath("/add-item-group")}
@@ -70,7 +82,7 @@ const Page = () => {
         >
           <Image
             src="/assets/images/group.png"
-            alt="purchase"
+            alt="add-group"
             width={50}
             height={50}
           />
@@ -82,7 +94,7 @@ const Page = () => {
         >
           <Image
             src="/assets/images/group (1).png"
-            alt="purchase"
+            alt="add-party"
             width={50}
             height={50}
           />
@@ -96,7 +108,7 @@ const Page = () => {
         >
           <Image
             src="/assets/images/sale.png"
-            alt="purchase"
+            alt="sale"
             width={50}
             height={50}
           />
@@ -109,7 +121,7 @@ const Page = () => {
         >
           <Image
             src="/assets/images/store.png"
-            alt="purchase"
+            alt="stock"
             width={50}
             height={50}
           />
@@ -121,7 +133,7 @@ const Page = () => {
         >
           <Image
             src="/assets/images/folder-history.png"
-            alt="purchase"
+            alt="history"
             width={50}
             height={50}
           />
@@ -133,7 +145,7 @@ const Page = () => {
         >
           <Image
             src="/assets/images/settings.png"
-            alt="purchase"
+            alt="settings"
             width={50}
             height={50}
           />

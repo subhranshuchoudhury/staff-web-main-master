@@ -5,6 +5,6 @@ export const content = [
   "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
 ];
 export const daisyui = {
-  themes: ["light", "dark", "cupcake", "synthwave"],
+  themes: ["synthwave"],
 };
 export const plugins = [require("daisyui")];
