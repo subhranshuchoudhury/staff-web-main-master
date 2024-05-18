@@ -21,8 +21,8 @@ export const POST = async (req) => {
         checkConnection();
         const bodyData = await req.json();
 
-        const itemName = bodyData.itemName.toUpperCase();
-        const similarItem = bodyData.similarItem.toUpperCase();
+        const itemName = bodyData.itemName.toUpperCase().trim();
+        const similarItem = bodyData.similarItem.toUpperCase().trim();
 
         const preCheckItem = await SimilarItem.findOne({ 'similarList.itemName': similarItem }).select('itemName');
 
