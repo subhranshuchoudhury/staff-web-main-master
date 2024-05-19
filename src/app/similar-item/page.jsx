@@ -11,18 +11,14 @@ export default function page() {
     const router = useRouter()
 
     const [ExcelJsonInput, setExcelJsonInput] = useState([])
-    const [loadingExcel, setLoadingExcel] = useState(false)
-    const [InputtedExcelItemCount, setInputtedExcelItemCount] = useState(0)
-    const [parentItems, setParentItems] = useState([])
     const [UploadReport, setUploadReport] = useState([])
+    const [CurrentUpload, setCurrentUpload] = useState(0)
 
     const handleExcelFileInput = (e) => {
         const selectedFile = e.target.files?.[0];
-        // const loading = toast.loading('Please wait while we are processing your file...');
 
 
         if (!selectedFile) {
-            // toast.error('Please select a excel file');
             return;
         }
         let excelData = null;
@@ -42,28 +38,12 @@ export default function page() {
                 rawNumbers: false,
                 defval: null,
             });
-            // excelData.pop();
             const transformedData = excelData.filter(obj => {
-                // Check if any of the values are blank or empty strings
                 return Object.values(obj).every(value => String(value).trim() !== "");
             });
             setExcelJsonInput(transformedData)
 
-            let parentItems = []
 
-            for (const key in transformedData[0]) {
-                if (transformedData[0].hasOwnProperty(key)) {
-                    const element = transformedData[0][key];
-                    parentItems.push(element)
-                }
-            }
-
-            setParentItems(parentItems)
-            // console.log(transformedData)
-            // toast.success('File processed successfully');
-            // toast.dismiss(loading);
-            setInputtedExcelItemCount(transformedData?.length)
-            // ExcelItemFinder(transformedData)
         }
 
     }
@@ -106,41 +86,28 @@ export default function page() {
         }
     }
 
-    const handleStoreSimilarItem = async (excelData, parentItems) => {
-        // const loading = toast.loading('Please wait while we are processing your file...');
-        try {
 
 
-            const reportData = []
+    const handleStoreSimilarItemNew = async (excelData) => {
 
+        let UploadReport = []
 
+        for (let i = 0; i < excelData.length; i++) {
+            setCurrentUpload(i + 1)
+            const itemName = excelData[i]['A']
+            const similarItemName = excelData[i]['B']
 
-            for (let i = 0; i < excelData.length; i++) {
-                const element = excelData[i];
-                for (let j = 0; j < parentItems.length; j++) {
-                    const parentItem = parentItems[j];
-                    if (parentItem !== element[String.fromCharCode(65 + j)] && element[String.fromCharCode(65 + j)]) {
-                        const itemToast = toast.loading(`Processing ${parentItem} and ${element[String.fromCharCode(65 + j)]}...`);
-                        const response = await manualStoreSimilarItem(parentItem, element[String.fromCharCode(65 + j)])
-                        if (response.status) {
-                            reportData.push({ parentItem, similarItem: element[String.fromCharCode(65 + j)], status: 'Success', message: response.data.message })
-                        } else {
-                            reportData.push({ parentItem, similarItem: element[String.fromCharCode(65 + j)], status: 'Failed', message: response.data.message })
-                        }
-                        toast.dismiss(itemToast);
-                        console.log(parentItem, element[String.fromCharCode(65 + j)])
-                    }
+            if (itemName && similarItemName) {
+                const response = await manualStoreSimilarItem(itemName, similarItemName)
+                if (response.status) {
+                    UploadReport.push({ parentItem: itemName, similarItem: similarItemName, status: 'Success', message: response.data.message })
+                } else {
+                    UploadReport.push({ parentItem: itemName, similarItem: similarItemName, status: 'Failed', message: response.data.message })
                 }
             }
-
-            setUploadReport(reportData)
-            // toast.dismiss(loading);
-            toast.success('File processed successfully', { icon: '🚀' });
-
-        } catch (error) {
-            toast.error('An error occurred while processing your file', { icon: '🚫' });
-            console.log(error)
         }
+
+        setUploadReport(UploadReport)
     }
 
     const createSheet = (data) => {
@@ -184,35 +151,46 @@ export default function page() {
                 <div className='m-auto'>
 
                     {
-                        !loadingExcel && ExcelJsonInput.length === 0 && InputtedExcelItemCount === 0 ? <input name='own' id='excelData' onChange={handleExcelFileInput} accept='application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' type="file" title='Your Excel File' className="file-input file-input-bordered file-input-warning w-full max-w-xs" /> : null
+                        ExcelJsonInput.length === 0 ? <input name='own' id='excelData' onChange={handleExcelFileInput} accept='application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' type="file" title='Your Excel File' className="file-input file-input-bordered file-input-warning w-full max-w-xs" /> : null
                     }
                 </div>
 
 
-                <div className='w-[100%] overflow-scroll justify-between flex bg-green-300'>
+
+
+                <div className='justify-center items-center flex text-2xl font-extrabold mb-6'>
                     {
-                        parentItems.length > 0 ? parentItems.map((item, index) => {
-                            return <div className='bg-green-600 m-2 p-2 rounded-md' key={index}>
-
-                                <p className='text-2xl font-bold'>{item}</p>
-
-                                {
-                                    ExcelJsonInput.map((childItem, childIndex) => {
-                                        return <p className='p-3' key={childIndex}>{childItem[String.fromCharCode(65 + index)]}</p>
-
-                                    })
-                                }
-                            </div>
-
-                        }) : null
+                        ExcelJsonInput.length > 0 && CurrentUpload > 1 && <>
+                            <p className='animate-pulse'>Processing {CurrentUpload} of {ExcelJsonInput.length} ({Math.round((CurrentUpload / ExcelJsonInput.length) * 100)}%)</p>
+                        </>
                     }
                 </div>
 
 
 
+                <div className='justify-center items-center flex'>
+                    <div className='flex flex-col'>
+
+                        {
+                            ExcelJsonInput.map((item, index) => {
+                                return <div key={index} className='items-center justify-center gap-5 bg-green-300 p-4 rounded-sm flex mb-2'>
+                                    <p className='text-black font-bold'>{item['A']}</p>
+                                    <p className='w-52 h-1 rounded-md bg-green-900'></p>
+                                    <p className='text-black font-bold'>{item['B']}</p>
+                                </div>
+                            })
+                        }
 
 
-            </div>
+
+                    </div>
+                </div >
+
+
+
+
+
+            </div >
             <div className="btm-nav glass bg-blue-800">
                 <button
                     onClick={() => {
@@ -233,8 +211,8 @@ export default function page() {
                 </button>
                 <button
                     onClick={() => {
-                        if (ExcelJsonInput.length > 0 && parentItems.length > 0)
-                            handleStoreSimilarItem(ExcelJsonInput, parentItems)
+                        if (ExcelJsonInput.length > 0)
+                            handleStoreSimilarItemNew(ExcelJsonInput)
                     }}
                     className="text-white hover:bg-blue-900"
                 >
