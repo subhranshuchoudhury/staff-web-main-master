@@ -212,7 +212,10 @@ export default function page() {
                 <button
                     onClick={() => {
                         if (ExcelJsonInput.length > 0)
-                            handleStoreSimilarItemNew(ExcelJsonInput)
+                            if (CurrentUpload !== 0)
+                                toast.error('Please wait for the current upload to finish', { icon: '🚀' });
+                            else
+                                handleStoreSimilarItemNew(ExcelJsonInput)
                     }}
                     className="text-white hover:bg-blue-900"
                 >
