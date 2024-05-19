@@ -6,6 +6,7 @@ import React, { useState } from 'react'
 import toast, { Toaster } from 'react-hot-toast';
 import * as XLSX from 'xlsx';
 
+
 export default function page() {
 
     const router = useRouter()
@@ -88,27 +89,61 @@ export default function page() {
 
 
 
-    const handleStoreSimilarItemNew = async (excelData) => {
+    // const handleStoreSimilarItemNew = async (excelData) => {
 
+    //     let UploadReport = []
+
+    //     for (let i = 0; i < excelData.length; i++) {
+    //         setCurrentUpload(i + 1)
+    //         const itemName = excelData[i]['A']
+    //         const similarItemName = excelData[i]['B']
+
+    //         if (itemName && similarItemName) {
+    //             const response = await manualStoreSimilarItem(itemName, similarItemName)
+    //             if (response.status) {
+    //                 UploadReport.push({ parentItem: itemName, similarItem: similarItemName, status: 'Success', message: response.data.message })
+    //             } else {
+    //                 UploadReport.push({ parentItem: itemName, similarItem: similarItemName, status: 'Failed', message: response.data.message })
+    //             }
+    //         }
+    //     }
+
+    //     setUploadReport(UploadReport)
+    // }
+
+    const handleStoreSimilarItemNew = async (excelData) => {
         let UploadReport = []
 
-        for (let i = 0; i < excelData.length; i++) {
-            setCurrentUpload(i + 1)
-            const itemName = excelData[i]['A']
-            const similarItemName = excelData[i]['B']
+        const concurrencyLimit = 5
+        let currentIndex = 0
 
-            if (itemName && similarItemName) {
-                const response = await manualStoreSimilarItem(itemName, similarItemName)
-                if (response.status) {
-                    UploadReport.push({ parentItem: itemName, similarItem: similarItemName, status: 'Success', message: response.data.message })
-                } else {
-                    UploadReport.push({ parentItem: itemName, similarItem: similarItemName, status: 'Failed', message: response.data.message })
+        const processItem = async () => {
+            while (currentIndex < excelData.length) {
+                const index = currentIndex++
+                setCurrentUpload(index + 1)
+                const itemName = excelData[index]['A']
+                const similarItemName = excelData[index]['B']
+
+                if (itemName && similarItemName) {
+                    const response = await manualStoreSimilarItem(itemName, similarItemName)
+                    if (response.status) {
+                        UploadReport.push({ parentItem: itemName, similarItem: similarItemName, status: 'Success', message: response.data.message })
+                    } else {
+                        UploadReport.push({ parentItem: itemName, similarItem: similarItemName, status: 'Failed', message: response.data.message })
+                    }
                 }
             }
         }
 
+        // Create an array of initial promises based on the concurrency limit
+        const promises = Array.from({ length: concurrencyLimit }, processItem)
+
+        // Wait for all promises to resolve
+        await Promise.all(promises)
+
         setUploadReport(UploadReport)
     }
+
 
     const createSheet = (data) => {
         let reportData = [
