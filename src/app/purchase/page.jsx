@@ -161,6 +161,9 @@ export default function page(props) {
         target: { name: "itemPartNo", value: result?.value },
       });
       handleFormChange({
+        target: { name: "unit", value: result?.unit },
+      });
+      handleFormChange({
         target: { name: "itemPartNoOrg", value: result?.pn || "N/A" },
       });
       handleFormChange({
@@ -269,6 +272,10 @@ export default function page(props) {
 
       handleFormChange({
         target: { name: "itemPartNo", value: result?.value },
+      });
+
+      handleFormChange({
+        target: { name: "unit", value: result?.unit },
       });
 
       handleFormChange({
@@ -1617,12 +1624,17 @@ export default function page(props) {
                   loc: formData?.itemLocation,
                   mrp: formData?.mrp,
                   gst: formData?.gstPercentage,
+                  unit: formData?.unit
                 }
               }
               onChange={(e) => {
+                console.log(e)
                 handleFormChange({
                   target: { name: "itemPartNo", value: e.value },
                 });
+                handleFormChange({
+                  target: { name: "unit", value: e.unit }
+                })
                 handleFormChange({
                   target: { name: "itemPartNoOrg", value: e?.pn || "N/A" },
                 });
