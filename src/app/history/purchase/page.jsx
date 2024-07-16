@@ -301,6 +301,7 @@ const Page = () => {
                           JSON.parse(d?.sheetdata)
                         );
 
+
                         addInDownloadedList(d._id);
                         router.refresh();
 
@@ -311,6 +312,26 @@ const Page = () => {
                       className="btn bg-green-700 m-5"
                     >
                       Download ⬇
+                    </button>
+                    <button
+                      onClick={() => {
+
+                        DownloadExcel(
+                          `Barcode-${d?.partyname}`,
+                          d?.invoice,
+                          JSON.parse(d?.barcodedata)
+                        );
+
+                        addInDownloadedList(d._id);
+                        router.refresh();
+
+                      }
+
+
+                      }
+                      className="btn bg-indigo-700 m-5"
+                    >
+                      Download Barcode ⬇
                     </button>
                   </div>
                 </div>

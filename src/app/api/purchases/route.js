@@ -35,6 +35,7 @@ export const POST = async (request) => {
     const data = await request.json();
     const payload = new Purchase({
       sheetdata: data?.sheetdata,
+      barcodedata: data?.barcodedata,
       items: data?.items,
       invoice: data?.invoice,
       partyname: data?.partyname,

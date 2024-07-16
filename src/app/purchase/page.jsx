@@ -1162,13 +1162,13 @@ export default function page(props) {
     ];
 
 
-    DownloadExcel(content[0]?.partyName, content[0]?.invoiceNo, data);
+    DownloadExcel(content[0]?.partyName, content[0]?.invoiceNo, data, barcodeData);
     DownloadBarcodeExcel(content[0]?.invoiceNo, barcodeData);
   };
 
   // * download the excel file
 
-  const DownloadExcel = (fileName, invoice, data) => {
+  const DownloadExcel = (fileName, invoice, data, barcodeData) => {
     const settings = {
       fileName: `${fileName}-${invoice?.split("-")[1] || invoice}`,
       extraLength: 3,
@@ -1178,7 +1178,7 @@ export default function page(props) {
     };
     let callback = function () {
       // * send the document to purchase history
-      sendPurchaseHistory(fileName, invoice, data);
+      sendPurchaseHistory(fileName, invoice, data, barcodeData);
       // * clear the localStorage
       clearLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA");
     };
@@ -1202,7 +1202,9 @@ export default function page(props) {
 
   // * upload the document to history
 
-  const sendPurchaseHistory = (partyname, invoice, sheet) => {
+  const sendPurchaseHistory = (partyname, invoice, sheet, barcodeSheet) => {
+    console.log("Barcode Data", barcodeSheet)
+    console.log("Sheet Data", sheet)
     handleModal(
       "⏳ Uploading...",
       "Please wait while we upload your document...",
@@ -1212,6 +1214,7 @@ export default function page(props) {
 
     const payload = {
       sheetdata: JSON.stringify(sheet),
+      barcodedata: JSON.stringify(barcodeSheet),
       items: sheet[0]?.content?.length,
       invoice,
       partyname,
