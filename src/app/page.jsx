@@ -127,6 +127,19 @@ const Page = () => {
           />
           <p>STOCK</p>
         </div>
+
+        <div
+          onClick={() => routePath("/stock/status")}
+          className="btn btn-info text-white w-44 h-28 m-5 shadow-2xl hover:shadow-white flex-col bg-transparent"
+        >
+          <Image
+            src="/assets/images/store.png"
+            alt="stock-status"
+            width={50}
+            height={50}
+          />
+          <p>STOCK STATUS</p>
+        </div>
         <div
           onClick={() => routePath("/history")}
           className="btn btn-info text-white w-44 h-28 m-5 shadow-2xl hover:shadow-white flex-col bg-transparent"
