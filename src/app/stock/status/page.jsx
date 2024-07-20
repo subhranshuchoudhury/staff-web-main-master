@@ -22,7 +22,7 @@ const StockStatus = () => {
     console.log('fetching items...')
     setLoading(true)
 
-    const storedData = JSON.parse(localStorage.getItem("ITEM_API_DATA") || "[]") || []
+    const storedData = JSON.parse(localStorage.getItem("ITEM_API_DATA") || "[]")
 
     setItems(storedData)
     try {
@@ -39,9 +39,6 @@ const StockStatus = () => {
       setLoading(false)
     }
   }
-
-
-  
 
   
   return (
@@ -75,13 +72,13 @@ const StockStatus = () => {
             <div className="flex justify-between items-center bg-base-100 rounded-md p-5 mt-5">
               <p className="text-lg">Closing Stock</p>
               <p className="text-xl font-bold text-green-400">{
-              selectedItem ? selectedItem.closingStock : 'Select an item'
+              selectedItem ? selectedItem?.closingStock : 'Select an item'
               }</p>
             </div>
             <div className="flex justify-between items-center bg-base-100 rounded-md p-5 mt-5">
               <p className="text-lg">Location</p>
               <p className="text-xl font-bold text-green-400">{
-              selectedItem ? selectedItem.storageLocation : 'Select an item'
+              selectedItem ? selectedItem?.storageLocation : 'Select an item'
               }</p>
             </div>
           </section>
