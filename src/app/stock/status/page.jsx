@@ -5,13 +5,8 @@ import CustomMenuList from "../../Dropdown/CustomMenuList";
 import { useState } from "react";
 import { useEffect } from "react";
 import { Toaster } from "react-hot-toast";
-import { set } from "mongoose";
 
 const StockStatus = () => {
-  const [closingStock, setClosingStock] = useState({
-    closingStockValue: null,
-    location: null
-  });
 
   const [items, setItems] = useState([])
   const [selectedItem, setSelectedItem] = useState(null)
@@ -26,11 +21,17 @@ const StockStatus = () => {
   const fetchItems = async () => { 
     console.log('fetching items...')
     setLoading(true)
+
+    const storedData = JSON.parse(localStorage.getItem("ITEM_API_DATA") || "[]") || []
+
+    setItems(storedData)
     try {
-      const response = await fetch('/api/stock/status', { next: { revalidate: 300 },cache:'force-cache' })
+      const response = await fetch('/api/stock/status', { cache:'default' })
       const data = await response.json()
-      console.log(data)
+      // console.log(data)
+      console.log("Item fetched")
       setItems(data)
+      localStorage.setItem("ITEM_API_DATA",JSON.stringify(data))
     } catch (error) {
       console.log(error)
       
@@ -48,24 +49,26 @@ const StockStatus = () => {
       <Toaster />
       <p className="text-center text-3xl font-bold">Stock Status</p>
       {
-        loading && <p className="text-center text-2xl font-bold mt-5 text-sky-500">Loading...</p>
+        loading && <div className="text-center mt-5">
+          <span className="loading loading-spinner loading-lg text-success"></span>
+        </div>
       }
       <div className="flex justify-center mt-16">
         <div className="w-[90%]">
-          <div className="flex justify-between items-center bg-base-200 rounded-sm p-5">
-            <p className="text-lg">Item Name</p>
+          <div className="bg-base-200 rounded-sm p-5">
+            <p className="text-lg text-center mb-5 font-bold">Select Item</p>
             <Select
               plaaceholder="SELECT ITEM/PART NO"
-              className="w-[75%] text-blue-800 font-bold"
+              className="text-blue-800 font-bold"
               options={items}
-              getOptionLabel={(option) => `${option["itemName"]} - ${option["partNumber"]}`}
+              getOptionLabel={(option) => `${option["itemName"]} : ${option["partNumber"]}`}
               onChange={(e) => {
                 setSelectedItem(e)
               }
               }
               filterOption={createFilter({ ignoreAccents: false })}
               components={{ Option: CustomOption, MenuList: CustomMenuList }}
-
+              value={selectedItem}
             />
           </div>
           <section className="mt-20 p-2 glass rounded-md">
