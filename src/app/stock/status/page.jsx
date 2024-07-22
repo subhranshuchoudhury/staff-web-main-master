@@ -26,7 +26,7 @@ const StockStatus = () => {
 
     setItems(storedData)
     try {
-      const response = await fetch('/api/stock/status', { cache:'default' })
+      const response = await fetch('/api/stock/status', { cache:'no-store' })
       const data = await response.json()
       // console.log(data)
       console.log("Item fetched")
