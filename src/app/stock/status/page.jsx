@@ -59,7 +59,15 @@ const StockStatus = () => {
               plaaceholder="SELECT ITEM/PART NO"
               className="text-blue-800 font-bold"
               options={items}
-              getOptionLabel={(option) => `${option["itemName"]} : ${option["partNumber"]}`}
+              formatOptionLabel={
+                ({ itemName }) => (
+                  <div className="flex justify-between">
+                    <p className="text-black">{itemName}</p>
+                  </div>
+                )
+              }
+              
+              getOptionLabel={(option) => `${option["itemName"]} ${option["partNumber"]}`}
               onChange={(e) => {
                 setSelectedItem(e)
               }
