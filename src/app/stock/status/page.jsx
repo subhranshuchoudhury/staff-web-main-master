@@ -5,6 +5,7 @@ import CustomMenuList from "../../Dropdown/CustomMenuList";
 import { useState } from "react";
 import { useEffect } from "react";
 import { Toaster } from "react-hot-toast";
+import next from "next";
 
 const StockStatus = () => {
 
@@ -26,7 +27,7 @@ const StockStatus = () => {
 
     setItems(storedData)
     try {
-      const response = await fetch('/api/stock/status', { cache:'no-store' }) // cache no-store to avoid caching
+      const response = await fetch('/api/stock/status', { next: { revalidate: 0 },cache:'no-store' }) // cache no-store to avoid caching
       const data = await response.json()
       // console.log(data)
       console.log("Item fetched")
