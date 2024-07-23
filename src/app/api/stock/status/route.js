@@ -17,7 +17,7 @@ const checkConnection = async () => {
 };
 
 
-
+export const dynamic = 'force-dynamic' // defaults to auto
 export const GET = async () => {
     try {
         checkConnection();
