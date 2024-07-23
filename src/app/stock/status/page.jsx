@@ -2,10 +2,9 @@
 import Select, { createFilter } from "react-select";
 import CustomOption from "../../Dropdown/CustomOption";
 import CustomMenuList from "../../Dropdown/CustomMenuList";
-import { useState } from "react";
+import { cache, useState } from "react";
 import { useEffect } from "react";
 import { Toaster } from "react-hot-toast";
-import next from "next";
 
 const StockStatus = () => {
 
@@ -27,7 +26,16 @@ const StockStatus = () => {
 
     setItems(storedData)
     try {
-      const response = await fetch('/api/stock/status', { next: { revalidate: 0 },cache:'no-store' }) // cache no-store to avoid caching
+      const options = {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-store'
+        },
+        cache: 'no-store',
+        next: { revalidate: 0 }
+      }
+      const response = await fetch('/api/stock/status', options) // cache no-store to avoid caching
       const data = await response.json()
       // console.log(data)
       console.log("Item fetched")
