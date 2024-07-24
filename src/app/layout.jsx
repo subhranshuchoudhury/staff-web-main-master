@@ -8,6 +8,7 @@ export const metadata = {
   keywords: "Jyeshtha Motors, Motors, Jyeshtha",
 };
 
+
 export default function RootLayout({ children }) {
   return (
     <html data-theme="synthwave" lang="en">
