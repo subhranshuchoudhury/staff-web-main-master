@@ -22,25 +22,20 @@ const StockStatus = () => {
     console.log('fetching items...')
     setLoading(true)
 
-    const storedData = JSON.parse(localStorage.getItem("ITEM_API_DATA") || "[]")
+    const storedData = JSON.parse(localStorage.getItem("ITEM_API_DATA_STOCK") || "[]")
 
     setItems(storedData)
     try {
       const options = {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-store'
-        },
         cache: 'no-store',
-        next: { revalidate: 0 }
       }
       const response = await fetch('/api/stock/status', options) // cache no-store to avoid caching
       const data = await response.json()
       // console.log(data)
       console.log("Item fetched")
       setItems(data)
-      localStorage.setItem("ITEM_API_DATA",JSON.stringify(data))
+      localStorage.setItem("ITEM_API_DATA_STOCK",JSON.stringify(data))
     } catch (error) {
       console.log(error)
       
@@ -64,7 +59,7 @@ const StockStatus = () => {
           <div className="bg-base-200 rounded-sm p-5">
             <p className="text-lg text-center mb-5 font-bold">Select Item</p>
             <Select
-              plaaceholder="SELECT ITEM/PART NO"
+              placeholder="SELECT ITEM/PART NO"
               className="text-blue-800 font-bold"
               options={items}
               formatOptionLabel={
