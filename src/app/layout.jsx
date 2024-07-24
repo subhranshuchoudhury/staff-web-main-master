@@ -1,5 +1,6 @@
 import Link from "next/link";
 import "./globals.css";
+import { Suspense } from "react";
 
 export const metadata = {
   title: "Jyeshtha Motors",
@@ -103,7 +104,9 @@ export default function RootLayout({ children }) {
           </div>
         </div>
         <div className="my-16"></div>
+        <Suspense fallback={null}>
         {children}
+        </Suspense>
       </body>
     </html>
   );
