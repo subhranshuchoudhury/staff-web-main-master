@@ -4,7 +4,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import xlsx from "json-as-xlsx";
 import { useState, useEffect } from "react";
-import Select, { createFilter, useStateManager } from "react-select";
+import Select, { createFilter } from "react-select";
 import gstAmount from "../DB/Purchase/gstamount";
 import gstType from "../DB/Purchase/gsttype";
 import {
@@ -40,6 +40,7 @@ export default function page() {
   const router = useRouter();
 
   useEffect(() => {
+    checkNotDownload();
     getItemsData();
   }, []);
 
@@ -115,9 +116,8 @@ export default function page() {
     });
   };
 
-  const handleFormChange = (event) => {
-    const name = event.target?.name;
-    const value = event.target?.value;
+  const handleFormChange = (name, value) => {
+    if (!name || !value) return;
     setFormData((values) => ({ ...values, [name]: value }));
   };
 
@@ -130,33 +130,32 @@ export default function page() {
       const storedItemData = await purchaseIDB.get("ITEMS_DATA");
       const storedPartyData = await purchaseIDB.get("PARTIES_DATA");
 
-
       if (storedItemData) setItemData(JSON.parse(storedItemData));
       if (storedPartyData) setPartyData(JSON.parse(storedPartyData));
 
-      const responses = await Promise.all([
-        fetch("/api/items"),
-        fetch(
-          "https://script.google.com/macros/s/AKfycbwr8ndVgq8gTbhOCRZChJT8xEOZZCOrjev29Uk6DCDLQksysu80oTb8VSnoZMsCQa3g/exec"
-        ),
-      ]);
+      // const responses = await Promise.all([
+      //   fetch("/api/items"),
+      //   fetch(
+      //     "https://script.google.com/macros/s/AKfycbwr8ndVgq8gTbhOCRZChJT8xEOZZCOrjev29Uk6DCDLQksysu80oTb8VSnoZMsCQa3g/exec"
+      //   ),
+      // ]);
 
-      const data = await Promise.all(
-        responses.map((response) => response.json())
-      );
+      // const data = await Promise.all(
+      //   responses.map((response) => response.json())
+      // );
 
-      const [itemData, partyData] = data;
+      // const [itemData, partyData] = data;
 
-      if (itemData?.length > 0 && partyData?.length > 0) {
-        setItemData(itemData);
-        setPartyData(partyData);
-        setLoadingExcel(false);
+      // if (itemData?.length > 0 && partyData?.length > 0) {
+      //   setItemData(itemData);
+      //   setPartyData(partyData);
+      //   setLoadingExcel(false);
 
-        await purchaseIDB.set("ITEMS_DATA", JSON.stringify(itemData));
-        await purchaseIDB.set("PARTIES_DATA", JSON.stringify(partyData));
-      } else {
-        toast.error("No item or party data found.");
-      }
+      //   await purchaseIDB.set("ITEMS_DATA", JSON.stringify(itemData));
+      //   await purchaseIDB.set("PARTIES_DATA", JSON.stringify(partyData));
+      // } else {
+      // toast.error("No item or party data found.");
+      // }
     } catch (error) {
       console.error("Error fetching data:", error);
       toast.error("Failed while getting item & party data.");
@@ -165,6 +164,7 @@ export default function page() {
     }
   };
 
+  // Append new added items to the localStorage in case of refresh
   const storeNotDownload = (obj) => {
     const retrievedArray =
       getLocalStorageJSONParse("PURCHASE_NOT_DOWNLOAD_DATA") || [];
@@ -172,8 +172,62 @@ export default function page() {
     setLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA", retrievedArray);
   };
 
-  // * Duplicate check
+  // Check if there is items are available that are not downloaded
 
+  const checkNotDownload = (isAgreed = false) => {
+    const retrievedArray = getLocalStorageJSONParse(
+      "PURCHASE_NOT_DOWNLOAD_DATA"
+    );
+    const agreed = () => {
+      if (retrievedArray !== null && retrievedArray !== undefined) {
+        setExcelContent(retrievedArray);
+        const constantFields = retrievedArray[0];
+        let dateString = constantFields?.billDate || "26-08-2003";
+        let dateParts = dateString.split("-");
+        let dateObject = new Date(dateParts[2], dateParts[1] - 1, dateParts[0]);
+
+        handleFormChange("invoiceNo", constantFields?.invoiceNo);
+        handleFormChange("partyName", constantFields?.partyName);
+        handleFormChange("invoiceDate", dateObject);
+      }
+    };
+
+    if (isAgreed) {
+      agreed();
+      return;
+    }
+
+    handleConfirmationModal(
+      "Confirmation ❓",
+      "Do you want to restore previous purchases?",
+      "Yes",
+      "No",
+      [
+        {
+          data: `📜 Invoice: ${retrievedArray?.[0]?.invoiceNo}`,
+          style: "text-xl font-bold",
+        },
+        {
+          data: `🤵 Party: ${retrievedArray?.[0]?.partyName}`,
+          style: "text-sm",
+        },
+        {
+          data: `📑 Total: ${retrievedArray?.length} items`,
+          style: "text-sm",
+        },
+        {
+          data: `📅 Date: ${retrievedArray?.[0]?.billDate}`,
+          style: "text-sm",
+        },
+      ],
+
+      agreed,
+      () => clearLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA")
+    );
+    retrievedArray && window.purchase_modal_2.showModal();
+  };
+
+  // Alert user when user tries to add a item that is previously added
   const isDuplicate = (item) => {
     const result = excelContent.find(
       (obj) =>
@@ -249,16 +303,14 @@ export default function page() {
       cgst = parseInt(gstValue / 2);
     }
 
-    if (formData?.purchaseType === "DM" && formData?.gstType === "Exclusive") {
+    if (formData?.purchaseType === "DM" && formData?.gstType === "Exclusive")
       disc = exclusiveDM(
         formData?.mrp,
         formData?.quantity,
         formData?.mDiscPercentage,
         gstValue
       );
-    } else if (formData?.purchaseType === "DM") {
-      disc = formData?.mDiscPercentage;
-    }
+    else if (formData?.purchaseType === "DM") disc = formData?.mDiscPercentage;
 
     // calculate the Total amount:
 
@@ -291,12 +343,7 @@ export default function page() {
       repetition: parseInt(formData?.quantity), // Quantity for print invoice duplication
     };
 
-    handleFormChange({
-      target: {
-        name: "dynamicdisc",
-        value: disc,
-      },
-    });
+    handleFormChange("dynamicdisc", disc);
 
     if (excelContent?.length === 0) {
       // credit days function
@@ -315,12 +362,9 @@ export default function page() {
     }
 
     const repetitionModal = (value) => {
-      if (isNaN(value)) {
-        //  when user clears all the value it will go back to default.
-        tempContent.repetition = parseInt(formData.quantity);
-      } else {
-        tempContent.repetition = value;
-      }
+      //  when user clears all the value it will go back to default.
+      if (isNaN(value)) tempContent.repetition = parseInt(formData.quantity);
+      else tempContent.repetition = value;
     };
 
     const modalConfirmedAdd = () => {
@@ -337,50 +381,15 @@ export default function page() {
 
       setQrResult("...");
 
-      handleFormChange({
-        target: {
-          name: "itemPartNo",
-          value: null,
-        },
-      });
+      handleFormChange("itemPartNo", null);
+      handleFormChange("dynamicdisc", null);
+      handleFormChange("quantity", null);
+      handleFormChange("mrp", null);
 
-      handleFormChange({
-        target: {
-          name: "dynamicdisc",
-          value: null,
-        },
-      });
+      if (formData?.gstType !== "Exempt")
+        handleFormChange("gstPercentage", null);
 
-      handleFormChange({
-        target: {
-          name: "quantity",
-          value: null,
-        },
-      });
-      handleFormChange({
-        target: {
-          name: "mrp",
-          value: null,
-        },
-      });
-
-      if (formData?.gstType !== "Exempt") {
-        handleFormChange({
-          target: {
-            name: "gstPercentage",
-            value: null,
-          },
-        });
-      }
-
-      if (formData?.purchaseType !== "DM") {
-        handleFormChange({
-          target: {
-            name: "amount",
-            value: null,
-          },
-        });
-      }
+      if (formData?.purchaseType !== "DM") handleFormChange("amount", null);
     };
 
     const askForConfirmation = (choice) => {
@@ -409,7 +418,7 @@ export default function page() {
             style: "text-sm",
           },
           {
-            data: `Item: ${formData?.itemPartNo}`,
+            data: `Item: ${formData?.itemName}`,
             style: "text-sm",
           },
         ],
@@ -494,93 +503,65 @@ export default function page() {
       window.purchase_modal_1.showModal();
       return;
     }
-    // empty variable to restore.
 
-    let content = [];
-    let BILL_REF_AMOUNT = 0;
-
-    // do not touch this.
-    excelContent.forEach((e) => {
-      content.push(e);
-      BILL_REF_AMOUNT += e?.amount;
+    let totalBillAmount = 0;
+    const content = excelContent.map((item) => {
+      totalBillAmount += item?.amount || 0;
+      return { ...item };
     });
-    content[0].BILL_REF_AMOUNT = Math.round(BILL_REF_AMOUNT);
+    content[0].BILL_REF_AMOUNT = Math.round(totalBillAmount);
 
-    let data = [
+    const data = [
       {
         sheet: "Sheet1",
-        columns: purchaseBillFormat,
-        content,
+        columns: formData?.isIGST
+          ? purchaseBillFormat
+              .filter((col) => col.value !== "cgst" && col.value !== "sgst")
+              .concat({
+                label: "IGST PERCENT",
+                value: "igstPercent",
+                format: "0",
+              })
+          : purchaseBillFormat,
+        content: formData?.isIGST
+          ? content.map((item) => ({
+              ...item,
+              igstPercent: parseInt(item?.sgst + item?.cgst),
+              disc: IGSTnewDiscPercentage(
+                item?.disc,
+                parseInt(item?.sgst + item?.cgst)
+              ),
+              amount: IGSTnewAmount(
+                item?.mrp,
+                item?.disc,
+                parseInt(item?.quantity),
+                parseInt(item?.sgst + item?.cgst)
+              ),
+              purchaseType: "IGST",
+            }))
+          : content,
       },
     ];
 
-    // console.log(data);
+    const barcodeContent = content.flatMap((item) => {
+      const date = new Date(item?.originDate);
+      const day = date.getDate().toString().padStart(2, "0");
+      const month = (date.getMonth() + 1).toString().padStart(2, "0");
+      const year = date.getFullYear().toString().slice(-2);
+      const roundedDisc = Math.round(item?.disc);
+      const discCode = `${roundedDisc}${day}${month}${year}`;
+      const itemName =
+        item?.itemPartNo === "N/A" ? item?.itemName : item?.itemPartNo;
 
-    if (formData?.isIGST) {
-      data[0].columns = data[0].columns.filter(
-        (col) => col.value !== "cgst" && col.value !== "sgst"
-      );
-      data[0].columns.push({
-        label: "IGST PERCENT",
-        value: "igstPercent",
-        format: "0",
-      });
-
-      data[0].content.forEach((e, index) => {
-        data[0].content[index].igstPercent = parseInt(e?.sgst + e?.cgst);
-        data[0].content[index].disc = IGSTnewDiscPercentage(
-          e?.disc,
-          e?.igstPercent
-        );
-        data[0].content[index].amount = IGSTnewAmount(
-          e?.mrp,
-          e?.disc,
-          parseInt(e?.quantity),
-          e?.igstPercent
-        );
-        data[0].content[index].purchaseType = "IGST";
-      });
-    }
-
-    // Barcode Invoice Generation
-
-    let barcodeContent = [];
-
-    for (let index = 0; index < content.length; index++) {
-      // format of disc: 10.65 -> 11, combine with today date to make it unique - 11100124
-      // Get current date
-      const currentDate = new Date(content[index]?.originDate);
-      const day = currentDate.getDate().toString().padStart(2, "0");
-      const month = (currentDate.getMonth() + 1).toString().padStart(2, "0");
-      const year = currentDate.getFullYear().toString().slice(-2);
-
-      // Given disc value
-      const disc = content[index]?.disc;
-
-      // Round off the disc value
-      const roundedDisc = Math.round(disc);
-
-      // Format the output
-      const output = `${roundedDisc}${day}${month}${year}`;
-
-      const tempObj = {
-        itemName:
-          content[index]?.itemPartNo === "N/A"
-            ? content[index]?.itemName
-            : content[index]?.itemPartNo,
-        discCode: output,
-        location: content[index]?.itemLocation || "N/A",
+      return Array(item.repetition).fill({
+        itemName,
+        discCode,
+        location: item?.itemLocation || "N/A",
         coupon: "",
-      };
+      });
+    });
 
-      for (let j = 0; j < content[index].repetition; j++) {
-        barcodeContent.push(tempObj);
-      }
-    }
-
-    console.log("CONTENT", content, "BARCODE", barcodeContent);
-
-    let barcodeData = [
+    const barcodeData = [
       {
         sheet: "Sheet1",
         columns: purchaseBarcodeFormat,
@@ -771,7 +752,7 @@ export default function page() {
         </form>
       </dialog>
 
-      <p className="text-center text-3xl font-bold mb-4">PURCHASE SECTION</p>
+      <p className="text-center text-3xl font-bold mb-4">Purchase Section</p>
       <div className="text-center m-auto">
         {loadingExcel && (
           <span className="loading loading-infinity w-[80px] text-sky-500"></span>
@@ -793,24 +774,20 @@ export default function page() {
                 }
               }
               onChange={(e) => {
-                handleFormChange({
-                  target: { name: "partyName", value: e?.value },
-                });
-                handleFormChange({
-                  target: {
-                    name: "creditDays",
-                    value:
-                      isNaN(e?.creditDays) || e?.creditDays === ""
-                        ? 0
-                        : e?.creditDays,
-                  },
-                });
+                handleFormChange("partyName", e?.value);
+                handleFormChange(
+                  "creditDays",
+
+                  isNaN(e?.creditDays) || e?.creditDays === ""
+                    ? 0
+                    : e?.creditDays
+                );
                 setLocalStorage("US_PN_REFERER", e?.value);
               }}
               noOptionsMessage={() => {
                 return (
                   <p
-                    onClick={() => router.push("/party")}
+                    onClick={() => toast.error("This is not yet done.")}
                     className="hover:cursor-pointer"
                   >
                     ➕ Add Party
@@ -828,12 +805,7 @@ export default function page() {
               disabled={excelContent?.length > 0}
               value={formData?.invoiceNo || ""}
               onChange={(e) => {
-                handleFormChange({
-                  target: {
-                    name: "invoiceNo",
-                    value: e.target.value?.toUpperCase(),
-                  },
-                });
+                handleFormChange("invoiceNo", e.target.value?.toUpperCase());
               }}
             />
 
@@ -846,12 +818,7 @@ export default function page() {
               dateFormat="dd/MM/yyyy"
               selected={formData?.invoiceDate ?? new Date()}
               onChange={(selectedDate) => {
-                handleFormChange({
-                  target: {
-                    name: "invoiceDate",
-                    value: selectedDate,
-                  },
-                });
+                handleFormChange("invoiceDate", selectedDate);
                 setLocalStorage("US_INV_DATE", selectedDate);
               }}
             />
@@ -866,16 +833,9 @@ export default function page() {
             value={formData?.gstType && { value: formData.gstType }}
             onChange={(e) => {
               if (e?.value === "Exempt") {
-                handleFormChange({
-                  target: {
-                    name: "gstPercentage",
-                    value: 0,
-                  },
-                });
+                handleFormChange("gstPercentage", 0);
               }
-              handleFormChange({
-                target: { name: "gstType", value: e.value },
-              });
+              handleFormChange("gstType", e.value);
             }}
           />
 
@@ -888,16 +848,9 @@ export default function page() {
               onChange={(e) => {
                 if (e?.value === "DM") {
                   // * whenever the purchase type is DM, the amount field will be hidden & zero.
-                  handleFormChange({
-                    target: {
-                      name: "amount",
-                      value: 0,
-                    },
-                  });
+                  handleFormChange("amount", 0);
                 }
-                handleFormChange({
-                  target: { name: "purchaseType", value: e.value },
-                });
+                handleFormChange("purchaseType", e.value);
               }}
               value={
                 formData?.purchaseType && {
@@ -919,14 +872,7 @@ export default function page() {
               isSearchable={false}
               options={choiceIGST}
               onChange={(e) => {
-                // alert("This is under development.");
-                // return;
-                handleFormChange({
-                  target: {
-                    name: "isIGST",
-                    value: e?.value,
-                  },
-                });
+                handleFormChange("isIGST", e?.value);
               }}
               value={{
                 label: formData?.isIGST
@@ -941,15 +887,10 @@ export default function page() {
               hidden={formData?.purchaseType === "DNM"}
               value={formData?.mDiscPercentage || ""}
               onChange={(e) => {
-                handleFormChange({
-                  target: {
-                    name: "mDiscPercentage",
-                    value: e.target.value,
-                  },
-                });
+                handleFormChange("mDiscPercentage", e.target.value);
               }}
               className="input input-bordered input-secondary w-[295px] m-5"
-              placeholder="MENTIONED DISC %"
+              placeholder="Mentioned Discount %"
               type="number"
               onWheel={(e) => {
                 e.target.blur();
@@ -969,14 +910,13 @@ export default function page() {
               onFocus={(e) => {
                 e.target.value = "";
                 setBarcodeScannedData("");
-                blur();
               }}
               type="text"
               placeholder="BARCODE SCAN 🔎"
               onChange={(e) => {
                 setBarcodeScannedData(e.target.value);
               }}
-              className="m-5 p-5 glass rounded-sm w-[295px] text-center"
+              className="m-5 p-5 glass rounded-full w-[300px] text-center"
             />
           </form>
           <p className="text-center m-5 glass rounded-sm">{qrResult}</p>
@@ -991,32 +931,25 @@ export default function page() {
               options={itemData}
               value={SelectedItem}
               onChange={(e) => {
-                setSelectedItem(e);
+                if (!formData?.gstType) {
+                  toast.error("Select GST Type");
+                  return;
+                }
+
                 console.log("Selected Item: ", e);
-                handleFormChange({
-                  target: { name: "itemName", value: e.itemName },
-                });
-                handleFormChange({
-                  target: { name: "unit", value: e?.unitName },
-                });
-                handleFormChange({
-                  target: { name: "itemPartNoOrg", value: e.partNumber },
-                });
-                handleFormChange({
-                  target: {
-                    name: "itemLocation",
-                    value: e?.storageLocation || "Not Available",
-                  },
-                });
+                setSelectedItem(e);
+                handleFormChange("itemName", e.itemName);
+                handleFormChange("unit", e?.unitName);
+                handleFormChange("itemPartNoOrg", e.partNumber);
+                handleFormChange("mrp", e?.unitPrice);
+                handleFormChange(
+                  "itemLocation",
+                  e?.storageLocation || "Not Available"
+                );
 
                 if (formData?.gstType !== "Exempt") {
                   // * if gst type is exempt, then it will not modify the gst percentage
-                  handleFormChange({
-                    target: {
-                      name: "gstPercentage",
-                      value: e?.gstPercentage || null,
-                    },
-                  });
+                  handleFormChange("gstPercentage", e?.gstPercentage || null);
                 }
               }}
               getOptionLabel={(option) =>
@@ -1045,9 +978,7 @@ export default function page() {
           <div>
             <input
               onChange={(e) => {
-                handleFormChange({
-                  target: { name: "quantity", value: e.target.value },
-                });
+                handleFormChange("quantity", e.target.value);
                 if (formData?.dynamicdisc && !isNaN(formData?.dynamicdisc)) {
                   let unitPrice = 0;
 
@@ -1064,12 +995,7 @@ export default function page() {
                     );
                   }
 
-                  handleFormChange({
-                    target: {
-                      name: "amount",
-                      value: unitPrice * e.target.value,
-                    },
-                  });
+                  handleFormChange("amount", unitPrice * e.target.value);
                 }
               }}
               className="input input-bordered input-secondary w-[295px] m-5"
@@ -1082,9 +1008,7 @@ export default function page() {
             />
             <input
               onChange={(e) => {
-                handleFormChange({
-                  target: { name: "mrp", value: e.target.value },
-                });
+                handleFormChange("mrp", e.target.value);
               }}
               value={formData?.mrp || ""}
               className="input input-bordered input-secondary w-[295px] m-5"
@@ -1110,9 +1034,7 @@ export default function page() {
                 }
               }
               onChange={(e) => {
-                handleFormChange({
-                  target: { name: "gstPercentage", value: e.value },
-                });
+                handleFormChange("gstPercentage", e.value);
               }}
             />
           )}
@@ -1120,9 +1042,7 @@ export default function page() {
 
         <input
           onChange={(e) => {
-            handleFormChange({
-              target: { name: "amount", value: e.target.value },
-            });
+            handleFormChange("amount", e.target.value);
           }}
           value={formData?.amount || ""}
           className={[
