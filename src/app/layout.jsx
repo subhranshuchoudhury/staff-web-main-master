@@ -5,13 +5,14 @@ import { Suspense } from "react";
 export const metadata = {
   title: "Jyeshtha Motors",
   description: "Dedicated web app for Jyeshtha Motors.",
+  keywords: "Jyeshtha Motors, Motors, Jyeshtha",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html data-theme="synthwave" lang="en">
       <head>
-        <title>Jyeshtha Motors PWA</title>
+        <title>Jyeshtha Motors</title>
         <meta
           name="description"
           content="Web App for managing Jyeshtha Motors shop."
@@ -42,29 +43,7 @@ export default function RootLayout({ children }) {
                 tabIndex={0}
                 className="menu menu-sm dropdown-content mt-3 p-2 bg-blue-950  rounded-box w-52 z-20"
               >
-                {/* <li>
-                  <Link href={"/purchase/party"}>Add New Party</Link>
-                </li> */}
-                {/* <li>
-                  <Link href={"/purchase/item"}>Add New Item</Link>
-                </li> */}
-                {/* <li>
-                  <Link href={"/add-item-group"}>Add Item Group</Link>
-                </li>
-
-                <li>
-                  <Link href={"/sale"}>Sale</Link>
-                </li>
-
-                <li>
-                  <Link href={"/history"}>History</Link>
-                </li>
-                <li>
-                  <Link href={"/settings"}>Settings</Link>
-                </li>
-                <li>
-                  <Link href={"/test"}>TEST (Dev)</Link>
-                </li> */}
+                
                 <li>
                   <Link href={"/"}>Home</Link>
                 </li>

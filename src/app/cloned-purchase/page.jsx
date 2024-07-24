@@ -32,10 +32,11 @@ import {
   setLocalStorage,
   clearLocalStorage,
   getLocalStorageJSONParse,
-  getSetLocalStorage,
 } from "@/utils/localstorage";
+import { SimpleIDB } from "@/utils/idb";
+const purchaseIDB = new SimpleIDB("Purchase", "purchase");
 
-export default function page(props) {
+export default function page() {
   const router = useRouter();
 
   useEffect(() => {
@@ -120,43 +121,48 @@ export default function page(props) {
     setFormData((values) => ({ ...values, [name]: value }));
   };
 
-  // * save the current state: (date, gstType, DNM)
-
   const getItemsData = async () => {
-    console.log("Fetching item & party data...")
-    getSetLocalStorage("PARTY_API_DATA", setPartyData);
-    getSetLocalStorage("ITEM_API_DATA_PURCHASE", setItemData);
+    console.log("Fetching item & party data...");
 
-    Promise.all([
-      fetch("/api/items"),
-      fetch(
-        "https://script.google.com/macros/s/AKfycbwr8ndVgq8gTbhOCRZChJT8xEOZZCOrjev29Uk6DCDLQksysu80oTb8VSnoZMsCQa3g/exec"
-      ),
-    ])
-      .then((responses) =>
-        Promise.all(responses.map((response) => response.json()))
-      )
-      .then((data) => {
-        // data[0] contains the items
-        // data[1] contains the party
+    try {
+      setLoadingExcel(true);
 
-        const item_data = data[0];
-        const party_data = data[1];
+      const storedItemData = await purchaseIDB.get("ITEMS_DATA");
+      const storedPartyData = await purchaseIDB.get("PARTIES_DATA");
 
-        console.log("Item Data", item_data);
 
-        setItemData(item_data);
-        setPartyData(party_data);
+      if (storedItemData) setItemData(JSON.parse(storedItemData));
+      if (storedPartyData) setPartyData(JSON.parse(storedPartyData));
 
+      const responses = await Promise.all([
+        fetch("/api/items"),
+        fetch(
+          "https://script.google.com/macros/s/AKfycbwr8ndVgq8gTbhOCRZChJT8xEOZZCOrjev29Uk6DCDLQksysu80oTb8VSnoZMsCQa3g/exec"
+        ),
+      ]);
+
+      const data = await Promise.all(
+        responses.map((response) => response.json())
+      );
+
+      const [itemData, partyData] = data;
+
+      if (itemData?.length > 0 && partyData?.length > 0) {
+        setItemData(itemData);
+        setPartyData(partyData);
         setLoadingExcel(false);
 
-        setLocalStorage("PARTY_API_DATA", JSON.stringify(party_data));
-        setLocalStorage("ITEM_API_DATA_PURCHASE", JSON.stringify(item_data));
-      })
-      .catch((error) => {
-        setLoadingExcel(true);
-        console.error(error);
-      });
+        await purchaseIDB.set("ITEMS_DATA", JSON.stringify(itemData));
+        await purchaseIDB.set("PARTIES_DATA", JSON.stringify(partyData));
+      } else {
+        toast.error("No item or party data found.");
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      toast.error("Failed while getting item & party data.");
+    } finally {
+      setLoadingExcel(false);
+    }
   };
 
   const storeNotDownload = (obj) => {

@@ -2,9 +2,13 @@
 import Select, { createFilter } from "react-select";
 import CustomOption from "../../Dropdown/CustomOption";
 import CustomMenuList from "../../Dropdown/CustomMenuList";
-import { cache, useState } from "react";
+import {  useState } from "react";
 import { useEffect } from "react";
 import { Toaster } from "react-hot-toast";
+
+import { SimpleIDB } from "@/utils/idb";
+
+const stockIDB = new SimpleIDB("Stock", "stock");
 
 const StockStatus = () => {
 
@@ -22,9 +26,9 @@ const StockStatus = () => {
     console.log('fetching items...')
     setLoading(true)
 
-    const storedData = JSON.parse(localStorage.getItem("ITEM_API_DATA_STOCK") || "[]")
-
-    setItems(storedData)
+    const storedData = await stockIDB.get("ITEMS_DATA")
+    if(storedData)
+    setItems(JSON.parse(storedData))
     try {
       const options = {
         method: 'GET',
@@ -32,10 +36,10 @@ const StockStatus = () => {
       }
       const response = await fetch('/api/stock/status', options) // cache no-store to avoid caching
       const data = await response.json()
-      // console.log(data)
-      console.log("Item fetched")
-      setItems(data)
-      localStorage.setItem("ITEM_API_DATA_STOCK",JSON.stringify(data))
+      if (data?.length > 0) {
+        setItems(data)
+        await stockIDB.set("ITEMS_DATA", JSON.stringify(data))
+      }
     } catch (error) {
       console.log(error)
       
