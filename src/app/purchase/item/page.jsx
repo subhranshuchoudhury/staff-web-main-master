@@ -111,9 +111,9 @@ const Page = () => {
     window.my_modal_1.showModal();
 
     const payload = {
-      item_name: d.Item_Name,
-      loc: d.Loc,
-      part_no: d.Item_Alias,
+      item_name: d.Item_Name?.toUpperCase(),
+      loc: d.Loc?.toUpperCase(),
+      part_no: d.Item_Alias?.toUpperCase(),
       unit: d.Item_Main_Unit,
       mrp: d?.MRP,
       gst: d?.Tax_Category?.split("%")[0],
@@ -211,7 +211,7 @@ const Page = () => {
 
     if (isEmpty) {
       setModalMessage({
-        message: "At least one value (field) is empty!",
+        message: "All the fields are not filled.",
         title: "Empty 🫙",
         btn: "Ok",
       });
@@ -245,14 +245,20 @@ const Page = () => {
       {
         sheet: "Sheet1",
         columns: [
-          { label: "Item_Name", value: "Item_Name" },
-          { label: "Item_Alias", value: "Item_Alias" },
+          {
+            label: "Item_Name",
+            value: (row) => row["Item_Name"].toUpperCase(),
+          },
+          {
+            label: "Item_Alias",
+            value: (row) => row["Item_Alias"].toUpperCase(),
+          },
           { label: "Item_Group", value: "Item_Group" },
           { label: "Item_Main_Unit", value: "Item_Main_Unit" },
           { label: "Tax_Category", value: "Tax_Category" },
-          { label: "HSN", value: "HSN" },
+          { label: "HSN", value: (row) => row["HSN"].toUpperCase() },
           { label: "MRP", value: "MRP", format: "0.00" },
-          { label: "Loc", value: "Loc" },
+          { label: "Loc", value: (row) => row["Loc"].toUpperCase() },
           { label: "MRP wise details", value: "MRP_Wise_Details" },
         ],
         content,
@@ -301,8 +307,8 @@ const Page = () => {
     const payload = {
       sheetdata: JSON.stringify(sheet),
       items: sheet[0]?.content?.length,
-      invoice,
-      partyname,
+      invoice: invoice?.toUpperCase(),
+      partyname: partyname?.toUpperCase(),
       desc: "New Item",
     };
 
@@ -372,7 +378,7 @@ const Page = () => {
           placeholder="ENTER ITEM NAME"
           type="text"
           onChange={(e) => {
-            DATA.Item_Name = e?.target?.value?.toUpperCase();
+            DATA.Item_Name = e?.target?.value;
           }}
         />
         <input
@@ -381,7 +387,7 @@ const Page = () => {
           type="text"
           ref={aliasRef}
           onChange={(e) => {
-            DATA.Item_Alias = e?.target?.value?.toUpperCase();
+            DATA.Item_Alias = e?.target?.value;
           }}
         />
 
@@ -393,7 +399,7 @@ const Page = () => {
               placeholder="ENTER PARTY NAME"
               type="text"
               onChange={(e) => {
-                setPartyName(e.target?.value?.toUpperCase());
+                setPartyName(e.target?.value);
                 localStorage.setItem("US_PN_REFERER", e?.target?.value);
               }}
             />
@@ -403,7 +409,7 @@ const Page = () => {
               placeholder="ENTER INVOICE"
               type="text"
               onChange={(e) => {
-                setInvoice(e.target?.value?.toUpperCase());
+                setInvoice(e.target?.value);
                 localStorage.setItem("US_INV_REFERER", e?.target?.value);
               }}
             />
@@ -469,7 +475,7 @@ const Page = () => {
           placeholder="LOCATION"
           type="text"
           onChange={(e) => {
-            DATA.Loc = e?.target?.value?.toUpperCase();
+            DATA.Loc = e?.target?.value;
           }}
         />
       </div>
