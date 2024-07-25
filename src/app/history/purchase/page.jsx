@@ -5,7 +5,6 @@ import xlsx from "json-as-xlsx";
 import toast, { Toaster } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 
-
 const Page = () => {
   const [SavedData, setSavedData] = useState([]);
   const [Loading, setLoading] = useState(true);
@@ -150,14 +149,14 @@ const Page = () => {
       const localDownloadedList = localStorage.getItem("ADI");
 
       if (localDownloadedList === null || localDownloadedList === undefined) {
-        localStorage.setItem("ADI", JSON.stringify([{ id: id }]))
+        localStorage.setItem("ADI", JSON.stringify([{ id: id }]));
       } else {
         let parsedList = JSON.parse(localDownloadedList);
         parsedList.push({ id: id });
         localStorage.setItem("ADI", JSON.stringify(parsedList));
       }
     }
-  }
+  };
 
   const checkIsAlreadyDownload = (id) => {
     const localDownloadedList = localStorage.getItem("ADI");
@@ -165,12 +164,11 @@ const Page = () => {
     if (localDownloadedList === null || localDownloadedList === undefined) {
       return false;
     } else {
-      const parsedList = JSON.parse(localDownloadedList)
+      const parsedList = JSON.parse(localDownloadedList);
       const isPresent = parsedList.find((item) => item.id === id);
       return isPresent ? true : false;
-
     }
-  }
+  };
   return (
     <div>
       <Toaster />
@@ -257,11 +255,11 @@ const Page = () => {
                     </p>
                   </div>
                   <div className="flex justify-center flex-row flex-wrap">
-                    {
-                      checkIsAlreadyDownload(d._id) && <button className="btn btn-error animate-pulse m-1 hover:cursor-default">
+                    {checkIsAlreadyDownload(d._id) && (
+                      <button className="btn btn-error animate-pulse m-1 hover:cursor-default">
                         Downloaded
                       </button>
-                    }
+                    )}
                     <button className="btn btn-accent m-1 hover:cursor-default">
                       {d?.desc}
                     </button>
@@ -274,10 +272,12 @@ const Page = () => {
                     <button className="btn btn-neutral m-1 hover:cursor-default">
                       PARTY: {d?.partyname}
                     </button>
-                    <button className="btn btn-neutral m-1 hover:cursor-default">
-                      TOTAL AMOUNT:{" "}
-                      {JSON.parse(d?.sheetdata)[0].content[0].BILL_REF_AMOUNT}
-                    </button>
+                    {JSON.parse(d?.sheetdata)[0].content[0].BILL_REF_AMOUNT && (
+                      <button className="btn btn-neutral m-1 hover:cursor-default">
+                        TOTAL AMOUNT:{" "}
+                        {JSON.parse(d?.sheetdata)[0].content[0].BILL_REF_AMOUNT}
+                      </button>
+                    )}
                   </div>
 
                   <div className="flex justify-center h-10 bg-slate-300 rounded-b-xl">
@@ -301,38 +301,30 @@ const Page = () => {
                           JSON.parse(d?.sheetdata)
                         );
 
-
                         addInDownloadedList(d._id);
                         router.refresh();
-
-                      }
-
-
-                      }
+                      }}
                       className="btn bg-green-700 m-5"
                     >
                       Download ⬇
                     </button>
-                    <button
-                      onClick={() => {
+                    {d?.barcodedata && (
+                      <button
+                        onClick={() => {
+                          DownloadExcel(
+                            `Barcode-${d?.partyname}`,
+                            d?.invoice,
+                            JSON.parse(d?.barcodedata)
+                          );
 
-                        DownloadExcel(
-                          `Barcode-${d?.partyname}`,
-                          d?.invoice,
-                          JSON.parse(d?.barcodedata)
-                        );
-
-                        addInDownloadedList(d._id);
-                        router.refresh();
-
-                      }
-
-
-                      }
-                      className="btn bg-indigo-700 m-5"
-                    >
-                      Download Barcode ⬇
-                    </button>
+                          addInDownloadedList(d._id);
+                          router.refresh();
+                        }}
+                        className="btn bg-indigo-700 m-5"
+                      >
+                        Download Barcode ⬇
+                      </button>
+                    )}
                   </div>
                 </div>
               );

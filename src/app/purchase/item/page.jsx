@@ -111,9 +111,9 @@ const Page = () => {
     window.my_modal_1.showModal();
 
     const payload = {
-      item_name: d.Item_Name?.toUpperCase(),
-      loc: d.Loc?.toUpperCase(),
-      part_no: d.Item_Alias?.toUpperCase(),
+      item_name: d.Item_Name,
+      loc: d.Loc,
+      part_no: d.Item_Alias,
       unit: d.Item_Main_Unit,
       mrp: d?.MRP,
       gst: d?.Tax_Category?.split("%")[0],
@@ -320,11 +320,6 @@ const Page = () => {
             title: "✔ Done",
             btn: "Ok",
           });
-
-          const isApp = localStorage.getItem("EXPO_SCN_RESULT");
-          if (isApp !== null || isApp !== undefined) {
-            router.push("/history/purchase/share/latest?download=1");
-          }
         } else {
           setModalMessage({
             message: `❌ Saved to cloud failed.`,
@@ -335,6 +330,7 @@ const Page = () => {
       })
       .catch((err) => {
         alert("❌ The item is not uploaded to the history.", err);
+        console.log(err);
       });
   };
 
@@ -376,7 +372,7 @@ const Page = () => {
           placeholder="ENTER ITEM NAME"
           type="text"
           onChange={(e) => {
-            DATA.Item_Name = e.target?.value;
+            DATA.Item_Name = e?.target?.value?.toUpperCase();
           }}
         />
         <input
@@ -385,7 +381,7 @@ const Page = () => {
           type="text"
           ref={aliasRef}
           onChange={(e) => {
-            DATA.Item_Alias = e.target?.value;
+            DATA.Item_Alias = e?.target?.value?.toUpperCase();
           }}
         />
 
@@ -397,7 +393,7 @@ const Page = () => {
               placeholder="ENTER PARTY NAME"
               type="text"
               onChange={(e) => {
-                setPartyName(e.target?.value);
+                setPartyName(e.target?.value?.toUpperCase());
                 localStorage.setItem("US_PN_REFERER", e?.target?.value);
               }}
             />
@@ -407,7 +403,7 @@ const Page = () => {
               placeholder="ENTER INVOICE"
               type="text"
               onChange={(e) => {
-                setInvoice(e.target?.value);
+                setInvoice(e.target?.value?.toUpperCase());
                 localStorage.setItem("US_INV_REFERER", e?.target?.value);
               }}
             />
@@ -438,7 +434,7 @@ const Page = () => {
         }}
       />
       <Select
-        placeholder="TAX CATEGORY "
+        placeholder="TAX CATEGORY"
         className="w-full m-auto p-5 text-blue-800 font-bold"
         options={gstAmount}
         isSearchable={false}
@@ -450,10 +446,10 @@ const Page = () => {
       <div className="flex justify-center items-center flex-wrap">
         <input
           className="input input-bordered input-secondary w-[320px] m-5 uppercase"
-          placeholder="HSN CODE "
+          placeholder="HSN CODE"
           type="text"
           onChange={(e) => {
-            DATA.HSN = e.target?.value;
+            DATA.HSN = e?.target?.value;
           }}
         />
         <input
@@ -473,7 +469,7 @@ const Page = () => {
           placeholder="LOCATION"
           type="text"
           onChange={(e) => {
-            DATA.Loc = e.target?.value;
+            DATA.Loc = e?.target?.value?.toUpperCase();
           }}
         />
       </div>
