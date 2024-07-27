@@ -34,6 +34,10 @@ import {
   getLocalStorageJSONParse,
 } from "@/utils/localstorage";
 import { SimpleIDB } from "@/utils/idb";
+import {
+  exclusiveTaxTotalAmount,
+  inclusiveExemptTaxTotalAmount,
+} from "@/utils/purchase/calc";
 const purchaseIDB = new SimpleIDB("Purchase", "purchase");
 
 export default function page() {
@@ -117,7 +121,7 @@ export default function page() {
   };
 
   const handleFormChange = (name, value) => {
-    if (!name || !value) return;
+    if (!name) return;
     setFormData((values) => ({ ...values, [name]: value }));
   };
 
@@ -133,29 +137,29 @@ export default function page() {
       if (storedItemData) setItemData(JSON.parse(storedItemData));
       if (storedPartyData) setPartyData(JSON.parse(storedPartyData));
 
-      // const responses = await Promise.all([
-      //   fetch("/api/items"),
-      //   fetch(
-      //     "https://script.google.com/macros/s/AKfycbwr8ndVgq8gTbhOCRZChJT8xEOZZCOrjev29Uk6DCDLQksysu80oTb8VSnoZMsCQa3g/exec"
-      //   ),
-      // ]);
+      const responses = await Promise.all([
+        fetch("/api/items"),
+        fetch(
+          "https://script.google.com/macros/s/AKfycbwr8ndVgq8gTbhOCRZChJT8xEOZZCOrjev29Uk6DCDLQksysu80oTb8VSnoZMsCQa3g/exec"
+        ),
+      ]);
 
-      // const data = await Promise.all(
-      //   responses.map((response) => response.json())
-      // );
+      const data = await Promise.all(
+        responses.map((response) => response.json())
+      );
 
-      // const [itemData, partyData] = data;
+      const [itemData, partyData] = data;
 
-      // if (itemData?.length > 0 && partyData?.length > 0) {
-      //   setItemData(itemData);
-      //   setPartyData(partyData);
-      //   setLoadingExcel(false);
+      if (itemData?.length > 0 && partyData?.length > 0) {
+        setItemData(itemData);
+        setPartyData(partyData);
+        setLoadingExcel(false);
 
-      //   await purchaseIDB.set("ITEMS_DATA", JSON.stringify(itemData));
-      //   await purchaseIDB.set("PARTIES_DATA", JSON.stringify(partyData));
-      // } else {
-      // toast.error("No item or party data found.");
-      // }
+        await purchaseIDB.set("ITEMS_DATA", JSON.stringify(itemData));
+        await purchaseIDB.set("PARTIES_DATA", JSON.stringify(partyData));
+      } else {
+        toast.error("No item or party data found.");
+      }
     } catch (error) {
       console.error("Error fetching data:", error);
       toast.error("Failed while getting item & party data.");
@@ -898,7 +902,7 @@ export default function page() {
             />
           </div>
 
-          <form
+          {/* <form
             className="animate-pulse"
             onSubmit={(e) => {
               e.preventDefault();
@@ -918,8 +922,8 @@ export default function page() {
               }}
               className="m-5 p-5 glass rounded-full w-[300px] text-center"
             />
-          </form>
-          <p className="text-center m-5 glass rounded-sm">{qrResult}</p>
+          </form> */}
+          {/* <p className="text-center m-5 glass rounded-sm">{qrResult}</p> */}
 
           {/* Item DropDown */}
           {itemData?.length > 0 && (
@@ -979,6 +983,7 @@ export default function page() {
             <input
               onChange={(e) => {
                 handleFormChange("quantity", e.target.value);
+
                 if (formData?.dynamicdisc && !isNaN(formData?.dynamicdisc)) {
                   let unitPrice = 0;
 
@@ -989,6 +994,7 @@ export default function page() {
                       formData?.gstPercentage?.replace("%", "")
                     );
                   } else {
+                    // * if gst type is exempt & inclusive
                     unitPrice = unitPriceCalcEXemptInclDISC(
                       formData?.mrp,
                       formData?.dynamicdisc
@@ -996,6 +1002,21 @@ export default function page() {
                   }
 
                   handleFormChange("amount", unitPrice * e.target.value);
+                } else if (formData?.mrp) {
+                  if (formData?.gstType === "Exclusive") {
+                    const exclusiveTotalAmount = exclusiveTaxTotalAmount(
+                      100,
+                      e.target.value,
+                      formData?.gstPercentage
+                    );
+                    handleFormChange("amount", exclusiveTotalAmount);
+                  } else {
+                    const inclExemptTotalAmount = inclusiveExemptTaxTotalAmount(
+                      formData?.mrp,
+                      e.target.value
+                    );
+                    handleFormChange("amount", inclExemptTotalAmount);
+                  }
                 }
               }}
               className="input input-bordered input-secondary w-[295px] m-5"
