@@ -1,11 +1,11 @@
 // D4 - mrp & D6 - unit price after discount values
 
-const inclusiveExemptTaxTotalAmount = (mrp, quantity) => {
-  if (!mrp || !quantity) {
+const inclusiveExemptTaxTotalAmount = (unitPriceAfterDiscount, quantity) => {
+  if (!unitPriceAfterDiscount || !quantity) {
     return;
   }
   const qty = parseInt(quantity);
-  const m = parseFloat(mrp);
+  const m = parseFloat(unitPriceAfterDiscount);
   const result = m * qty;
   return Math.round(result * 100) / 100;
 };

@@ -63,10 +63,11 @@ export default function page() {
     purchaseType: "DNM",
     mDiscPercentage: 0, // mention discount percentage
     itemName: null,
-    itemPartNoOrg: null,
+    itemPartNoOrg: null, // part no of the item
     itemLocation: null, // from item data
     quantity: 0,
-    mrp: null,
+    mrp: null, // D4 value
+    unitPriceAfterDiscount_D6: null,
     gstPercentage: null,
     amount: null,
     finalDisc: "ERROR!",
@@ -90,6 +91,7 @@ export default function page() {
     btn_f_1: () => {},
     btn_f_2: () => {},
     norm_f_3: () => {},
+    norm_f_4: () => {},
   });
 
   // * handle the modal
@@ -271,8 +273,6 @@ export default function page() {
   // * handle the add button
 
   const addSingleFormContent = () => {
-    // * Converting the new Date() to dd-mm-yyyy format
-
     // * mutable values
     let gstValue =
       formData?.gstType === "Exempt"
@@ -347,6 +347,7 @@ export default function page() {
       repetition: parseInt(formData?.quantity), // Quantity for print invoice duplication
     };
 
+    // dynamic discount calculation
     handleFormChange("dynamicdisc", disc);
 
     if (excelContent?.length === 0) {
@@ -385,7 +386,7 @@ export default function page() {
 
       setQrResult("...");
 
-      handleFormChange("itemPartNo", null);
+      handleFormChange("itemName", null);
       handleFormChange("dynamicdisc", null);
       handleFormChange("quantity", null);
       handleFormChange("mrp", null);
@@ -482,7 +483,7 @@ export default function page() {
             style: "text-sm",
           },
           {
-            data: `Item: ${formData?.itemPartNo}`,
+            data: `Item: ${formData?.itemName}`,
             style: "text-sm",
           },
         ],
@@ -738,6 +739,18 @@ export default function page() {
               modalConfirmation.norm_f_3(parseInt(e.target.value));
             }}
           />
+          <br />
+          <label className="text-yellow-300">Location</label>
+          <input
+            className="input input-bordered input-secondary m-5 uppercase w-[295px]"
+            placeholder={formData?.itemLocation || ""}
+            type="text"
+            name="itemLocation"
+            value={formData?.itemLocation || ""}
+            onChange={(e) => {
+              handleFormChange("itemLocation", e.target.value);
+            }}
+          />
           <div className="modal-action">
             {/* if there is a button in form, it will close the modal */}
             <button
@@ -947,6 +960,10 @@ export default function page() {
                 handleFormChange("itemPartNoOrg", e.partNumber);
                 handleFormChange("mrp", e?.unitPrice);
                 handleFormChange(
+                  "unitPriceAfterDiscount_D6",
+                  e?.unitPriceAfterDiscount
+                );
+                handleFormChange(
                   "itemLocation",
                   e?.storageLocation || "Not Available"
                 );
@@ -982,8 +999,14 @@ export default function page() {
           <div>
             <input
               onChange={(e) => {
+                if (!formData?.itemName) {
+                  toast.error("Select an item");
+                  return;
+                }
+
                 handleFormChange("quantity", e.target.value);
 
+                // when dynamic discount is available
                 if (formData?.dynamicdisc && !isNaN(formData?.dynamicdisc)) {
                   let unitPrice = 0;
 
@@ -1002,17 +1025,17 @@ export default function page() {
                   }
 
                   handleFormChange("amount", unitPrice * e.target.value);
-                } else if (formData?.mrp) {
+                } else if (formData?.unitPriceAfterDiscount_D6) {
                   if (formData?.gstType === "Exclusive") {
                     const exclusiveTotalAmount = exclusiveTaxTotalAmount(
-                      100,
+                      formData.unitPriceAfterDiscount_D6,
                       e.target.value,
                       formData?.gstPercentage
                     );
                     handleFormChange("amount", exclusiveTotalAmount);
                   } else {
                     const inclExemptTotalAmount = inclusiveExemptTaxTotalAmount(
-                      formData?.mrp,
+                      formData?.unitPriceAfterDiscount_D6,
                       e.target.value
                     );
                     handleFormChange("amount", inclExemptTotalAmount);
