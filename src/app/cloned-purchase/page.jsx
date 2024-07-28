@@ -379,14 +379,15 @@ export default function page() {
       handleModal("Success ✅", "Content Added Successfully!", "Okay");
       window.purchase_modal_1.showModal();
 
-      // * clearing some fields
-
       // setQrResult("...");
 
+      // * clearing fields
       handleFormChange("itemName", null);
       handleFormChange("dynamicdisc", null);
       handleFormChange("quantity", null);
       handleFormChange("mrp", null);
+      handleFormChange("itemLocation", null);
+      setSelectedItem(null);
 
       if (formData?.gstType !== "Exempt")
         handleFormChange("gstPercentage", null);
@@ -736,18 +737,7 @@ export default function page() {
               modalConfirmation.norm_f_3(parseInt(e.target.value));
             }}
           />
-          <br />
-          <label className="text-yellow-300">Location</label>
-          <input
-            className="input input-bordered input-secondary m-5 uppercase w-[295px]"
-            placeholder={formData?.itemLocation || ""}
-            type="text"
-            name="itemLocation"
-            value={formData?.itemLocation || ""}
-            onChange={(e) => {
-              handleFormChange("itemLocation", e.target.value);
-            }}
-          />
+
           <div className="modal-action">
             {/* if there is a button in form, it will close the modal */}
             <button
@@ -1084,6 +1074,16 @@ export default function page() {
             />
           )}
         </div>
+
+        <input
+          onChange={(e) => {
+            handleFormChange("itemLocation", e.target.value);
+          }}
+          value={formData?.itemLocation || ""}
+          className={"input input-bordered  w-[295px] m-5 input-accent"}
+          placeholder="Item Location"
+          type="text"
+        />
 
         <input
           onChange={(e) => {
