@@ -853,6 +853,8 @@ export default function page() {
                 handleFormChange("gstPercentage", 0);
               }
               handleFormChange("gstType", e.value);
+              handleFormChange("quantity", 0); // clearing the fields
+              handleFormChange("amount", 0); // clearing the fields
             }}
           />
 
@@ -955,6 +957,8 @@ export default function page() {
 
                 console.log("Selected Item: ", e);
                 setSelectedItem(e);
+                handleFormChange("quantity", 0); // clearing the fields
+                handleFormChange("amount", 0); // clearing the fields
                 handleFormChange("itemName", e.itemName);
                 handleFormChange("unit", e?.unitName);
                 handleFormChange("itemPartNoOrg", e.partNumber);
