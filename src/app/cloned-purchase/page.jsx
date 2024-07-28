@@ -21,7 +21,6 @@ import {
 import Image from "next/image";
 import CustomOption from "../Dropdown/CustomOption";
 import CustomMenuList from "../Dropdown/CustomMenuList";
-import { useRouter } from "next/navigation";
 import purchasetype from "../DB/Purchase/purchasetype";
 import toast, { Toaster } from "react-hot-toast";
 import { choiceIGST } from "../DB/Purchase/choice";
@@ -41,8 +40,6 @@ import {
 const purchaseIDB = new SimpleIDB("Purchase", "purchase");
 
 export default function page() {
-  const router = useRouter();
-
   useEffect(() => {
     checkNotDownload();
     getItemsData();
@@ -52,8 +49,8 @@ export default function page() {
   const [excelContent, setExcelContent] = useState([]);
   const [partyData, setPartyData] = useState([]);
   const [itemData, setItemData] = useState([]);
-  const [qrResult, setQrResult] = useState("");
-  const [barcodeScannedData, setBarcodeScannedData] = useState(null);
+  // const [qrResult, setQrResult] = useState("");
+  // const [barcodeScannedData, setBarcodeScannedData] = useState(null);
   const [formData, setFormData] = useState({
     partyName: null,
     invoiceNo: null,
@@ -384,7 +381,7 @@ export default function page() {
 
       // * clearing some fields
 
-      setQrResult("...");
+      // setQrResult("...");
 
       handleFormChange("itemName", null);
       handleFormChange("dynamicdisc", null);
@@ -1156,7 +1153,7 @@ export default function page() {
         <button
           onClick={() => {
             clearLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA");
-            window.location.href = "/purchase";
+            window.location.href = "/cloned-purchase";
           }}
           className="text-white hover:bg-blue-900"
         >
