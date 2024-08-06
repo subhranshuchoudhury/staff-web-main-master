@@ -17,8 +17,8 @@ const bdsDb = new mongoose.Schema({
   gstPercentage: String,
   storageLocation: String,
   closingStock: Number,
-  unitPrice: Number,
-  unitPriceAfterDiscount: Number,
+  unitPrice: Number, // D4
+  unitPriceAfterDiscount: Number, // D6
   discPercentage: Number,
 });
 
