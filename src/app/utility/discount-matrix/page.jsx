@@ -9,9 +9,11 @@ const page = () =>{
 	}, [])
 
 	const [addDataModal, setAddDataModal] = useState(false);
+	const [isLoading, setIsLoading] = useState(true)
 	const [Data, setData] = useState(null)
 
 	const loadData = async()=>{
+		setIsLoading(true)
 		try{
 			const response = await fetch("/api/discount-matrix");
 			const data = await response.json()
@@ -19,11 +21,14 @@ const page = () =>{
 
 		}catch(error){
 
+		}finally{
+			setIsLoading(false)
 		}
 	}
 
 
 	const addData = async()=>{
+		setIsLoading(true)
 		try{
 			const body = {
 				groupName:"Test Group",
@@ -41,16 +46,27 @@ const page = () =>{
 			console.log(data)
 		}catch(error){
 			console.log(error)
+		}finally{
+			setIsLoading(false)
 		}
 	}
 
 
 	return <>
 		<p className="text-2xl text-center mb-12 font-bold">Discount Matrix</p>
-		<div className="h-12 flex justify-center mb-10">
+		{
+			isLoading && <div className="text-center mb-5">
+				<span className="loading loading-spinner loading-lg"></span>
+			</div>
+		}
+		
+		{
+			!isLoading && <div className="h-12 flex justify-center mb-10">
 			<button onClick={()=>addData()} className="bg-blue-600 rounded-md hover:bg-blue-400 p-2">Add a new data</button>
 		</div>
-		<div className="overflow-x-auto">
+		}
+	{
+		!isLoading && Data && <div className="overflow-x-auto">
   <table className="table table-zebra">
     {/* head */}
     <thead>
@@ -76,6 +92,7 @@ const page = () =>{
     </tbody>
   </table>
 </div>
+	}
 
 	</>
 }
