@@ -40,9 +40,11 @@ export const POST = async (request) => {
             partyName:data.partyName,
             groupName:data.groupName,
         });
+
         if(isExist){
             return NextResponse.json({ message: "Data already exist" }, { status: 400 });
         }
+        
         const discountMatrixNew = new DiscountMatrix(data);
         await discountMatrixNew.save()
         return NextResponse.json({ status: 200 });
