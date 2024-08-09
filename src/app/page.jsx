@@ -19,9 +19,7 @@ const Page = () => {
 
   return (
     <div className="flex justify-center items-center flex-col">
-      <p className="glass text-center h-2 mb-9 rounded-xl w-1/2">
-
-      </p>
+      <p className="glass text-center h-2 mb-9 rounded-xl w-1/2"></p>
       {Navigating ? (
         <div>
           <span className="loading loading-bars loading-lg"></span>
@@ -153,7 +151,7 @@ const Page = () => {
           <p>HISTORY</p>
         </div>
         <div
-          onClick={() => routePath("/settings")}
+          onClick={() => routePath("/utility")}
           className="btn btn-info text-white w-44 h-28 m-5 shadow-2xl hover:shadow-white flex-col bg-transparent"
         >
           <Image
@@ -162,7 +160,7 @@ const Page = () => {
             width={50}
             height={50}
           />
-          <p>SETTINGS</p>
+          <p>UTILITIES</p>
         </div>
       </div>
     </div>
