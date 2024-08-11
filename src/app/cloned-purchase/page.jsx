@@ -49,6 +49,7 @@ export default function page() {
   const [excelContent, setExcelContent] = useState([]);
   const [partyData, setPartyData] = useState([]);
   const [itemData, setItemData] = useState([]);
+  const [DiscountStructure, setDiscountStructure] = useState([])
   // const [qrResult, setQrResult] = useState("");
   // const [barcodeScannedData, setBarcodeScannedData] = useState(null);
   const [formData, setFormData] = useState({
@@ -132,30 +133,35 @@ export default function page() {
 
       const storedItemData = await purchaseIDB.get("ITEMS_DATA");
       const storedPartyData = await purchaseIDB.get("PARTIES_DATA");
+      const storedDiscoutStructure = await purchaseIDB.get("DISCOUNT_STRUCTURE");
 
       if (storedItemData) setItemData(JSON.parse(storedItemData));
       if (storedPartyData) setPartyData(JSON.parse(storedPartyData));
+      if(storedDiscoutStructure) setDiscountStructure(JSON.parse(storedDiscoutStructure))
 
       const responses = await Promise.all([
         fetch("/api/items"),
         fetch(
           "https://script.google.com/macros/s/AKfycbwr8ndVgq8gTbhOCRZChJT8xEOZZCOrjev29Uk6DCDLQksysu80oTb8VSnoZMsCQa3g/exec"
         ),
+        fetch("/api/discount-matrix")
       ]);
 
       const data = await Promise.all(
         responses.map((response) => response.json())
       );
 
-      const [itemData, partyData] = data;
+      const [itemData, partyData,discountStructure] = data;
 
-      if (itemData?.length > 0 && partyData?.length > 0) {
+      if (itemData?.length > 0 && partyData?.length > 0 && discountStructure?.length > 0) {
         setItemData(itemData);
         setPartyData(partyData);
+        setDiscountStructure(discountStructure)
         setLoadingExcel(false);
 
         await purchaseIDB.set("ITEMS_DATA", JSON.stringify(itemData));
         await purchaseIDB.set("PARTIES_DATA", JSON.stringify(partyData));
+        await purchaseIDB.set("DISCOUNT_STRUCTURE",JSON.stringify(discountStructure))
       } else {
         toast.error("No item or party data found.");
       }

@@ -7,7 +7,6 @@ const page = () => {
     loadData();
   }, []);
 
-  const [addDataModal, setAddDataModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [Data, setData] = useState(null);
   const [formData, setFormData] = useState({
@@ -42,8 +41,8 @@ const page = () => {
     setIsLoading(true);
     try {
       const body = {
-        groupName: formData.groupName,
-        partyName: formData.partyName,
+        groupName: formData.groupName.trim(),
+        partyName: formData.partyName.trim(),
         value: formData.value,
       };
 
