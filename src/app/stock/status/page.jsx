@@ -56,7 +56,8 @@ const StockStatus = () => {
         <div className="w-[90%]">
           <div className="bg-base-200 rounded-sm p-5">
             <p className="text-lg text-center mb-5 font-bold">Select Item</p>
-            <Select
+            {
+              items && items?.length > 0 ? <Select
               placeholder="SELECT ITEM/PART NO"
               className="text-blue-800 font-bold"
               options={items}
@@ -75,26 +76,25 @@ const StockStatus = () => {
               filterOption={createFilter({ ignoreAccents: false })}
               components={{ Option: CustomOption, MenuList: CustomMenuList }}
               value={selectedItem}
-            />
+            /> : <p className="text-center">Please Wait...</p>
+            }
           </div>
           <section className="mt-20 p-2 glass rounded-md">
-            <div className="flex justify-between items-center bg-base-100 rounded-md p-5 mt-5">
-              <p className="text-lg">Closing Stock</p>
-              <p className="text-xl font-bold text-green-400">
-                {selectedItem ? selectedItem?.closingStock : "Select an item"}
-              </p>
-            </div>
-            <div className="flex justify-between items-center bg-base-100 rounded-md p-5 mt-5">
-              <p className="text-lg">Location</p>
-              <p className="text-xl font-bold text-green-400">
-                {selectedItem
-                  ? selectedItem?.storageLocation
-                  : "Select an item"}
-              </p>
-            </div>
+          <RowItem
+              label={"Alias"}
+              value={selectedItem ? selectedItem?.partNumber : "Select an item"}
+            />
+            <RowItem
+              label={"Closing Stock"}
+              value={selectedItem ? selectedItem?.closingStock : "Select an item"}
+            />
+            <RowItem
+              label={"Location"}
+              value={selectedItem ? selectedItem?.storageLocation : "Select an item"}
+            />
             <RowItem
               label={"MRP"}
-              value={selectedItem ? selectedItem?.unitPrice : ""}
+              value={selectedItem ? selectedItem?.unitPrice : "Select an item"}
             />
           </section>
         </div>
