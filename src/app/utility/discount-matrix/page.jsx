@@ -1,6 +1,10 @@
 "use client";
 import { useState, useEffect } from "react";
 import toast, { Toaster } from "react-hot-toast";
+import Select, { createFilter } from "react-select";
+import CustomOption from "../../Dropdown/CustomOption";
+import CustomMenuList from "../../Dropdown/CustomMenuList";
+import Itemgroup from "@/app/DB/Purchase/Itemgroup";
 
 const page = () => {
   useEffect(() => {
@@ -9,6 +13,7 @@ const page = () => {
 
   const [isLoading, setIsLoading] = useState(true);
   const [Data, setData] = useState(null);
+  const [PartyData, setPartyData] = useState(null);
   const [formData, setFormData] = useState({
     partyName: "",
     groupName: "",
@@ -25,9 +30,21 @@ const page = () => {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/discount-matrix");
-      const data = await response.json();
-      setData(data);
+      const responses = await Promise.all([
+        fetch(
+          "https://script.google.com/macros/s/AKfycbwr8ndVgq8gTbhOCRZChJT8xEOZZCOrjev29Uk6DCDLQksysu80oTb8VSnoZMsCQa3g/exec"
+        ),
+        fetch("/api/discount-matrix"),
+      ]);
+
+      const data = await Promise.all(
+        responses.map((response) => response.json())
+      );
+
+      const [partyData, discountStructure] = data;
+
+      setData(discountStructure);
+      setPartyData(partyData);
     } catch (error) {
     } finally {
       setIsLoading(false);
@@ -223,6 +240,7 @@ const page = () => {
         onUpdate={updateData}
         formData={formData}
         onDelete={deleteData}
+        partyData={PartyData}
       />
     </>
   );
@@ -235,6 +253,7 @@ const ItemModal = ({
   onSubmit,
   onUpdate,
   onDelete,
+  partyData,
 }) => {
   return (
     <dialog id={id} className="modal">
@@ -246,32 +265,41 @@ const ItemModal = ({
           </button>
         </form>
         <h3 className="font-bold mb-8">Create Structure</h3>
-        <label className="input input-bordered flex items-center gap-2 mb-4">
-          Group
-          <input
-            type="text"
-            name={"groupName"}
-            className="grow"
-            value={formData.groupName || ""}
-            onChange={(e) => {
-              handleFormChange("groupName", e.target.value?.toUpperCase());
-            }}
-            placeholder="SPICER"
-          />
-        </label>
-        <label className="input input-bordered flex items-center gap-2 mb-4">
-          Party
-          <input
-            name={"partyName"}
-            value={formData.partyName || ""}
-            onChange={(e) => {
-              handleFormChange("partyName", e.target.value?.toUpperCase());
-            }}
-            type="text"
-            className="grow"
-            placeholder="MAHAVIR MOTORS"
-          />
-        </label>
+        <Select
+          filterOption={createFilter({ ignoreAccents: false })}
+          components={{ Option: CustomOption, MenuList: CustomMenuList }}
+          placeholder="Party Name"
+          className="w-full m-auto p-5 text-blue-800 font-bold"
+          getOptionLabel={(option) => `${option["value"]}`}
+          options={partyData}
+          value={
+            formData.partyName && {
+              value: formData.partyName,
+            }
+          }
+          onChange={(e) => {
+            console.log(e);
+            handleFormChange("partyName", e?.value?.toUpperCase());
+          }}
+        />
+        <Select
+          filterOption={createFilter({ ignoreAccents: false })}
+          components={{ Option: CustomOption, MenuList: CustomMenuList }}
+          placeholder="Group Name"
+          className="w-full m-auto p-5 text-blue-800 font-bold"
+          getOptionLabel={(option) => `${option["value"]}`}
+          options={Itemgroup}
+          value={
+            formData.groupName && {
+              value: formData.groupName,
+            }
+          }
+          onChange={(e) => {
+            console.log(e);
+            handleFormChange("groupName", e?.value?.toUpperCase());
+          }}
+        />
+
         <label className="input input-bordered flex items-center gap-2">
           Discount
           <input
