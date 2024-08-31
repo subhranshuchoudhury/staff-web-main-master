@@ -74,6 +74,7 @@ export default function page() {
     isIGST: false,
     dynamicdisc: null,
     unitPrice: 0,
+    repetitionPrint: 0,
   });
   const [SelectedItem, setSelectedItem] = useState(null);
   const [modalMessage, setModalMessage] = useState({
@@ -365,7 +366,7 @@ export default function page() {
       cgst: cgst,
       sgst: cgst,
       itemLocation: formData?.itemLocation,
-      repetition: parseInt(formData?.quantity), // Quantity for print invoice duplication
+      repetition: parseInt(formData?.repetitionPrint),
     };
     // dynamic discount calculation
     handleFormChange("dynamicdisc", disc);
@@ -387,9 +388,13 @@ export default function page() {
     }
 
     const repetitionModal = (value) => {
-      //  when user clears all the value it will go back to default.
-      if (isNaN(value)) tempContent.repetition = parseInt(formData.quantity);
-      else tempContent.repetition = value;
+      handleFormChange("repetitionPrint", value);
+      if (isNaN(value)) {
+        //  when user clears all the value it will go back to default.
+        tempContent.repetition = parseInt(formData.quantity);
+      } else {
+        tempContent.repetition = value;
+      }
     };
 
     const modalConfirmedAdd = () => {
@@ -408,6 +413,7 @@ export default function page() {
       handleFormChange("itemName", null);
       handleFormChange("dynamicdisc", null);
       handleFormChange("quantity", null);
+      handleFormChange("repetitionPrint", null);
       handleFormChange("mrp", null);
       handleFormChange("itemLocation", null);
       handleFormChange("unitPrice", "");
@@ -578,7 +584,11 @@ export default function page() {
       const roundedDisc = Math.round(item?.disc);
       const discCode = `${roundedDisc}${day}${month}${year}`;
       const itemName =
-        item?.itemPartNo === "N/A" ? item?.itemName : item?.itemPartNo;
+        item?.itemPartNo === "" ||
+        !item?.itemPartNo ||
+        item?.itemPartNo === "N/A"
+          ? item?.itemName
+          : item?.itemPartNo;
 
       return Array(item.repetition).fill({
         itemName,
@@ -787,6 +797,8 @@ export default function page() {
         </form>
       </dialog>
 
+      {/* Print repetition modal */}
+
       <dialog id="print_modal_1" className="modal">
         <form method="dialog" className="modal-box">
           <h3 className="font-bold text-lg">{modalConfirmation?.title}</h3>
@@ -806,6 +818,7 @@ export default function page() {
             onWheel={(e) => {
               e.target.blur();
             }}
+            value={formData?.repetitionPrint || ""}
             className="input input-bordered input-secondary m-5 uppercase w-[295px]"
             placeholder={`No. of prints ${formData?.quantity}`}
             type="number"
@@ -1066,6 +1079,8 @@ export default function page() {
             />
           )}
 
+          {/* Quantity field */}
+
           <div>
             <input
               onChange={(e) => {
@@ -1075,6 +1090,7 @@ export default function page() {
                 }
 
                 handleFormChange("quantity", e.target.value);
+                handleFormChange("repetitionPrint", e.target.value); // by default the repetition print will be the quantity
 
                 // * If we got the value from the DB then return
                 if (gotDbValue && formData?.unitPrice) {
