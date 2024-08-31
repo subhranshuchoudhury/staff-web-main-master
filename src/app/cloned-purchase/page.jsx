@@ -2,7 +2,7 @@
 
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import xlsx from "json-as-xlsx";
+import xlsx, { getContentProperty } from "json-as-xlsx";
 import { useState, useEffect } from "react";
 import Select, { createFilter } from "react-select";
 import gstAmount from "../DB/Purchase/gstamount";
@@ -50,6 +50,7 @@ export default function page() {
   const [partyData, setPartyData] = useState([]);
   const [itemData, setItemData] = useState([]);
   const [DiscountStructure, setDiscountStructure] = useState([]);
+  const [gotDbValue, setGotDbValue] = useState(false);
   // const [qrResult, setQrResult] = useState("");
   // const [barcodeScannedData, setBarcodeScannedData] = useState(null);
   const [formData, setFormData] = useState({
@@ -72,6 +73,7 @@ export default function page() {
     selectedItemRow: -1,
     isIGST: false,
     dynamicdisc: null,
+    unitPrice: 0,
   });
   const [SelectedItem, setSelectedItem] = useState(null);
   const [modalMessage, setModalMessage] = useState({
@@ -264,7 +266,13 @@ export default function page() {
 
   const isFormValidated = (form) => {
     for (let key in form) {
-      if (key === "dynamicdisc") continue;
+      if (
+        key === "dynamicdisc" ||
+        key === "itemPartNoOrg" ||
+        key === "unitPriceAfterDiscount_D6" ||
+        key === "unitPrice"
+      )
+        continue;
 
       if (form[key] === null || form[key] === undefined || form[key] === "") {
         handleModal(
@@ -359,7 +367,6 @@ export default function page() {
       itemLocation: formData?.itemLocation,
       repetition: parseInt(formData?.quantity), // Quantity for print invoice duplication
     };
-
     // dynamic discount calculation
     handleFormChange("dynamicdisc", disc);
 
@@ -403,6 +410,7 @@ export default function page() {
       handleFormChange("quantity", null);
       handleFormChange("mrp", null);
       handleFormChange("itemLocation", null);
+      handleFormChange("unitPrice", "");
       setSelectedItem(null);
 
       if (formData?.gstType !== "Exempt")
@@ -680,6 +688,59 @@ export default function page() {
       });
   };
 
+  // * Finding the value with the selected party name and group name
+  const handleFindValue = async () => {
+    const partyName = formData.partyName;
+    const groupName = SelectedItem?.groupName;
+
+    if (!partyName || !groupName) return;
+
+    // * Find the array with same party name and group name
+    const getCorrespondingArray = DiscountStructure.filter((dis) => {
+      if (dis.groupName === groupName && dis.partyName === partyName) {
+        return dis.value;
+      }
+    });
+
+    // * Get the value from the array
+    const value = getCorrespondingArray[0]?.value;
+
+    // * If the DB don't have that value
+    if (!value) {
+      setGotDbValue(false);
+      return;
+    }
+    setGotDbValue(true);
+    let MRP = parseFloat((formData.unitPrice * value).toFixed(2));
+    if (formData?.unitPrice > 0) handleFormChange("mrp", Math.round(MRP));
+    const percentageValue = SelectedItem?.discPercentage;
+    let unitRate = parseFloat((MRP - MRP * (percentageValue / 100)).toFixed(2));
+
+    let totAmount = parseFloat((unitRate * formData.quantity).toFixed(2));
+    let totalAmount;
+    if (formData?.gstType === "Exclusive") {
+      let gstPercentageInt = parseInt(
+        formData?.gstPercentage?.split("%")[0]?.trim()
+      );
+      totalAmount = parseFloat(
+        (totAmount / (1 + gstPercentageInt / 100)).toFixed(2)
+      );
+    } else {
+      totalAmount = totAmount;
+    }
+    if (formData?.purchaseType !== "DM" && formData?.unitPrice > 0) {
+      handleFormChange("amount", totalAmount);
+    }
+  };
+
+  useEffect(() => {
+    handleFindValue();
+  }, [
+    formData?.unitPrice,
+    formData?.itemName,
+    formData?.partyName,
+    formData?.quantity,
+  ]);
   return (
     <>
       <Toaster />
@@ -856,6 +917,7 @@ export default function page() {
                 handleFormChange("gstPercentage", 0);
               }
               handleFormChange("gstType", e.value);
+              handleFormChange("unitPrice", 0);
               handleFormChange("quantity", 0); // clearing the fields
               handleFormChange("amount", 0); // clearing the fields
             }}
@@ -964,6 +1026,7 @@ export default function page() {
                 handleFormChange("amount", 0); // clearing the fields
                 handleFormChange("itemName", e.itemName);
                 handleFormChange("unit", e?.unitName);
+                handleFormChange("unitPrice", "");
                 handleFormChange("itemPartNoOrg", e.partNumber);
                 handleFormChange("mrp", e?.unitPrice);
                 handleFormChange(
@@ -1013,6 +1076,11 @@ export default function page() {
 
                 handleFormChange("quantity", e.target.value);
 
+                // * If we got the value from the DB then return
+                if (gotDbValue && formData?.unitPrice) {
+                  return;
+                }
+
                 // when dynamic discount is available
                 if (formData?.dynamicdisc && !isNaN(formData?.dynamicdisc)) {
                   let unitPrice = 0;
@@ -1056,6 +1124,19 @@ export default function page() {
                 e.target.blur();
               }}
               value={formData?.quantity || ""}
+            />
+            <input
+              onChange={(e) => {
+                handleFormChange("unitPrice", e.target.value);
+              }}
+              value={gotDbValue ? formData?.unitPrice : "N/A"}
+              className="input input-bordered input-secondary w-[295px] m-5"
+              placeholder="Unit Price"
+              type={`${gotDbValue ? "number" : "text"}`}
+              onWheel={(e) => {
+                e.target.blur();
+              }}
+              disabled={!gotDbValue}
             />
             <input
               onChange={(e) => {
