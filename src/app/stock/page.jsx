@@ -432,7 +432,7 @@ export default function Page() {
 
       <Select
         placeholder="Select Item"
-        className="w-[660px] m-auto p-5 text-blue-800 font-bold"
+        className="w-[60%] m-auto p-5 text-blue-800 font-bold"
         options={ItemAPIData}
         getOptionLabel={(option) => `${option["itemName"]}`}
         value={formData?.item && { itemName: formData?.item }}
