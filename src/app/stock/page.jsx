@@ -15,56 +15,57 @@ export default function Page() {
 
   useEffect(() => {
     getAPIContent();
-    const unsubscribe = window.addEventListener("EXPO_LS_EVENT", function () {
-      // * This is for the expo app, using for scanning bar codes.
-      digLocalStorageQR();
-    });
-    return () => {
-      window.removeEventListener("EXPO_LS_EVENT", unsubscribe);
-    };
+    // const unsubscribe = window.addEventListener("EXPO_LS_EVENT", function () {
+    //   // * This is for the expo app, using for scanning bar codes.
+    //   digLocalStorageQR();
+    // });
+    // return () => {
+    //   window.removeEventListener("EXPO_LS_EVENT", unsubscribe);
+    // };
   }, []);
 
-  const digLocalStorageQR = () => {
-    let localSavedItemApi = [];
+  // const digLocalStorageQR = () => {
+  //   let localSavedItemApi = [];
 
-    if (localSavedItemApi?.length === 0) {
-      setQrResult("🔍 Searching...");
-    }
+  //   if (localSavedItemApi?.length === 0) {
+  //     setQrResult("🔍 Searching...");
+  //   }
 
-    const setLocalITEM_API = (data) => {
-      localSavedItemApi = data;
-    };
+  //   const setLocalITEM_API = (data) => {
+  //     localSavedItemApi = data;
+  //   };
 
-    checkLocalStorageSaved("ITEM_API_DATA", setLocalITEM_API);
+  //   checkLocalStorageSaved("ITEM_API_DATA", setLocalITEM_API);
 
-    // * This function will get the local item whenever the event "EXPO_LS_EVENT" triggered.
+  //   // * This function will get the local item whenever the event "EXPO_LS_EVENT" triggered.
 
-    const res = localStorage.getItem("EXPO_SCN_RESULT");
-    const result = localSavedItemApi.find(
-      (obj) => obj.pn !== "" && res.includes(obj.pn)
-    );
+  //   const res = localStorage.getItem("EXPO_SCN_RESULT");
+  //   const result = localSavedItemApi.find(
+  //     (obj) => obj.pn !== "" && res.includes(obj.pn)
+  //   );
 
-    if (result?.value) {
-      console.log("SCN_RES", result);
-      setQrResult(`✔ ${result?.value}-${result?.pn}`);
+  //   if (result?.value) {
+  //     console.log("SCN_RES", result);
+  //     setQrResult(`✔ ${result?.value}-${result?.pn}`);
 
-      // * setting the matched value
-      handleChange({ target: { name: "unitType", value: result?.unit } });
-      handleChange({ target: { name: "mrp", value: result?.mrp || null } });
-      handleChange({ target: { name: "item", value: result?.value } });
-      handleChange({ target: { name: "selectedItemRow", value: result?.row } });
-      if (formData?.seriesType === "MAIN") return;
-      handleChange({
-        target: { name: "gstAmount", value: result?.gst || null },
-      });
-    } else {
-      localSavedItemApi?.length === 0
-        ? setQrResult(`❓ Oops! Kindly retry..`)
-        : setQrResult(`❌ No match: ${res}`);
-    }
-  };
+  //     // * setting the matched value
+  //     handleChange({ target: { name: "unitType", value: result?.unit } });
+  //     handleChange({ target: { name: "mrp", value: result?.mrp || null } });
+  //     handleChange({ target: { name: "item", value: result?.value } });
+  //     handleChange({ target: { name: "selectedItemRow", value: result?.row } });
+  //     if (formData?.seriesType === "MAIN") return;
+  //     handleChange({
+  //       target: { name: "gstAmount", value: result?.gst || null },
+  //     });
+  //   } else {
+  //     localSavedItemApi?.length === 0
+  //       ? setQrResult(`❓ Oops! Kindly retry..`)
+  //       : setQrResult(`❌ No match: ${res}`);
+  //   }
+  // };
 
   const [formData, setFormData] = useState({
+    user: null,
     stockDate: new Date(), // default today.
     item: null,
     quantity: null,
@@ -81,7 +82,7 @@ export default function Page() {
   const [ItemAPIData, setItemAPIData] = useState([]);
   const [APILoading, setAPILoading] = useState(true);
   const [ExcelContent, setExcelContent] = useState([]);
-  const [qrResult, setQrResult] = useState("...");
+  // const [qrResult, setQrResult] = useState("...");
 
   // * for uncommon useState alternative
 
@@ -122,31 +123,48 @@ export default function Page() {
 
   const getAPIContent = async () => {
     // check for local storage (fast loading)
-    checkLocalStorageSaved("ITEM_API_DATA", setItemAPIData);
+    // checkLocalStorageSaved("ITEM_API_DATA", setItemAPIData);
 
     // calls apis simultaneously
 
-    Promise.all([
-      fetch(
-        "https://script.google.com/macros/s/AKfycbx3G0up1xJoNIJqXLRdmSLQ09OPtwKnTfi8uWPzEw-vCUT4nwvluEmwOA3CKinO6PJhPg/exec"
-      ),
-    ])
+    Promise.all([fetch("/api/items")])
       .then((responses) =>
         Promise.all(responses.map((response) => response.json()))
       )
       .then((data) => {
         const item_api_data = data[0];
 
-        // item list with row index added
+        // demo of response
 
-        const indexedItems = item_api_data.map((obj, row) => ({
-          ...obj,
-          row,
-        }));
+        //         {
+        //     "_id": "669f819df84e0c9fd7551e42",
+        //     "code": 11574,
+        //     "itemName": "29066277-CMC ASSY SFC609/709",
+        //     "partNumber": "29066277",
+        //     "groupName": "BRAKES INDIA LTD",
+        //     "unitName": "Pcs",
+        //     "gstPercentage": "28%",
+        //     "storageLocation": "BIN-2A/1/3",
+        //     "closingStock": 1,
+        //     "unitPrice": null,
+        //     "unitPriceAfterDiscount": null,
+        //     "__v": 0,
+        //     "discPercentage": 0,
+        //     "mrp": 1350
+        // }
 
-        setItemAPIData(indexedItems);
+        setItemAPIData(item_api_data);
 
-        localStorage.setItem("ITEM_API_DATA", JSON.stringify(indexedItems));
+        console.log("ITEM_API_DATA", item_api_data);
+
+        // const indexedItems = item_api_data.map((obj, row) => ({
+        //   ...obj,
+        //   row,
+        // }));
+
+        // setItemAPIData(indexedItems);
+
+        // localStorage.setItem("ITEM_API_DATA", JSON.stringify(indexedItems));
 
         setAPILoading(false);
       })
@@ -275,22 +293,23 @@ export default function Page() {
   };
 
   const updateMrp = async (row, mrp) => {
-    const payload = {
-      updateRow: parseInt(row) + 2,
-      mrp,
-    };
+    console.log("MRP will be updated");
+    // const payload = {
+    //   updateRow: parseInt(row) + 2,
+    //   mrp,
+    // };
 
-    try {
-      const response = await uploadItem(payload);
+    // try {
+    //   const response = await uploadItem(payload);
 
-      if (response === "200") {
-        console.log("MRP UPDATED");
-      } else {
-        console.log("MRP NOT UPDATED");
-      }
-    } catch (error) {
-      console.log(error);
-    }
+    //   if (response === "200") {
+    //     console.log("MRP UPDATED");
+    //   } else {
+    //     console.log("MRP NOT UPDATED");
+    //   }
+    // } catch (error) {
+    //   console.log(error);
+    // }
   };
 
   const uploadStock = async (data) => {
@@ -372,7 +391,7 @@ export default function Page() {
 
       {/* Alert  */}
 
-      <p className="glass text-center text-[40px] font-mono mb-9 m-auto rounded-xl w-[98%] text-white">
+      <p className="text-center text-[40px] font-bold underline mb-24 m-auto rounded-xl w-[98%] text-white">
         STOCK MODULE
       </p>
       <div className="text-center">
@@ -382,6 +401,16 @@ export default function Page() {
       </div>
 
       <div className="flex justify-center items-center flex-wrap">
+        <div className="flex justify-center items-center flex-wrap">
+          <input
+            className="input input-bordered input-secondary w-[295px] m-5"
+            placeholder="User"
+            type="text"
+            name="user"
+            value={formData?.user || ""}
+            onChange={handleChange}
+          />
+        </div>
         <DatePicker
           className="input input-bordered input-secondary w-[295px] m-5 hover:cursor-pointer"
           placeholderText="STOCK DATE"
@@ -399,22 +428,24 @@ export default function Page() {
         />
       </div>
 
-      <p className="text-center m-5 glass rounded-sm">{qrResult}</p>
+      {/* <p className="text-center m-5 glass rounded-sm">{qrResult}</p> */}
 
       <Select
-        placeholder="SELECT ITEM/PART NO"
-        className="w-full m-auto p-5 text-blue-800 font-bold"
+        placeholder="Select Item"
+        className="w-[660px] m-auto p-5 text-blue-800 font-bold"
         options={ItemAPIData}
-        getOptionLabel={(option) => `${option["value"]}`}
-        value={formData?.item && { value: formData?.item }}
+        getOptionLabel={(option) => `${option["itemName"]}`}
+        value={formData?.item && { itemName: formData?.item }}
         onChange={(e) => {
           handleChange({ target: { name: "mrp", value: e?.mrp || null } });
-          handleChange({ target: { name: "item", value: e?.value } });
-          handleChange({ target: { name: "selectedItemRow", value: e?.row } });
-          handleChange({ target: { name: "location", value: e?.loc } });
+          handleChange({ target: { name: "item", value: e?.itemName } });
+          handleChange({ target: { name: "selectedItemRow", value: e?._id } });
+          handleChange({
+            target: { name: "location", value: e?.storageLocation },
+          });
           if (formData?.seriesType === "MAIN") return;
           handleChange({
-            target: { name: "gstAmount", value: e?.gst || null },
+            target: { name: "gstAmount", value: e?.gstPercentage || null },
           });
         }}
         filterOption={createFilter({ ignoreAccents: false })}
@@ -423,7 +454,7 @@ export default function Page() {
       <div className="flex justify-center items-center flex-wrap">
         <input
           className="input input-bordered input-secondary w-[295px] m-5"
-          placeholder="QUANTITY"
+          placeholder="Quantity"
           type="number"
           name="quantity"
           value={formData?.quantity || ""}
@@ -432,12 +463,9 @@ export default function Page() {
             e.target.blur();
           }}
         />
-      </div>
-
-      <div className="flex justify-center items-center flex-wrap">
         <input
           className="input input-bordered input-secondary w-[295px] m-5"
-          placeholder="MRP"
+          placeholder="Mrp"
           type="number"
           onChange={(e) => {
             handleChange(e);
@@ -449,9 +477,12 @@ export default function Page() {
             e.target.blur();
           }}
         />
+      </div>
+
+      <div className="flex justify-center items-center flex-wrap">
         <input
           className="input input-bordered input-secondary w-[295px] m-5"
-          placeholder="PURC PRICE"
+          placeholder="Purchase Price"
           type="number"
           onChange={(e) => {
             handleChange(e);
@@ -464,7 +495,7 @@ export default function Page() {
         />
         <input
           className="input input-bordered input-secondary w-[295px] m-5"
-          placeholder="LOCATION"
+          placeholder="Location"
           type="text"
           onChange={(e) => {
             handleChange(e);
