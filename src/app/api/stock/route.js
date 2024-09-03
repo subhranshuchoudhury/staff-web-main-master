@@ -47,7 +47,7 @@ export const POST = async (req) => {
 export const GET = async () => {
   try {
     checkConnection();
-    const result = await Stock.find();
+    const result = await Stock.find().sort({ createdAt: -1 });
     if (result) {
       return NextResponse.json(result, { status: 200 });
     } else {
