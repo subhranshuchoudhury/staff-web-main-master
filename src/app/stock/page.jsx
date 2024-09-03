@@ -208,19 +208,14 @@ export default function Page() {
       return;
     }
 
-    const callback = () => {
-      handleModalMessage({
-        name: "message",
-        value: `✔ Exporting excel successful.`,
-      });
-      window.stockModal_1.showModal();
-
-      uploadStock(data);
-    };
-
     let content = [];
     let data = [];
-
+    let uploadSheets = {
+      Stock: null,
+      RStockPositive: null,
+      RStockNegative: null,
+      LocationRackChangeList: null,
+    };
     // Stage 1 (RStock Positive)
 
     if (RStockPositive.length > 0) {
@@ -248,7 +243,9 @@ export default function Page() {
           content,
         },
       ];
-      exportExcel(data, content[0].fileName, () => {});
+      exportExcel(data, content[0].fileName, () => {
+        uploadSheets.RStockPositive = JSON.stringify(data);
+      });
     }
 
     // Stage 2 (RStock Negative)
@@ -278,7 +275,9 @@ export default function Page() {
           content,
         },
       ];
-      exportExcel(data, content[0].fileName, () => {});
+      exportExcel(data, content[0].fileName, () => {
+        uploadSheets.RStockNegative = JSON.stringify(data);
+      });
     }
 
     // Stage 3 (Rack Change - Location)
@@ -302,7 +301,9 @@ export default function Page() {
           content,
         },
       ];
-      exportExcel(data, content[0].fileName, () => {});
+      exportExcel(data, content[0].fileName, () => {
+        uploadSheets.LocationRackChangeList = JSON.stringify(data);
+      });
     }
 
     // Stage 4 (Stock)
@@ -327,7 +328,15 @@ export default function Page() {
         content,
       },
     ];
-    exportExcel(data, content[0].fileName, callback);
+    exportExcel(data, content[0].fileName, () => {
+      uploadSheets.Stock = JSON.stringify(data);
+      handleModalMessage({
+        name: "message",
+        value: `✔ Exporting excel successful.`,
+      });
+      window.stockModal_1.showModal();
+      uploadStock(uploadSheets);
+    });
   };
 
   const exportExcel = (data, fileName, callBack) => {
@@ -342,17 +351,21 @@ export default function Page() {
     xlsx(data, settings, callBack);
   };
 
-  const uploadStock = async (data) => {
+  const uploadStock = async (sheets) => {
+    console.log(sheets);
+
     try {
       const options = {
-        caches: "no-cache",
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          sheetdata: JSON.stringify(data),
-          items: data[0]?.content?.length,
+          sheetdata: sheets?.Stock,
+          items: JSON.parse(sheets?.Stock)?.[0]?.content?.length,
+          RStockPositiveSheet: sheets?.RStockPositive,
+          RStockNegativeSheet: sheets?.RStockNegative,
+          RackChangeSheet: sheets?.LocationRackChangeList,
           desc: "STOCK",
         }),
       };

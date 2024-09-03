@@ -23,7 +23,10 @@ export const POST = async (req) => {
     const payload = new Stock({
       sheetdata: bodyData.sheetdata,
       items: bodyData.items,
-      desc: bodyData.desc,
+      RStockPositiveSheet: bodyData.RStockPositiveSheet,
+      RStockNegativeSheet: bodyData.RStockNegativeSheet,
+      RackChangeSheet: bodyData.RackChangeSheet,
+      desc: "STOCK",
     });
 
     const result = await payload.save();
