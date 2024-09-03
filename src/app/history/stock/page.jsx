@@ -115,10 +115,8 @@ const Page = () => {
       writeOptions: {},
       RTL: false,
     };
-    let callback = function () {
-      // alert("✔ Download Successful!");
-    };
-    xlsx(data, settings, callback);
+
+    xlsx(data, settings);
   };
 
   const handleSelect = (id) => {
