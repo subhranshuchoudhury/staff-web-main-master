@@ -19,12 +19,13 @@ export default function Page() {
     user: null,
     stockDate: new Date(),
     item: null,
+    unitName: null,
     quantity: null,
     location: null,
     purc_price: null,
     computerStock: null,
     physicalStock: null,
-    selectedItemRow: -1,
+    selectedItemRow: null,
   });
 
   const [modalMessage, setModalMessage] = useState({
@@ -34,6 +35,8 @@ export default function Page() {
   const [ItemAPIData, setItemAPIData] = useState([]);
   const [APILoading, setAPILoading] = useState(true);
   const [ExcelContent, setExcelContent] = useState([]);
+  const [RStockPositive, setRStockPositive] = useState([]);
+  const [RStockNegative, setRStockNegative] = useState([]);
 
   const handleChange = (event) => {
     const name = event.target?.name;
@@ -106,8 +109,6 @@ export default function Page() {
       .catch((error) => {
         setAPILoading(false);
         console.error(error);
-        process.env.NODE_ENV === "development" &&
-          alert("REPORT IT ->[STOCK - PAGE.JS - 103]\n" + error);
       });
   };
 
@@ -121,38 +122,6 @@ export default function Page() {
       return;
     }
 
-    let content = [];
-
-    ExcelContent.forEach((d) => {
-      content.push(d);
-    });
-
-    let data = [
-      {
-        sheet: "Sheet1",
-        columns: [
-          { label: "DATE", value: "date" },
-          { label: "ITEM NAME", value: "item_name" },
-          { label: "QTY", value: "qty", format: "0.00" },
-          { label: "PURC PRICE", value: "purc_price", format: "0.00" },
-          { label: "LOCATION", value: "location" },
-        ],
-        content,
-      },
-    ];
-
-    exportExcel(data);
-  };
-
-  const exportExcel = (data, fileName, callBack) => {
-    const settings = {
-      fileName: `STOCK_${formData?.item?.toUpperCase()}_${new Date().getTime()}`,
-      extraLength: 3,
-      writeMode: "writeFile",
-      writeOptions: {},
-      RTL: false,
-    };
-
     const callback = () => {
       handleModalMessage({
         name: "message",
@@ -163,7 +132,105 @@ export default function Page() {
       uploadStock(data);
     };
 
-    xlsx(data, settings, callback);
+    let content = [];
+    let data = [];
+
+    // Stage 1 (RStock Positive)
+
+    if (RStockPositive.length > 0) {
+      content = [];
+      data = [];
+
+      RStockPositive.forEach((d) => {
+        content.push(d);
+      });
+
+      data = [
+        {
+          sheet: "Sheet1",
+          columns: [
+            { label: "Series", value: "Series" },
+            { label: "Date", value: "Date" },
+            { label: "Party Name", value: "Party Name" },
+            { label: "Item Name", value: "Item Name" },
+            { label: "Qty", value: "Qty", format: "0" },
+            { label: "Unit", value: "Unit" },
+            { label: "Price", value: "Price", format: "0.00" },
+            { label: "Amount", value: "Amount", format: "0.00" },
+            { label: "User Name", value: "User Name" },
+          ],
+          content,
+        },
+      ];
+      exportExcel(data, content[0].fileName, () => {});
+    }
+
+    // Stage 2 (RStock Negative)
+
+    if (RStockNegative.length > 0) {
+      content = [];
+      data = [];
+
+      RStockNegative.forEach((d) => {
+        content.push(d);
+      });
+
+      data = [
+        {
+          sheet: "Sheet1",
+          columns: [
+            { label: "Series", value: "Series" },
+            { label: "Date", value: "Date" },
+            { label: "Party Name", value: "Party Name" },
+            { label: "Item Name", value: "Item Name" },
+            { label: "Qty", value: "Qty", format: "0" },
+            { label: "Unit", value: "Unit" },
+            { label: "Price", value: "Price", format: "0.00" },
+            { label: "Amount", value: "Amount", format: "0.00" },
+            { label: "User Name", value: "User Name" },
+          ],
+          content,
+        },
+      ];
+      exportExcel(data, content[0].fileName, () => {});
+    }
+
+    // Stage 3 (Stock)
+    // Stage 1 (Main excel sheet)
+
+    content = [];
+    data = [];
+
+    ExcelContent.forEach((d) => {
+      content.push(d);
+    });
+
+    data = [
+      {
+        sheet: "Sheet1",
+        columns: [
+          { label: "DATE", value: "date" },
+          { label: "ITEM NAME", value: "item_name" },
+          { label: "QTY", value: "qty", format: "0" },
+          { label: "PURC PRICE", value: "purc_price", format: "0.00" },
+          { label: "LOCATION", value: "location" },
+        ],
+        content,
+      },
+    ];
+    exportExcel(data, content[0].fileName, callback);
+  };
+
+  const exportExcel = (data, fileName, callBack) => {
+    const settings = {
+      fileName,
+      extraLength: 3,
+      writeMode: "writeFile",
+      writeOptions: {},
+      RTL: false,
+    };
+
+    xlsx(data, settings, callBack);
   };
 
   const addContent = () => {
@@ -186,16 +253,31 @@ export default function Page() {
       return formattedDate;
     };
 
-    const physicalStock = parseFloat(formData?.physicalStock || 0);
-    const computerStock = parseFloat(formData?.computerStock || 0);
+    const physicalStock = parseInt(formData?.physicalStock || 0);
+    const computerStock = parseInt(formData?.computerStock || 0);
 
-    if (physicalStock > computerStock) {
-      alert("Physical stock is greater than computer stock.");
-    } else if (physicalStock < computerStock) {
-      alert("Physical stock is less than computer stock.");
+    const RStock = computerStock - physicalStock;
+
+    const tempContentRStock = {
+      Series: "Main",
+      Date: convertToDateString(formData?.stockDate),
+      "Party Name": "STOCK ADJ",
+      "Item Name": formData?.item,
+      Qty: RStock,
+      Unit: formData?.unitName,
+      Price: formData?.purc_price,
+      Amount: RStock * formData?.purc_price,
+      "User Name": formData?.user,
+    };
+    if (RStock > 0) {
+      (tempContentRStock.fileName = `MatIss${new Date().getTime()}`),
+        setRStockPositive((prevArray) => [...prevArray, tempContentRStock]);
+    } else if (RStock < 0) {
+      (tempContentRStock.fileName = `MatRcv${new Date().getTime()}`),
+        (tempContentRStock.Qty = Math.abs(RStock));
+      tempContentRStock.Amount = Math.abs(RStock) * formData?.purc_price;
+      setRStockNegative((prevArray) => [...prevArray, tempContentRStock]);
     }
-
-    return; // temporary test
 
     const tempContent = {
       date: convertToDateString(formData?.stockDate),
@@ -203,6 +285,7 @@ export default function Page() {
       qty: formData?.quantity,
       purc_price: parseFloat(formData?.purc_price || 0),
       location: formData?.location,
+      fileName: `STOCK_${formData?.item?.toUpperCase()}_${new Date().getTime()}`,
     };
 
     setExcelContent((prevArray) => [...prevArray, tempContent]);
@@ -212,6 +295,8 @@ export default function Page() {
       value: `✔ Item added successfully.`,
     });
     window.stockModal_1.showModal();
+
+    clearForm();
   };
 
   const uploadStock = async (data) => {
@@ -253,6 +338,21 @@ export default function Page() {
       });
       window.stockModal_1.showModal();
     }
+  };
+
+  const clearForm = () => {
+    setFormData((values) => ({
+      ...values,
+      stockDate: new Date(), // default today.
+      item: null,
+      quantity: null,
+      location: null,
+      purc_price: null,
+      selectedItemRow: null,
+      computerStock: null,
+      physicalStock: null,
+      unitName: null,
+    }));
   };
 
   // ****
@@ -340,6 +440,7 @@ export default function Page() {
         value={formData?.item && { itemName: formData?.item }}
         onChange={(e) => {
           handleChange({ target: { name: "item", value: e?.itemName } });
+          handleChange({ target: { name: "unitName", value: e?.unitName } });
           handleChange({
             target: { name: "computerStock", value: e?.closingStock },
           });
@@ -457,13 +558,18 @@ export default function Page() {
               stockDate: new Date(), // default today.
               item: null,
               quantity: null,
-              mrp: null,
               location: null,
               purc_price: null,
               selectedItemRow: -1,
+              computerStock: null,
+              physicalStock: null,
+              unitName: null,
+              user: null,
             });
 
             setExcelContent([]);
+            setRStockNegative([]);
+            setRStockPositive([]);
           }}
           className="text-white hover:bg-blue-900"
         >
