@@ -37,6 +37,7 @@ export default function Page() {
   const [ExcelContent, setExcelContent] = useState([]);
   const [RStockPositive, setRStockPositive] = useState([]);
   const [RStockNegative, setRStockNegative] = useState([]);
+  const [LocationRackChangeList, setLocationRackChangeList] = useState([]);
 
   const handleChange = (event) => {
     const name = event.target?.name;
@@ -110,6 +111,91 @@ export default function Page() {
         setAPILoading(false);
         console.error(error);
       });
+  };
+
+  const addContent = () => {
+    // if (!isFormValidated(formData)) return;
+
+    const convertToDateString = (date) => {
+      var dateString = `${date}`;
+      var date = new Date(dateString);
+      var day = date.getDate();
+      var month = date.getMonth() + 1;
+      var year = date.getFullYear();
+
+      var formattedDate =
+        (day < 10 ? "0" + day : day) +
+        "/" +
+        (month < 10 ? "0" + month : month) +
+        "/" +
+        year;
+
+      return formattedDate;
+    };
+
+    const physicalStock = parseInt(formData?.physicalStock || 0);
+    const computerStock = parseInt(formData?.computerStock || 0);
+
+    const RStock = computerStock - physicalStock;
+
+    const tempContentRStock = {
+      Series: "Main",
+      Date: convertToDateString(formData?.stockDate),
+      "Party Name": "STOCK ADJ",
+      "Item Name": formData?.item,
+      Qty: RStock,
+      Unit: formData?.unitName,
+      Price: formData?.purc_price,
+      Amount: RStock * formData?.purc_price,
+      "User Name": formData?.user,
+    };
+    if (RStock > 0) {
+      (tempContentRStock.fileName = `MatIss${new Date().getTime()}`),
+        setRStockPositive((prevArray) => [...prevArray, tempContentRStock]);
+    } else if (RStock < 0) {
+      (tempContentRStock.fileName = `MatRcv${new Date().getTime()}`),
+        (tempContentRStock.Qty = Math.abs(RStock));
+      tempContentRStock.Amount = Math.abs(RStock) * formData?.purc_price;
+      setRStockNegative((prevArray) => [...prevArray, tempContentRStock]);
+    }
+
+    const tempContent = {
+      date: convertToDateString(formData?.stockDate),
+      item_name: formData?.item,
+      qty: formData?.quantity,
+      purc_price: parseFloat(formData?.purc_price || 0),
+      location: formData?.location,
+      fileName: `STOCK_${formData?.item?.toUpperCase()}_${new Date().getTime()}`,
+    };
+    setExcelContent((prevArray) => [...prevArray, tempContent]);
+
+    const resLocationModified = checkIfLocationModified(
+      formData?.selectedItemRow,
+      formData?.location
+    );
+
+    if (resLocationModified) {
+      const tempLocationChange = {
+        "ITEM NAME": formData?.item,
+        ITEM_DESC1: formData?.location,
+        ITEM_DESC2: `${convertToDateString(formData?.stockDate)} - ${
+          formData?.user
+        }`,
+        fileName: `RackChange_${new Date().getTime()}`,
+      };
+      setLocationRackChangeList((prevArray) => [
+        ...prevArray,
+        tempLocationChange,
+      ]);
+    }
+
+    handleModalMessage({
+      name: "message",
+      value: `✔ Item added successfully.`,
+    });
+    window.stockModal_1.showModal();
+
+    clearForm();
   };
 
   const downloadSheet = () => {
@@ -195,8 +281,31 @@ export default function Page() {
       exportExcel(data, content[0].fileName, () => {});
     }
 
-    // Stage 3 (Stock)
-    // Stage 1 (Main excel sheet)
+    // Stage 3 (Rack Change - Location)
+
+    if (LocationRackChangeList.length > 0) {
+      content = [];
+      data = [];
+
+      LocationRackChangeList.forEach((d) => {
+        content.push(d);
+      });
+
+      data = [
+        {
+          sheet: "Sheet1",
+          columns: [
+            { label: "ITEM NAME", value: "ITEM NAME" },
+            { label: "ITEM_DESC1", value: "ITEM_DESC1" },
+            { label: "ITEM_DESC2", value: "ITEM_DESC2" },
+          ],
+          content,
+        },
+      ];
+      exportExcel(data, content[0].fileName, () => {});
+    }
+
+    // Stage 4 (Stock)
 
     content = [];
     data = [];
@@ -231,72 +340,6 @@ export default function Page() {
     };
 
     xlsx(data, settings, callBack);
-  };
-
-  const addContent = () => {
-    // if (!isFormValidated(formData)) return;
-
-    const convertToDateString = (date) => {
-      var dateString = `${date}`;
-      var date = new Date(dateString);
-      var day = date.getDate();
-      var month = date.getMonth() + 1;
-      var year = date.getFullYear();
-
-      var formattedDate =
-        (day < 10 ? "0" + day : day) +
-        "/" +
-        (month < 10 ? "0" + month : month) +
-        "/" +
-        year;
-
-      return formattedDate;
-    };
-
-    const physicalStock = parseInt(formData?.physicalStock || 0);
-    const computerStock = parseInt(formData?.computerStock || 0);
-
-    const RStock = computerStock - physicalStock;
-
-    const tempContentRStock = {
-      Series: "Main",
-      Date: convertToDateString(formData?.stockDate),
-      "Party Name": "STOCK ADJ",
-      "Item Name": formData?.item,
-      Qty: RStock,
-      Unit: formData?.unitName,
-      Price: formData?.purc_price,
-      Amount: RStock * formData?.purc_price,
-      "User Name": formData?.user,
-    };
-    if (RStock > 0) {
-      (tempContentRStock.fileName = `MatIss${new Date().getTime()}`),
-        setRStockPositive((prevArray) => [...prevArray, tempContentRStock]);
-    } else if (RStock < 0) {
-      (tempContentRStock.fileName = `MatRcv${new Date().getTime()}`),
-        (tempContentRStock.Qty = Math.abs(RStock));
-      tempContentRStock.Amount = Math.abs(RStock) * formData?.purc_price;
-      setRStockNegative((prevArray) => [...prevArray, tempContentRStock]);
-    }
-
-    const tempContent = {
-      date: convertToDateString(formData?.stockDate),
-      item_name: formData?.item,
-      qty: formData?.quantity,
-      purc_price: parseFloat(formData?.purc_price || 0),
-      location: formData?.location,
-      fileName: `STOCK_${formData?.item?.toUpperCase()}_${new Date().getTime()}`,
-    };
-
-    setExcelContent((prevArray) => [...prevArray, tempContent]);
-
-    handleModalMessage({
-      name: "message",
-      value: `✔ Item added successfully.`,
-    });
-    window.stockModal_1.showModal();
-
-    clearForm();
   };
 
   const uploadStock = async (data) => {
@@ -340,6 +383,12 @@ export default function Page() {
     }
   };
 
+  const checkIfLocationModified = (selectedRowID, location) => {
+    const selectedRow = ItemAPIData.find((row) => row._id === selectedRowID);
+    if (selectedRow?.storageLocation !== location) return true;
+    return false;
+  };
+
   const clearForm = () => {
     setFormData((values) => ({
       ...values,
@@ -377,9 +426,8 @@ export default function Page() {
           <div className="text-white">
             <b className="block mb-2 text-warning">Summary: </b>
             <p>ITEM: {formData?.item}</p>
-            {/* <p>MRP: {formData?.mrp}</p> */}
             <p>QTY: {formData?.quantity}</p>
-            <p>PURC PRICE: {formData?.purc_price}</p>
+            <p>PURCHASE PRICE: {formData?.purc_price}</p>
             <p>LOC: {formData?.location}</p>
           </div>
           <div className="modal-action">
