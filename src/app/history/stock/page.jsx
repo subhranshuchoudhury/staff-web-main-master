@@ -107,8 +107,9 @@ const Page = () => {
   };
 
   const DownloadExcel = (data) => {
+    if (data?.length === 0 || !data) return;
     const settings = {
-      fileName: `STOCK_Downloaded-${new Date().getTime()}`,
+      fileName: data[0].content[0].fileName,
       extraLength: 3,
       writeMode: "writeFile",
       writeOptions: {},
@@ -246,7 +247,16 @@ const Page = () => {
                       DELETE 🗑
                     </button>
                     <button
-                      onClick={() => DownloadExcel(JSON.parse(d?.sheetdata))}
+                      onClick={() => {
+                        DownloadExcel(JSON.parse(d?.sheetdata || "[]"));
+                        DownloadExcel(
+                          JSON.parse(d?.RStockPositiveSheet || "[]")
+                        );
+                        DownloadExcel(
+                          JSON.parse(d?.RStockNegativeSheet || "[]")
+                        );
+                        DownloadExcel(JSON.parse(d?.RackChangeSheet || "[]"));
+                      }}
                       className="btn bg-green-700 m-5"
                     >
                       Download ⬇
