@@ -11,67 +11,19 @@ import { useEffect, useState } from "react";
 import { uploadItem } from "../AppScript/script";
 
 export default function Page() {
-  // ****
-
   useEffect(() => {
     getAPIContent();
-    // const unsubscribe = window.addEventListener("EXPO_LS_EVENT", function () {
-    //   // * This is for the expo app, using for scanning bar codes.
-    //   digLocalStorageQR();
-    // });
-    // return () => {
-    //   window.removeEventListener("EXPO_LS_EVENT", unsubscribe);
-    // };
   }, []);
-
-  // const digLocalStorageQR = () => {
-  //   let localSavedItemApi = [];
-
-  //   if (localSavedItemApi?.length === 0) {
-  //     setQrResult("🔍 Searching...");
-  //   }
-
-  //   const setLocalITEM_API = (data) => {
-  //     localSavedItemApi = data;
-  //   };
-
-  //   checkLocalStorageSaved("ITEM_API_DATA", setLocalITEM_API);
-
-  //   // * This function will get the local item whenever the event "EXPO_LS_EVENT" triggered.
-
-  //   const res = localStorage.getItem("EXPO_SCN_RESULT");
-  //   const result = localSavedItemApi.find(
-  //     (obj) => obj.pn !== "" && res.includes(obj.pn)
-  //   );
-
-  //   if (result?.value) {
-  //     console.log("SCN_RES", result);
-  //     setQrResult(`✔ ${result?.value}-${result?.pn}`);
-
-  //     // * setting the matched value
-  //     handleChange({ target: { name: "unitType", value: result?.unit } });
-  //     handleChange({ target: { name: "mrp", value: result?.mrp || null } });
-  //     handleChange({ target: { name: "item", value: result?.value } });
-  //     handleChange({ target: { name: "selectedItemRow", value: result?.row } });
-  //     if (formData?.seriesType === "MAIN") return;
-  //     handleChange({
-  //       target: { name: "gstAmount", value: result?.gst || null },
-  //     });
-  //   } else {
-  //     localSavedItemApi?.length === 0
-  //       ? setQrResult(`❓ Oops! Kindly retry..`)
-  //       : setQrResult(`❌ No match: ${res}`);
-  //   }
-  // };
 
   const [formData, setFormData] = useState({
     user: null,
-    stockDate: new Date(), // default today.
+    stockDate: new Date(),
     item: null,
     quantity: null,
-    mrp: null,
     location: null,
     purc_price: null,
+    computerStock: null,
+    physicalStock: null,
     selectedItemRow: -1,
   });
 
@@ -82,9 +34,6 @@ export default function Page() {
   const [ItemAPIData, setItemAPIData] = useState([]);
   const [APILoading, setAPILoading] = useState(true);
   const [ExcelContent, setExcelContent] = useState([]);
-  // const [qrResult, setQrResult] = useState("...");
-
-  // * for uncommon useState alternative
 
   const handleChange = (event) => {
     const name = event.target?.name;
@@ -122,11 +71,6 @@ export default function Page() {
   // API CALLS
 
   const getAPIContent = async () => {
-    // check for local storage (fast loading)
-    // checkLocalStorageSaved("ITEM_API_DATA", setItemAPIData);
-
-    // calls apis simultaneously
-
     Promise.all([fetch("/api/items")])
       .then((responses) =>
         Promise.all(responses.map((response) => response.json()))
@@ -136,35 +80,26 @@ export default function Page() {
 
         // demo of response
 
-        //         {
-        //     "_id": "669f819df84e0c9fd7551e42",
-        //     "code": 11574,
-        //     "itemName": "29066277-CMC ASSY SFC609/709",
-        //     "partNumber": "29066277",
-        //     "groupName": "BRAKES INDIA LTD",
-        //     "unitName": "Pcs",
-        //     "gstPercentage": "28%",
-        //     "storageLocation": "BIN-2A/1/3",
-        //     "closingStock": 1,
-        //     "unitPrice": null,
-        //     "unitPriceAfterDiscount": null,
-        //     "__v": 0,
-        //     "discPercentage": 0,
-        //     "mrp": 1350
-        // }
+        // const demoData = {
+        //   _id: "669f819df84e0c9fd7551e42",
+        //   code: 11574,
+        //   itemName: "29066277-CMC ASSY SFC609/709",
+        //   partNumber: "29066277",
+        //   groupName: "BRAKES INDIA LTD",
+        //   unitName: "Pcs",
+        //   gstPercentage: "28%",
+        //   storageLocation: "BIN-2A/1/3",
+        //   closingStock: 1,
+        //   unitPrice: null,
+        //   unitPriceAfterDiscount: null,
+        //   __v: 0,
+        //   discPercentage: 0,
+        //   mrp: 1350,
+        // };
 
         setItemAPIData(item_api_data);
 
         console.log("ITEM_API_DATA", item_api_data);
-
-        // const indexedItems = item_api_data.map((obj, row) => ({
-        //   ...obj,
-        //   row,
-        // }));
-
-        // setItemAPIData(indexedItems);
-
-        // localStorage.setItem("ITEM_API_DATA", JSON.stringify(indexedItems));
 
         setAPILoading(false);
       })
@@ -174,14 +109,6 @@ export default function Page() {
         process.env.NODE_ENV === "development" &&
           alert("REPORT IT ->[STOCK - PAGE.JS - 103]\n" + error);
       });
-  };
-
-  const checkLocalStorageSaved = (address, manager) => {
-    let storage = localStorage.getItem(address);
-    if (storage !== null && storage != undefined) {
-      storage = JSON.parse(storage);
-      manager(storage);
-    }
   };
 
   const downloadSheet = () => {
@@ -207,7 +134,6 @@ export default function Page() {
           { label: "DATE", value: "date" },
           { label: "ITEM NAME", value: "item_name" },
           { label: "QTY", value: "qty", format: "0.00" },
-          { label: "MRP", value: "mrp", format: "0.00" },
           { label: "PURC PRICE", value: "purc_price", format: "0.00" },
           { label: "LOCATION", value: "location" },
         ],
@@ -218,7 +144,7 @@ export default function Page() {
     exportExcel(data);
   };
 
-  const exportExcel = (data) => {
+  const exportExcel = (data, fileName, callBack) => {
     const settings = {
       fileName: `STOCK_${formData?.item?.toUpperCase()}_${new Date().getTime()}`,
       extraLength: 3,
@@ -260,56 +186,32 @@ export default function Page() {
       return formattedDate;
     };
 
+    const physicalStock = parseFloat(formData?.physicalStock || 0);
+    const computerStock = parseFloat(formData?.computerStock || 0);
+
+    if (physicalStock > computerStock) {
+      alert("Physical stock is greater than computer stock.");
+    } else if (physicalStock < computerStock) {
+      alert("Physical stock is less than computer stock.");
+    }
+
+    return; // temporary test
+
     const tempContent = {
       date: convertToDateString(formData?.stockDate),
       item_name: formData?.item,
       qty: formData?.quantity,
-      mrp: parseFloat(formData?.mrp),
       purc_price: parseFloat(formData?.purc_price || 0),
       location: formData?.location,
     };
 
     setExcelContent((prevArray) => [...prevArray, tempContent]);
 
-    isMrpMismatched(formData?.selectedItemRow, formData?.mrp); // * update the mrp field if any changes happened in the mrp field.
-
     handleModalMessage({
       name: "message",
       value: `✔ Item added successfully.`,
     });
     window.stockModal_1.showModal();
-  };
-
-  // * update the mrp field if any changes happened in the mrp field.
-
-  const isMrpMismatched = (row, newMrp) => {
-    // Find the object with the specified row number
-    var obj = ItemAPIData[parseInt(row)];
-
-    // Check if the object was found and if the new MRP value is different from the previous MRP value
-    if (obj && obj.mrp != newMrp) {
-      updateMrp(row, newMrp);
-    }
-  };
-
-  const updateMrp = async (row, mrp) => {
-    console.log("MRP will be updated");
-    // const payload = {
-    //   updateRow: parseInt(row) + 2,
-    //   mrp,
-    // };
-
-    // try {
-    //   const response = await uploadItem(payload);
-
-    //   if (response === "200") {
-    //     console.log("MRP UPDATED");
-    //   } else {
-    //     console.log("MRP NOT UPDATED");
-    //   }
-    // } catch (error) {
-    //   console.log(error);
-    // }
   };
 
   const uploadStock = async (data) => {
@@ -375,7 +277,7 @@ export default function Page() {
           <div className="text-white">
             <b className="block mb-2 text-warning">Summary: </b>
             <p>ITEM: {formData?.item}</p>
-            <p>MRP: {formData?.mrp}</p>
+            {/* <p>MRP: {formData?.mrp}</p> */}
             <p>QTY: {formData?.quantity}</p>
             <p>PURC PRICE: {formData?.purc_price}</p>
             <p>LOC: {formData?.location}</p>
@@ -437,8 +339,10 @@ export default function Page() {
         getOptionLabel={(option) => `${option["itemName"]}`}
         value={formData?.item && { itemName: formData?.item }}
         onChange={(e) => {
-          handleChange({ target: { name: "mrp", value: e?.mrp || null } });
           handleChange({ target: { name: "item", value: e?.itemName } });
+          handleChange({
+            target: { name: "computerStock", value: e?.closingStock },
+          });
           handleChange({ target: { name: "selectedItemRow", value: e?._id } });
           handleChange({
             target: { name: "location", value: e?.storageLocation },
@@ -463,16 +367,27 @@ export default function Page() {
             e.target.blur();
           }}
         />
+      </div>
+      <div className="flex justify-center items-center flex-wrap">
         <input
           className="input input-bordered input-secondary w-[295px] m-5"
-          placeholder="Mrp"
+          placeholder="Physical Stock"
+          type="text"
+          onChange={(e) => {
+            handleChange(e);
+          }}
+          value={formData?.physicalStock || ""}
+          name="physicalStock"
+        />
+        <input
+          className="input input-bordered input-secondary w-[295px] m-5"
+          placeholder="Computer Stock"
           type="number"
           onChange={(e) => {
             handleChange(e);
-            calculateDisc();
           }}
-          value={formData?.mrp || ""}
-          name="mrp"
+          value={formData?.computerStock || ""}
+          name="computerStock"
           onWheel={(e) => {
             e.target.blur();
           }}
