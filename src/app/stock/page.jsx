@@ -34,7 +34,6 @@ export default function Page() {
 
   const [ItemAPIData, setItemAPIData] = useState([]);
   const [APILoading, setAPILoading] = useState(true);
-  // const [ExcelContent, setExcelContent] = useState([]);
   const [RStockPositive, setRStockPositive] = useState([]);
   const [RStockNegative, setRStockNegative] = useState([]);
   const [LocationRackChangeList, setLocationRackChangeList] = useState([]);

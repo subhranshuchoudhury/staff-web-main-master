@@ -27,6 +27,23 @@ const Page = () => {
       ) : null}
       <div className="flex flex-wrap justify-center">
         <div
+          onClick={() => routePath("/new-purchase")}
+          className="btn btn-info text-white w-44 h-28 m-5 shadow-2xl hover:shadow-white flex-col bg-transparent"
+        >
+          <div className="w-full flex flex-row justify-end">
+            <p className="bg-blue-400 animate-pulse rounded-md text-xs w-7">
+              New
+            </p>
+          </div>
+          <Image
+            src="/assets/images/purchase.png"
+            alt="purchase"
+            width={50}
+            height={50}
+          />
+          <p>PURCHASE</p>
+        </div>
+        <div
           onClick={() => routePath("/purchase")}
           className="btn btn-info text-white w-44 h-28 m-5 shadow-2xl hover:shadow-white flex-col bg-transparent"
         >
