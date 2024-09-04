@@ -20,7 +20,7 @@ export default function Page() {
     stockDate: new Date(),
     item: null,
     unitName: null,
-    quantity: null,
+    // quantity: null,
     location: null,
     purc_price: null,
     computerStock: null,
@@ -34,7 +34,7 @@ export default function Page() {
 
   const [ItemAPIData, setItemAPIData] = useState([]);
   const [APILoading, setAPILoading] = useState(true);
-  const [ExcelContent, setExcelContent] = useState([]);
+  // const [ExcelContent, setExcelContent] = useState([]);
   const [RStockPositive, setRStockPositive] = useState([]);
   const [RStockNegative, setRStockNegative] = useState([]);
   const [LocationRackChangeList, setLocationRackChangeList] = useState([]);
@@ -159,16 +159,6 @@ export default function Page() {
       setRStockNegative((prevArray) => [...prevArray, tempContentRStock]);
     }
 
-    const tempContent = {
-      date: convertToDateString(formData?.stockDate),
-      item_name: formData?.item,
-      qty: formData?.quantity,
-      purc_price: parseFloat(formData?.purc_price || 0),
-      location: formData?.location,
-      fileName: `STOCK_${formData?.item?.toUpperCase()}_${new Date().getTime()}`,
-    };
-    setExcelContent((prevArray) => [...prevArray, tempContent]);
-
     const resLocationModified = checkIfLocationModified(
       formData?.selectedItemRow,
       formData?.location
@@ -199,7 +189,11 @@ export default function Page() {
   };
 
   const downloadSheet = () => {
-    if (ExcelContent.length === 0) {
+    if (
+      RStockNegative.length === 0 &&
+      RStockPositive.length === 0 &&
+      LocationRackChangeList.length === 0
+    ) {
       handleModalMessage({
         name: "message",
         value: `⚠ Add one document before exporting excel.`,
@@ -306,37 +300,14 @@ export default function Page() {
       });
     }
 
-    // Stage 4 (Stock)
+    // Show Alert & Upload to cloud
 
-    content = [];
-    data = [];
-
-    ExcelContent.forEach((d) => {
-      content.push(d);
+    handleModalMessage({
+      name: "message",
+      value: `✔ Exporting excel successful.`,
     });
-
-    data = [
-      {
-        sheet: "Sheet1",
-        columns: [
-          { label: "DATE", value: "date" },
-          { label: "ITEM NAME", value: "item_name" },
-          { label: "QTY", value: "qty", format: "0" },
-          { label: "PURC PRICE", value: "purc_price", format: "0.00" },
-          { label: "LOCATION", value: "location" },
-        ],
-        content,
-      },
-    ];
-    exportExcel(data, content[0].fileName, () => {
-      uploadSheets.Stock = JSON.stringify(data);
-      handleModalMessage({
-        name: "message",
-        value: `✔ Exporting excel successful.`,
-      });
-      window.stockModal_1.showModal();
-      uploadStock(uploadSheets);
-    });
+    window.stockModal_1.showModal();
+    uploadStock(uploadSheets);
   };
 
   const exportExcel = (data, fileName, callBack) => {
@@ -361,7 +332,6 @@ export default function Page() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          sheetdata: sheets?.Stock,
           items: JSON.parse(sheets?.Stock)?.[0]?.content?.length,
           RStockPositiveSheet: sheets?.RStockPositive,
           RStockNegativeSheet: sheets?.RStockNegative,
@@ -407,7 +377,7 @@ export default function Page() {
       ...values,
       stockDate: new Date(), // default today.
       item: null,
-      quantity: null,
+      // quantity: null,
       location: null,
       purc_price: null,
       selectedItemRow: null,
@@ -439,7 +409,7 @@ export default function Page() {
           <div className="text-white">
             <b className="block mb-2 text-warning">Summary: </b>
             <p>ITEM: {formData?.item}</p>
-            <p>QTY: {formData?.quantity}</p>
+            {/* <p>QUANTITY: {formData?.quantity}</p> */}
             <p>PURCHASE PRICE: {formData?.purc_price}</p>
             <p>LOC: {formData?.location}</p>
           </div>
@@ -517,19 +487,7 @@ export default function Page() {
         filterOption={createFilter({ ignoreAccents: false })}
         components={{ Option: CustomOption, MenuList: CustomMenuList }}
       />
-      <div className="flex justify-center items-center flex-wrap">
-        <input
-          className="input input-bordered input-secondary w-[295px] m-5"
-          placeholder="Quantity"
-          type="number"
-          name="quantity"
-          value={formData?.quantity || ""}
-          onChange={handleChange}
-          onWheel={(e) => {
-            e.target.blur();
-          }}
-        />
-      </div>
+
       <div className="flex justify-center items-center flex-wrap">
         <input
           className="input input-bordered input-secondary w-[295px] m-5"
@@ -546,7 +504,7 @@ export default function Page() {
           placeholder="Computer Stock"
           type="number"
           onChange={(e) => {
-            handleChange(e);
+            // handleChange(e);
           }}
           value={formData?.computerStock || ""}
           name="computerStock"
@@ -618,7 +576,7 @@ export default function Page() {
             setFormData({
               stockDate: new Date(), // default today.
               item: null,
-              quantity: null,
+              // quantity: null,
               location: null,
               purc_price: null,
               selectedItemRow: -1,
@@ -628,7 +586,6 @@ export default function Page() {
               user: null,
             });
 
-            setExcelContent([]);
             setRStockNegative([]);
             setRStockPositive([]);
           }}

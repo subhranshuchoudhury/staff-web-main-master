@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const stockSchema = new mongoose.Schema(
   {
-    sheetdata: { type: String, required: true },
+    sheetdata: { type: String, required: false },
     RStockPositiveSheet: { type: String, required: false },
     RStockNegativeSheet: { type: String, required: false },
     RackChangeSheet: { type: String, required: false },
