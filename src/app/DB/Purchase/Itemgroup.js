@@ -30,6 +30,7 @@ const Itemgroup = [
   { value: "BHARATBNEZ" },
   { value: "BIMITE" },
   { value: "BINTAX" },
+  { value: "BI BRAKE OIL" },
   { value: "BOSCH" },
   { value: "BRAKES INDIA" },
   { value: "BRAKES INDIA LTD" },
