@@ -59,6 +59,8 @@ const StockStatus = () => {
             <p className="text-lg text-center mb-5 font-bold">Select Item</p>
             {items && items?.length > 0 ? (
               <Select
+                isClearable
+                blurInputOnSelect={false}
                 placeholder="SELECT ITEM/PART NO"
                 className="text-blue-800 font-bold"
                 options={items}
