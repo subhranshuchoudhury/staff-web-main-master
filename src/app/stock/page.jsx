@@ -74,6 +74,8 @@ export default function Page() {
   // API CALLS
 
   const getAPIContent = async () => {
+    setAPILoading(true);
+
     Promise.all([fetch("/api/items")])
       .then((responses) =>
         Promise.all(responses.map((response) => response.json()))
@@ -102,7 +104,9 @@ export default function Page() {
 
         setItemAPIData(item_api_data);
 
-        console.log("ITEM_API_DATA", item_api_data);
+        if (process.env.NODE_ENV === "development") {
+          console.log("ITEM_API_DATA", item_api_data);
+        }
 
         setAPILoading(false);
       })
@@ -423,7 +427,7 @@ export default function Page() {
 
       {/* Alert  */}
 
-      <p className="text-center text-[40px] font-bold underline mb-24 m-auto rounded-xl w-[98%] text-white">
+      <p className="text-center text-[40px] font-bold mb-24 m-auto rounded-xl w-[98%] text-white">
         STOCK MODULE
       </p>
       <div className="text-center">
@@ -545,18 +549,6 @@ export default function Page() {
 
       <div className="btm-nav glass bg-blue-800">
         <button
-          onClick={downloadSheet}
-          className=" text-white hover:bg-blue-900"
-        >
-          <Image
-            src="/assets/images/download (1).png"
-            width={50}
-            height={50}
-            alt="icon"
-          ></Image>
-          <span className="mb-6 text-xl font-mono">Download</span>
-        </button>
-        <button
           onClick={() => {
             if (isFormValidated(formData)) window.stockModal_2.showModal();
           }}
@@ -570,6 +562,31 @@ export default function Page() {
             alt="icon"
           ></Image>
         </button>
+        <button
+          onClick={downloadSheet}
+          className=" text-white hover:bg-blue-900"
+        >
+          <Image
+            src="/assets/images/download (1).png"
+            width={50}
+            height={50}
+            alt="icon"
+          ></Image>
+          <span className="mb-6 text-xl font-mono">Download</span>
+        </button>
+        <button
+          onClick={getAPIContent}
+          className=" text-white hover:bg-blue-900"
+        >
+          <Image
+            src="/assets/images/refresh-arrow.png"
+            width={50}
+            height={50}
+            alt="icon"
+          ></Image>
+          <span className="mb-6 text-xl font-mono">Refresh</span>
+        </button>
+
         <button
           onClick={() => {
             setFormData({

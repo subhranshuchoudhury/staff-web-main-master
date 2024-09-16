@@ -18,54 +18,47 @@ export default function Page() {
 
   useEffect(() => {
     getAPIContent();
-    const unsubscribe = window.addEventListener("EXPO_LS_EVENT", function () {
-      // * This is for the expo app, using for scanning bar codes.
-      digLocalStorageQR();
-    });
-    return () => {
-      window.removeEventListener("EXPO_LS_EVENT", unsubscribe);
-    };
   }, []);
 
-  const digLocalStorageQR = () => {
-    let localSavedItemApi = [];
+  // const digLocalStorageQR = () => {
+  //   let localSavedItemApi = [];
 
-    if (localSavedItemApi?.length === 0) {
-      setQrResult("🔍 Searching...");
-    }
+  //   if (localSavedItemApi?.length === 0) {
+  //     setQrResult("🔍 Searching...");
+  //   }
 
-    const setLocalITEM_API = (data) => {
-      localSavedItemApi = data;
-    };
+  //   const setLocalITEM_API = (data) => {
+  //     localSavedItemApi = data;
+  //   };
 
-    checkLocalStorageSaved("ITEM_API_DATA", setLocalITEM_API);
+  //   checkLocalStorageSaved("ITEM_API_DATA", setLocalITEM_API);
 
-    // * This function will get the local item whenever the event "EXPO_LS_EVENT" triggered.
+  //   // * This function will get the local item whenever the event "EXPO_LS_EVENT" triggered.
 
-    const res = localStorage.getItem("EXPO_SCN_RESULT");
-    const result = localSavedItemApi.find(
-      (obj) => obj.pn !== "" && res.includes(obj.pn)
-    );
+  //   const res = localStorage.getItem("EXPO_SCN_RESULT");
+  //   const result = localSavedItemApi.find(
+  //     (obj) => obj.pn !== "" && res.includes(obj.pn)
+  //   );
 
-    if (result?.value) {
-      console.log("SCN_RES", result);
-      setQrResult(`✔ ${result?.value}-${result?.pn}`);
+  //   if (result?.value) {
+  //     console.log("SCN_RES", result);
+  //     setQrResult(`✔ ${result?.value}-${result?.pn}`);
 
-      // * setting the matched value
-      handleChange({ target: { name: "unitType", value: result?.unit } });
-      handleChange({ target: { name: "mrp", value: result?.mrp || null } });
-      handleChange({ target: { name: "item", value: result?.value } });
-      handleChange({ target: { name: "selectedItemRow", value: result?.row } });
-      if (formData?.seriesType === "MAIN") return;
-      handleChange({
-        target: { name: "gstAmount", value: result?.gst || null },
-      });
-    } else {
-      localSavedItemApi?.length === 0
-        ? setQrResult(`❓ Oops! Kindly retry..`)
-        : setQrResult(`❌ No match: ${res}`);
-    }
-  };
+  //     // * setting the matched value
+  //     handleChange({ target: { name: "unitType", value: result?.unit } });
+  //     handleChange({ target: { name: "mrp", value: result?.mrp || null } });
+  //     handleChange({ target: { name: "item", value: result?.value } });
+  //     handleChange({ target: { name: "selectedItemRow", value: result?.row } });
+  //     if (formData?.seriesType === "MAIN") return;
+  //     handleChange({
+  //       target: { name: "gstAmount", value: result?.gst || null },
+  //     });
+  //   } else {
+  //     localSavedItemApi?.length === 0
+  //       ? setQrResult(`❓ Oops! Kindly retry..`)
+  //       : setQrResult(`❌ No match: ${res}`);
+  //   }
+  // };
 
   const [formData, setFormData] = useState({
     seriesType: null,
@@ -92,7 +85,7 @@ export default function Page() {
   const [ItemAPIData, setItemAPIData] = useState([]);
   const [APILoading, setAPILoading] = useState(true);
   const [ExcelContent, setExcelContent] = useState([]);
-  const [qrResult, setQrResult] = useState("...");
+  // const [qrResult, setQrResult] = useState("...");
 
   // * Duplicate check
 
@@ -144,6 +137,7 @@ export default function Page() {
   // API CALLS
 
   const getAPIContent = async () => {
+    setAPILoading(true);
     // check for local storage (fast loading)
     checkLocalStorageSaved("PARTY_API_DATA", setPartyAPIData);
     checkLocalStorageSaved("ITEM_API_DATA", setItemAPIData);
@@ -183,8 +177,6 @@ export default function Page() {
       .catch((error) => {
         setAPILoading(false);
         console.error(error);
-        process.env.NODE_ENV === "development" &&
-          alert("REPORT IT ->[SALE - PAGE.JS - 103]\n" + error);
       });
   };
 
@@ -701,7 +693,7 @@ export default function Page() {
         </button>
       </div> */}
 
-      <p className="text-center m-5 glass rounded-sm">{qrResult}</p>
+      {/* <p className="text-center m-5 glass rounded-sm">{qrResult}</p> */}
 
       {/* {showQrScanner && (
         <MyQrScanner qrResultHandler={(r) => qrResultHandler(r)} />
@@ -825,18 +817,6 @@ export default function Page() {
 
       <div className="btm-nav glass bg-blue-800">
         <button
-          onClick={downloadSheet}
-          className=" text-white hover:bg-blue-900"
-        >
-          <Image
-            src="/assets/images/download (1).png"
-            width={50}
-            height={50}
-            alt="icon"
-          ></Image>
-          <span className="mb-6 text-xl font-mono">Download</span>
-        </button>
-        <button
           onClick={() => {
             if (isFormValidated(formData)) {
               if (isDuplicate(formData?.item)) {
@@ -862,7 +842,33 @@ export default function Page() {
             width={70}
             height={70}
             alt="icon"
-          ></Image>
+          />
+        </button>
+        <button
+          onClick={downloadSheet}
+          className=" text-white hover:bg-blue-900"
+        >
+          <Image
+            src="/assets/images/download (1).png"
+            width={50}
+            height={50}
+            alt="icon"
+          />
+          <span className="mb-6 text-xl font-mono">Download</span>
+        </button>
+        <button
+          onClick={() => {
+            getAPIContent();
+          }}
+          className="text-white hover:bg-blue-900"
+        >
+          <Image
+            src="/assets/images/refresh-arrow.png"
+            width={50}
+            height={50}
+            alt="icon"
+          />
+          <span className="mb-6 text-xl font-mono">Refresh</span>
         </button>
         <button
           onClick={() => {
@@ -892,7 +898,7 @@ export default function Page() {
             width={50}
             height={50}
             alt="icon"
-          ></Image>
+          />
           <span className="mb-6 text-xl font-mono">Reset</span>
         </button>
       </div>

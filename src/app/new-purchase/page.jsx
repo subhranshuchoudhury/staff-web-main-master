@@ -1234,21 +1234,6 @@ export default function page() {
       <div className="btm-nav glass bg-blue-800">
         <button
           onClick={() => {
-            createSheet();
-          }}
-          className=" text-white hover:bg-blue-900"
-        >
-          <Image
-            className=""
-            src="/assets/images/download (1).png"
-            width={50}
-            height={50}
-            alt="icon"
-          ></Image>
-          <span className="mb-6 text-xl font-mono">Download</span>
-        </button>
-        <button
-          onClick={() => {
             if (isFormValidated(formData)) {
               addSingleFormContent();
             }
@@ -1258,10 +1243,38 @@ export default function page() {
           <Image
             className="mb-20"
             src="/assets/images/add-button.png"
-            width={70}
-            height={70}
+            width={80}
+            height={80}
             alt="icon"
           ></Image>
+        </button>
+        <button
+          onClick={() => {
+            createSheet();
+          }}
+          className=" text-white hover:bg-blue-900"
+        >
+          <Image
+            src="/assets/images/download (1).png"
+            width={50}
+            height={50}
+            alt="icon"
+          ></Image>
+          <span className="mb-6 text-xl font-mono">Download</span>
+        </button>
+        <button
+          onClick={() => {
+            getItemsData();
+          }}
+          className="text-white hover:bg-blue-900"
+        >
+          <Image
+            src="/assets/images/refresh-arrow.png"
+            width={50}
+            height={50}
+            alt="icon"
+          ></Image>
+          <span className="mb-6 text-xl font-mono">Refresh</span>
         </button>
         <button
           onClick={() => {
