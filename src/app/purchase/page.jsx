@@ -54,7 +54,7 @@ export default function page(props) {
   const [itemData, setItemData] = useState([]);
   const [qrResult, setQrResult] = useState("");
   const [barcodeScannedData, setBarcodeScannedData] = useState(null);
-  const [PrevScanData, setPrevScanData] = useState(null)
+  const [PrevScanData, setPrevScanData] = useState(null);
   const [formData, setFormData] = useState({
     partyName: null,
     invoiceNo: null,
@@ -87,9 +87,9 @@ export default function page(props) {
     button_1: "",
     button_2: "",
     messages: [],
-    btn_f_1: () => { },
-    btn_f_2: () => { },
-    norm_f_3: () => { }
+    btn_f_1: () => {},
+    btn_f_2: () => {},
+    norm_f_3: () => {},
   });
 
   // * handle QR search feature
@@ -267,7 +267,7 @@ export default function page(props) {
 
       // * setting the matched value
 
-      setPrevScanData(result?.value)
+      setPrevScanData(result?.value);
       setBarcodeScannedData("");
 
       handleFormChange({
@@ -316,7 +316,9 @@ export default function page(props) {
           target: {
             name: "dynamicdisc",
             value:
-              isNaN(result?.dynamicdisc) || result?.dynamicdisc === "" ? null : Number(result?.dynamicdisc),
+              isNaN(result?.dynamicdisc) || result?.dynamicdisc === ""
+                ? null
+                : Number(result?.dynamicdisc),
           },
         });
       }
@@ -336,15 +338,19 @@ export default function page(props) {
       });
 
       if (result?.dynamicdisc && !isNaN(result?.dynamicdisc)) {
-
-
         let unitPrice = 0;
 
         if (result?.gstType === "Exclusive") {
-          unitPrice = unitPriceCalcExclDISC(result?.mrp, result?.dynamicdisc, result?.gstPercentage?.replace("%", ""));
-
+          unitPrice = unitPriceCalcExclDISC(
+            result?.mrp,
+            result?.dynamicdisc,
+            result?.gstPercentage?.replace("%", "")
+          );
         } else {
-          unitPrice = unitPriceCalcEXemptInclDISC(result?.mrp, result?.dynamicdisc);
+          unitPrice = unitPriceCalcEXemptInclDISC(
+            result?.mrp,
+            result?.dynamicdisc
+          );
         }
 
         handleFormChange({
@@ -352,7 +358,7 @@ export default function page(props) {
             name: "amount",
             value: unitPrice * newQuantity,
           },
-        })
+        });
       }
     } else {
       toast.error("No match found");
@@ -388,7 +394,7 @@ export default function page(props) {
       messages,
       btn_f_1: f1,
       btn_f_2: f2,
-      norm_f_3: f3
+      norm_f_3: f3,
     });
   };
 
@@ -422,6 +428,7 @@ export default function page(props) {
   // * Load our excel document for Party & Item Data.
 
   const getExcelData = async () => {
+    setLoadingExcel(true);
     // * Check if data is already saved in localStorage
 
     checkLocalStorageSaved("PARTY_API_DATA", setPartyData);
@@ -444,7 +451,6 @@ export default function page(props) {
 
         const item_data = data[0];
         const party_data = data[1];
-
 
         const indexedItems = item_data.map((obj, row) => ({
           ...obj,
@@ -692,9 +698,7 @@ export default function page(props) {
 
   const isFormValidated = (form) => {
     for (let key in form) {
-
       if (key === "dynamicdisc") continue;
-
 
       if (form[key] === null || form[key] === undefined || form[key] === "") {
         handleModal(
@@ -815,8 +819,8 @@ export default function page(props) {
       target: {
         name: "dynamicdisc",
         value: disc,
-      }
-    })
+      },
+    });
 
     if (excelContent?.length === 0) {
       // credit days function
@@ -835,22 +839,18 @@ export default function page(props) {
     }
 
     const repetitionModal = (value) => {
+      if (isNaN(value)) {
+        //  when user clears all the value it will go back to default.
 
-      if (isNaN(value)) { //  when user clears all the value it will go back to default.
-
-        console.log("RESET")
+        console.log("RESET");
 
         tempContent.repetition = parseInt(formData.quantity);
       } else {
-
         tempContent.repetition = value;
       }
-
-
-    }
+    };
 
     const modalConfirmedAdd = () => {
-
       setExcelContent((prevArray) => [...prevArray, tempContent]);
 
       // * saving the data to localStorage
@@ -880,9 +880,8 @@ export default function page(props) {
         target: {
           name: "dynamicdisc",
           value: null,
-        }
+        },
       });
-
 
       handleFormChange({
         target: {
@@ -917,12 +916,7 @@ export default function page(props) {
     };
 
     const askForConfirmation = (choice) => {
-
-
-
-      if (choice === "NO")
-        tempContent.repetition = 0
-
+      if (choice === "NO") tempContent.repetition = 0;
 
       handleConfirmationModal(
         "Confirmation",
@@ -952,10 +946,10 @@ export default function page(props) {
           },
         ],
         modalConfirmedAdd,
-        () => { }
+        () => {}
       );
       window.purchase_modal_2.showModal();
-    }
+    };
 
     const askPrintPreference = () => {
       // Duplication print invoice
@@ -981,7 +975,7 @@ export default function page(props) {
       );
 
       window.print_modal_1.showModal();
-    }
+    };
 
     if (isDuplicate(tempContent)) {
       handleConfirmationModal(
@@ -1012,14 +1006,11 @@ export default function page(props) {
           },
         ],
         askPrintPreference,
-        () => { }
+        () => {}
       );
       window.purchase_modal_2.showModal();
     } else {
-
       askPrintPreference();
-
-
     }
   };
 
@@ -1084,8 +1075,9 @@ export default function page(props) {
     // console.log(data);
 
     if (formData?.isIGST) {
-
-      data[0].columns = data[0].columns.filter(col => col.value !== "cgst" && col.value !== "sgst");
+      data[0].columns = data[0].columns.filter(
+        (col) => col.value !== "cgst" && col.value !== "sgst"
+      );
       data[0].columns.push({
         label: "IGST PERCENT",
         value: "igstPercent",
@@ -1094,15 +1086,20 @@ export default function page(props) {
 
       data[0].content.forEach((e, index) => {
         data[0].content[index].igstPercent = parseInt(e?.sgst + e?.cgst);
-        data[0].content[index].disc = IGSTnewDiscPercentage(e?.disc, e?.igstPercent);
-        data[0].content[index].amount = IGSTnewAmount(e?.mrp, e?.disc, parseInt(e?.quantity), e?.igstPercent);
-        data[0].content[index].purchaseType = "IGST"
+        data[0].content[index].disc = IGSTnewDiscPercentage(
+          e?.disc,
+          e?.igstPercent
+        );
+        data[0].content[index].amount = IGSTnewAmount(
+          e?.mrp,
+          e?.disc,
+          parseInt(e?.quantity),
+          e?.igstPercent
+        );
+        data[0].content[index].purchaseType = "IGST";
       });
 
-
-
       // console.log(data[0])
-
     }
 
     // Barcode Data
@@ -1110,13 +1107,11 @@ export default function page(props) {
     let barcodeContent = [];
 
     for (let index = 0; index < content.length; index++) {
-
-
       // format of disc: 10.65 -> 11, combine with today date to make it unique - 11100124
       // Get current date
       const currentDate = new Date(content[index]?.originDate);
-      const day = currentDate.getDate().toString().padStart(2, '0');
-      const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+      const day = currentDate.getDate().toString().padStart(2, "0");
+      const month = (currentDate.getMonth() + 1).toString().padStart(2, "0");
       const year = currentDate.getFullYear().toString().slice(-2);
 
       // Given disc value
@@ -1128,23 +1123,23 @@ export default function page(props) {
       // Format the output
       const output = `${roundedDisc}${day}${month}${year}`;
 
-
       const tempObj = {
-        itemName: content[index]?.itemPartNo === "N/A" ? content[index]?.itemName : content[index]?.itemPartNo,
+        itemName:
+          content[index]?.itemPartNo === "N/A"
+            ? content[index]?.itemName
+            : content[index]?.itemPartNo,
         discCode: output,
         location: content[index]?.itemLocation || "N/A",
         // orgName: "Jyeshtha Motors",
         coupon: "",
-      }
+      };
 
       for (let j = 0; j < content[index].repetition; j++) {
         barcodeContent.push(tempObj);
       }
     }
 
-    console.log("CONTENT", content, "BARCODE", barcodeContent)
-
-
+    console.log("CONTENT", content, "BARCODE", barcodeContent);
 
     let barcodeData = [
       {
@@ -1155,14 +1150,17 @@ export default function page(props) {
           { label: "Disc Code", value: "discCode" },
           { label: "Location", value: "location" },
           { label: "Coupon", value: "coupon" },
-
         ],
         content: barcodeContent,
       },
     ];
 
-
-    DownloadExcel(content[0]?.partyName, content[0]?.invoiceNo, data, barcodeData);
+    DownloadExcel(
+      content[0]?.partyName,
+      content[0]?.invoiceNo,
+      data,
+      barcodeData
+    );
     DownloadBarcodeExcel(content[0]?.invoiceNo, barcodeData);
   };
 
@@ -1186,7 +1184,6 @@ export default function page(props) {
   };
 
   const DownloadBarcodeExcel = (invoice, data) => {
-
     const settings = {
       fileName: `BARCODE-${invoice?.split("-")?.[1] || invoice}`,
       extraLength: 3,
@@ -1194,17 +1191,15 @@ export default function page(props) {
       writeOptions: {},
       RTL: false,
     };
-    let callback = function () {
-
-    };
+    let callback = function () {};
     xlsx(data, settings, callback);
   };
 
   // * upload the document to history
 
   const sendPurchaseHistory = (partyname, invoice, sheet, barcodeSheet) => {
-    console.log("Barcode Data", barcodeSheet)
-    console.log("Sheet Data", sheet)
+    console.log("Barcode Data", barcodeSheet);
+    console.log("Sheet Data", sheet);
     handleModal(
       "⏳ Uploading...",
       "Please wait while we upload your document...",
@@ -1233,7 +1228,9 @@ export default function page(props) {
           // ? show modal
           handleModal("Uploaded ✔", "The document has been uploaded", "Okay");
           window.purchase_modal_1.showModal();
-          const isApp = JSON.parse(localStorage.getItem("SETTINGS_isApp") || false);
+          const isApp = JSON.parse(
+            localStorage.getItem("SETTINGS_isApp") || false
+          );
           if (isApp) {
             router.push("/history/purchase/share/latest?download=1");
           }
@@ -1288,12 +1285,7 @@ export default function page(props) {
     }
   };
 
-
-
-
-
   const isDynamicdiscMissMatched = (row, newDynamicdisc) => {
-
     // console.log("row", row, "newDynamicdisc", newDynamicdisc)
     // Find the object with the specified row number
     var obj = itemData.find(function (o) {
@@ -1304,7 +1296,7 @@ export default function page(props) {
     if (obj && obj.dynamicdisc != newDynamicdisc) {
       updateDynamicdisc(row, newDynamicdisc);
     }
-  }
+  };
 
   const updateDynamicdisc = async (row, dynamicdisc) => {
     const payload = {
@@ -1323,10 +1315,7 @@ export default function page(props) {
     } catch (error) {
       console.log(error);
     }
-  }
-
-
-
+  };
 
   return (
     <>
@@ -1389,11 +1378,18 @@ export default function page(props) {
             })
           }
           <label className="text-yellow-300">Quantity</label>
-          <input onWheel={(e) => {
-            e.target.blur();
-          }} className="input input-bordered input-secondary m-5 uppercase w-[295px]" placeholder={`No. of prints ${formData?.quantity}`} type="number" name="repetitionPrint" onChange={(e) => {
-            modalConfirmation.norm_f_3(parseInt(e.target.value));
-          }} />
+          <input
+            onWheel={(e) => {
+              e.target.blur();
+            }}
+            className="input input-bordered input-secondary m-5 uppercase w-[295px]"
+            placeholder={`No. of prints ${formData?.quantity}`}
+            type="number"
+            name="repetitionPrint"
+            onChange={(e) => {
+              modalConfirmation.norm_f_3(parseInt(e.target.value));
+            }}
+          />
           <div className="modal-action">
             {/* if there is a button in form, it will close the modal */}
             <button
@@ -1411,8 +1407,6 @@ export default function page(props) {
           </div>
         </form>
       </dialog>
-
-
 
       <p className="text-center text-2xl glass m-5 p-4">PURCHASE MODULE</p>
       <div className="text-center m-auto">
@@ -1552,10 +1546,11 @@ export default function page(props) {
                 }}
                 value={
                   formData?.purchaseType && {
-                    label: `${formData?.purchaseType === "DNM"
-                      ? "Discount Not Mentioned"
-                      : "Discount Mentioned"
-                      }`,
+                    label: `${
+                      formData?.purchaseType === "DNM"
+                        ? "Discount Not Mentioned"
+                        : "Discount Mentioned"
+                    }`,
                     value: formData.purchaseType,
                   }
                 }
@@ -1579,8 +1574,10 @@ export default function page(props) {
                   });
                 }}
                 value={{
-                  label: formData?.isIGST ? "Choose IGST? (YES)" : "Choose IGST? (NO)",
-                  value: formData?.isIGST
+                  label: formData?.isIGST
+                    ? "Choose IGST? (YES)"
+                    : "Choose IGST? (NO)",
+                  value: formData?.isIGST,
                 }}
                 defaultValue={{ label: "Choose IGST? (NO)", value: "NO" }}
                 isClearable={false}
@@ -1605,12 +1602,27 @@ export default function page(props) {
               />
             </div>
           )}
-          <form className="animate-pulse" onSubmit={(e) => { e.preventDefault(); barCodeScanner() }}>
-            <input value={barcodeScannedData || ""} onFocus={(e) => {
-              e.target.value = "";
-              setBarcodeScannedData("");
-              blur()
-            }} type="text" placeholder="BARCODE SCAN 🔎" onChange={(e) => { setBarcodeScannedData(e.target.value) }} className="m-5 p-5 glass rounded-sm w-[295px] text-center" />
+          <form
+            className="animate-pulse"
+            onSubmit={(e) => {
+              e.preventDefault();
+              barCodeScanner();
+            }}
+          >
+            <input
+              value={barcodeScannedData || ""}
+              onFocus={(e) => {
+                e.target.value = "";
+                setBarcodeScannedData("");
+                blur();
+              }}
+              type="text"
+              placeholder="BARCODE SCAN 🔎"
+              onChange={(e) => {
+                setBarcodeScannedData(e.target.value);
+              }}
+              className="m-5 p-5 glass rounded-sm w-[295px] text-center"
+            />
           </form>
           <p className="text-center m-5 glass rounded-sm">{qrResult}</p>
 
@@ -1627,17 +1639,17 @@ export default function page(props) {
                   loc: formData?.itemLocation,
                   mrp: formData?.mrp,
                   gst: formData?.gstPercentage,
-                  unit: formData?.unit
+                  unit: formData?.unit,
                 }
               }
               onChange={(e) => {
-                console.log(e)
+                console.log(e);
                 handleFormChange({
                   target: { name: "itemPartNo", value: e.value },
                 });
                 handleFormChange({
-                  target: { name: "unit", value: e.unit }
-                })
+                  target: { name: "unit", value: e.unit },
+                });
                 handleFormChange({
                   target: { name: "itemPartNoOrg", value: e?.pn || "N/A" },
                 });
@@ -1678,14 +1690,12 @@ export default function page(props) {
                     target: {
                       name: "dynamicdisc",
                       value:
-                        isNaN(e?.dynamicdisc) || e?.dynamicdisc === "" ? null : Number(e?.dynamicdisc),
+                        isNaN(e?.dynamicdisc) || e?.dynamicdisc === ""
+                          ? null
+                          : Number(e?.dynamicdisc),
                     },
                   });
                 }
-
-
-
-
               }}
               getOptionLabel={(option) =>
                 `${option["value"]} ${option["pn"] || ""}`
@@ -1706,8 +1716,6 @@ export default function page(props) {
             />
           )}
 
-
-
           <div>
             <input
               onChange={(e) => {
@@ -1715,18 +1723,20 @@ export default function page(props) {
                   target: { name: "quantity", value: e.target.value },
                 });
 
-
-
                 if (formData?.dynamicdisc && !isNaN(formData?.dynamicdisc)) {
-
-
                   let unitPrice = 0;
 
                   if (formData?.gstType === "Exclusive") {
-                    unitPrice = unitPriceCalcExclDISC(formData?.mrp, formData?.dynamicdisc, formData?.gstPercentage?.replace("%", ""));
-
+                    unitPrice = unitPriceCalcExclDISC(
+                      formData?.mrp,
+                      formData?.dynamicdisc,
+                      formData?.gstPercentage?.replace("%", "")
+                    );
                   } else {
-                    unitPrice = unitPriceCalcEXemptInclDISC(formData?.mrp, formData?.dynamicdisc);
+                    unitPrice = unitPriceCalcEXemptInclDISC(
+                      formData?.mrp,
+                      formData?.dynamicdisc
+                    );
                   }
 
                   handleFormChange({
@@ -1734,11 +1744,7 @@ export default function page(props) {
                       name: "amount",
                       value: unitPrice * e.target.value,
                     },
-                  })
-
-
-
-
+                  });
                 }
               }}
               className="input input-bordered input-secondary w-[295px] m-5"
@@ -1790,13 +1796,14 @@ export default function page(props) {
             handleFormChange({
               target: { name: "amount", value: e.target.value },
             });
-
-
-
-
           }}
           value={formData?.amount || ""}
-          className={["input input-bordered  w-[295px] m-5", formData?.dynamicdisc !== "N/A" ? "input-primary" : "input-secondary"].join(" ")}
+          className={[
+            "input input-bordered  w-[295px] m-5",
+            formData?.dynamicdisc !== "N/A"
+              ? "input-primary"
+              : "input-secondary",
+          ].join(" ")}
           placeholder="Total Amount"
           type="number"
           hidden={formData?.purchaseType === "DM"}
@@ -1805,9 +1812,7 @@ export default function page(props) {
           }}
         />
 
-        {
-          <p>RECORDED DISC%: {formData?.dynamicdisc ?? "N/A"}</p>
-        }
+        {<p>RECORDED DISC%: {formData?.dynamicdisc ?? "N/A"}</p>}
 
         <br />
       </div>
@@ -1815,6 +1820,22 @@ export default function page(props) {
       <div className="py-20"></div>
       {/* Bottom Nav Bar */}
       <div className="btm-nav glass bg-blue-800">
+        <button
+          onClick={() => {
+            if (isFormValidated(formData)) {
+              addSingleFormContent();
+            }
+          }}
+          className="text-white hover:bg-blue-900"
+        >
+          <Image
+            className="mb-20"
+            src="/assets/images/add-button.png"
+            width={70}
+            height={70}
+            alt="icon"
+          ></Image>
+        </button>
         <button
           onClick={() => {
             createSheet();
@@ -1832,20 +1853,20 @@ export default function page(props) {
         </button>
         <button
           onClick={() => {
-            if (isFormValidated(formData)) {
-              addSingleFormContent();
-            }
+            getExcelData();
           }}
-          className="text-white hover:bg-blue-900"
+          className=" text-white hover:bg-blue-900"
         >
           <Image
-            className="mb-20"
-            src="/assets/images/add-button.png"
-            width={70}
-            height={70}
+            className=""
+            src="/assets/images/refresh-arrow.png"
+            width={50}
+            height={50}
             alt="icon"
           ></Image>
+          <span className="mb-6 text-xl font-mono">Refresh</span>
         </button>
+
         <button
           onClick={() => {
             clearLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA");

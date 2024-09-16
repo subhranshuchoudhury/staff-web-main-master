@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import { Toaster } from "react-hot-toast";
 
 import { SimpleIDB } from "@/utils/idb";
+import Image from "next/image";
 
 const stockIDB = new SimpleIDB("Stock", "stock");
 
@@ -56,41 +57,47 @@ const StockStatus = () => {
         <div className="w-[90%]">
           <div className="bg-base-200 rounded-sm p-5">
             <p className="text-lg text-center mb-5 font-bold">Select Item</p>
-            {
-              items && items?.length > 0 ? <Select
-              placeholder="SELECT ITEM/PART NO"
-              className="text-blue-800 font-bold"
-              options={items}
-              formatOptionLabel={({ itemName }) => (
-                <div className="flex justify-between">
-                  <p className="text-black">{itemName}</p>
-                </div>
-              )}
-              getOptionLabel={(option) =>
-                `${option["itemName"]} ${option["partNumber"]}`
-              }
-              onChange={(e) => {
-                setSelectedItem(e);
-                console.log(e);
-              }}
-              filterOption={createFilter({ ignoreAccents: false })}
-              components={{ Option: CustomOption, MenuList: CustomMenuList }}
-              value={selectedItem}
-            /> : <p className="text-center">Please Wait...</p>
-            }
+            {items && items?.length > 0 ? (
+              <Select
+                placeholder="SELECT ITEM/PART NO"
+                className="text-blue-800 font-bold"
+                options={items}
+                formatOptionLabel={({ itemName }) => (
+                  <div className="flex justify-between">
+                    <p className="text-black">{itemName}</p>
+                  </div>
+                )}
+                getOptionLabel={(option) =>
+                  `${option["itemName"]} ${option["partNumber"]}`
+                }
+                onChange={(e) => {
+                  setSelectedItem(e);
+                  console.log(e);
+                }}
+                filterOption={createFilter({ ignoreAccents: false })}
+                components={{ Option: CustomOption, MenuList: CustomMenuList }}
+                value={selectedItem}
+              />
+            ) : (
+              <p className="text-center">Please Wait...</p>
+            )}
           </div>
           <section className="mt-20 p-2 glass rounded-md">
-          <RowItem
+            <RowItem
               label={"Alias"}
               value={selectedItem ? selectedItem?.partNumber : "Select an item"}
             />
             <RowItem
               label={"Closing Stock"}
-              value={selectedItem ? selectedItem?.closingStock : "Select an item"}
+              value={
+                selectedItem ? selectedItem?.closingStock : "Select an item"
+              }
             />
             <RowItem
               label={"Location"}
-              value={selectedItem ? selectedItem?.storageLocation : "Select an item"}
+              value={
+                selectedItem ? selectedItem?.storageLocation : "Select an item"
+              }
             />
             <RowItem
               label={"MRP"}
@@ -98,6 +105,22 @@ const StockStatus = () => {
             />
           </section>
         </div>
+      </div>
+      <div className="btm-nav glass bg-blue-800">
+        <button
+          onClick={() => {
+            fetchItems();
+          }}
+          className=" text-white hover:bg-blue-900"
+        >
+          <Image
+            src="/assets/images/refresh-arrow.png"
+            width={50}
+            height={50}
+            alt="icon"
+          ></Image>
+          <span className="mb-6 text-xl font-mono">Refresh</span>
+        </button>
       </div>
     </>
   );
