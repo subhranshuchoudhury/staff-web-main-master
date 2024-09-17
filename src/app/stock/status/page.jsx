@@ -84,7 +84,7 @@ const StockStatus = () => {
               <p className="text-center">Please Wait...</p>
             )}
           </div>
-          <section className="mt-20 p-2 glass rounded-md">
+          <section className="mt-20 mb-32 p-2 glass rounded-md">
             <RowItem
               label={"Alias"}
               value={selectedItem ? selectedItem?.partNumber : "Select an item"}
