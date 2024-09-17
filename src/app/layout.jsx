@@ -8,12 +8,10 @@ export const metadata = {
   keywords: "Jyeshtha Motors, Motors, Jyeshtha",
 };
 
-
 export default function RootLayout({ children }) {
   return (
     <html data-theme="synthwave" lang="en">
       <head>
-        <title>Jyeshtha Motors</title>
         <meta
           name="description"
           content="Web App for managing Jyeshtha Motors shop."
@@ -44,7 +42,6 @@ export default function RootLayout({ children }) {
                 tabIndex={0}
                 className="menu menu-sm dropdown-content mt-3 p-2 bg-blue-950  rounded-box w-52 z-20"
               >
-                
                 <li>
                   <Link href={"/"}>Home</Link>
                 </li>
@@ -84,9 +81,7 @@ export default function RootLayout({ children }) {
           </div>
         </div>
         <div className="my-16"></div>
-        <Suspense fallback={null}>
-        {children}
-        </Suspense>
+        <Suspense fallback={null}>{children}</Suspense>
       </body>
     </html>
   );
