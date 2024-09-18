@@ -11,9 +11,12 @@ import CustomOption from "../Dropdown/CustomOption";
 import CustomMenuList from "../Dropdown/CustomMenuList";
 import xlsx from "json-as-xlsx";
 import { useEffect, useState } from "react";
-import { uploadItem } from "../AppScript/script";
+import toast, { Toaster } from "react-hot-toast";
+import { SimpleIDB } from "@/utils/idb";
 
-export default function Page() {
+const GlobalIDB = new SimpleIDB("GLOBAL", "global");
+
+export default function page() {
   // ****
 
   useEffect(() => {
@@ -66,8 +69,9 @@ export default function Page() {
     saleType: null,
     partyName: null,
     vehicleNo: null,
+    mobileNo: null,
     item: null,
-    quantity: null,
+    quantity: 1,
     unitType: null,
     mrp: null,
     disc: null,
@@ -84,6 +88,7 @@ export default function Page() {
   const [PartyAPIData, setPartyAPIData] = useState([]);
   const [ItemAPIData, setItemAPIData] = useState([]);
   const [APILoading, setAPILoading] = useState(true);
+  const [SelectedItem, setSelectedItem] = useState(null);
   const [ExcelContent, setExcelContent] = useState([]);
   // const [qrResult, setQrResult] = useState("...");
 
@@ -108,6 +113,11 @@ export default function Page() {
   const handleChange = (event) => {
     const name = event.target?.name;
     const value = event.target?.value;
+    setFormData((values) => ({ ...values, [name]: value }));
+  };
+
+  const handleFormChange = (name, value) => {
+    if (!name) return;
     setFormData((values) => ({ ...values, [name]: value }));
   };
 
@@ -137,54 +147,46 @@ export default function Page() {
   // API CALLS
 
   const getAPIContent = async () => {
-    setAPILoading(true);
-    // check for local storage (fast loading)
-    checkLocalStorageSaved("PARTY_API_DATA", setPartyAPIData);
-    checkLocalStorageSaved("ITEM_API_DATA", setItemAPIData);
+    try {
+      setAPILoading(true);
 
-    // calls apis simultaneously
+      // check in IDB
+      const storedItemData = await GlobalIDB.get("ITEMS_DATA");
+      const storedPartyData = await GlobalIDB.get("PARTIES_DATA");
 
-    Promise.all([
-      fetch(
-        "https://script.google.com/macros/s/AKfycbx3G0up1xJoNIJqXLRdmSLQ09OPtwKnTfi8uWPzEw-vCUT4nwvluEmwOA3CKinO6PJhPg/exec"
-      ),
-      fetch(
-        "https://script.google.com/macros/s/AKfycbwr8ndVgq8gTbhOCRZChJT8xEOZZCOrjev29Uk6DCDLQksysu80oTb8VSnoZMsCQa3g/exec"
-      ),
-    ])
-      .then((responses) =>
-        Promise.all(responses.map((response) => response.json()))
-      )
-      .then((data) => {
-        const item_api_data = data[0];
-        const party_api_data = data[1];
+      if (storedItemData) setItemAPIData(JSON.parse(storedItemData));
+      if (storedPartyData) setPartyAPIData(JSON.parse(storedPartyData));
 
-        // item list with row index added
+      // calls apis simultaneously
 
-        const indexedItems = item_api_data.map((obj, row) => ({
-          ...obj,
-          row,
-        }));
+      const responses = await Promise.all([
+        fetch("/api/items"),
+        fetch(
+          "https://script.google.com/macros/s/AKfycbwr8ndVgq8gTbhOCRZChJT8xEOZZCOrjev29Uk6DCDLQksysu80oTb8VSnoZMsCQa3g/exec"
+        ),
+      ]);
 
-        setPartyAPIData(party_api_data);
-        setItemAPIData(indexedItems);
+      const data = await Promise.all(
+        responses.map((response) => response.json())
+      );
 
-        localStorage.setItem("PARTY_API_DATA", JSON.stringify(party_api_data));
-        localStorage.setItem("ITEM_API_DATA", JSON.stringify(indexedItems));
+      const [itemData, partyData] = data;
 
-        setAPILoading(false);
-      })
-      .catch((error) => {
-        setAPILoading(false);
-        console.error(error);
-      });
-  };
+      if (itemData?.length > 0 && partyData?.length > 0) {
+        setItemAPIData(itemData);
+        setPartyAPIData(partyData);
 
-  const checkLocalStorageSaved = (address, manager) => {
-    let storage = localStorage.getItem(address);
-    if (storage !== null && storage != undefined) {
-      storage = JSON.parse(storage);
-      manager(storage);
+        // set the values for offline or error use
+        await GlobalIDB.set("ITEMS_DATA", JSON.stringify(itemData));
+        await GlobalIDB.set("PARTIES_DATA", JSON.stringify(partyData));
+      } else {
+        toast.error("No item or party data found");
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      toast.error("Failed while getting item & party data.");
+    } finally {
+      setAPILoading(false);
     }
   };
 
@@ -364,8 +366,6 @@ export default function Page() {
     // * Save the temp content to local storage for backup
     localStorageBackup(tempContent);
 
-    isMrpMismatched(formData?.selectedItemRow, formData?.mrp); // * update the mrp field if any changes happened in the mrp field.
-
     handleModalMessage({
       name: "message",
       value: `✔ Item added successfully.`,
@@ -429,35 +429,6 @@ export default function Page() {
 
   // * update the mrp field if any changes happened in the mrp field.
 
-  const isMrpMismatched = (row, newMrp) => {
-    // Find the object with the specified row number
-    var obj = ItemAPIData[parseInt(row)];
-
-    // Check if the object was found and if the new MRP value is different from the previous MRP value
-    if (obj && obj.mrp != newMrp) {
-      updateMrp(row, newMrp);
-    }
-  };
-
-  const updateMrp = async (row, mrp) => {
-    const payload = {
-      updateRow: parseInt(row) + 2,
-      mrp,
-    };
-
-    try {
-      const response = await uploadItem(payload);
-
-      if (response === "200") {
-        console.log("MRP UPDATED");
-      } else {
-        console.log("MRP NOT UPDATED");
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
   const localStorageBackup = (tempContent) => {
     const checkLocal = localStorage.getItem("SALE_TEMP_CONTENT");
     let localContent = [];
@@ -514,6 +485,8 @@ export default function Page() {
   return (
     <>
       {/* Alert */}
+
+      <Toaster />
 
       {/* General dialog */}
 
@@ -669,6 +642,18 @@ export default function Page() {
           }}
           disabled={ExcelContent?.length > 0}
         />
+        <input
+          className="input input-bordered input-secondary w-[295px] m-5 uppercase"
+          placeholder="MOBILE NO"
+          type="number"
+          name="mobileNo"
+          onChange={handleChange}
+          value={formData?.mobileNo || ""}
+          onWheel={(e) => {
+            e.target.blur();
+          }}
+          disabled={ExcelContent?.length > 0}
+        />
       </div>
       {/* <div className="flex justify-center items-center flex-wrap">
         <button
@@ -699,24 +684,52 @@ export default function Page() {
         <MyQrScanner qrResultHandler={(r) => qrResultHandler(r)} />
       )} */}
 
+      {/* Item Section */}
       <Select
+        filterOption={createFilter({ ignoreAccents: false })}
+        components={{ Option: CustomOption, MenuList: CustomMenuList }}
         placeholder="SELECT ITEM"
         className="w-full m-auto p-5 text-blue-800 font-bold"
         options={ItemAPIData}
-        getOptionLabel={(option) => `${option["value"]}`}
-        value={formData?.item && { value: formData?.item }}
-        onChange={(e) => {
-          handleChange({ target: { name: "unitType", value: e?.unit } });
-          handleChange({ target: { name: "mrp", value: e?.mrp || null } });
-          handleChange({ target: { name: "item", value: e?.value } });
-          handleChange({ target: { name: "selectedItemRow", value: e?.row } });
-          if (formData?.seriesType === "MAIN") return;
-          handleChange({
-            target: { name: "gstAmount", value: e?.gst || null },
-          });
+        getOptionLabel={(option) =>
+          `${option["itemName"]} ${option["partNumber"]}`
+        }
+        formatOptionLabel={({ itemName }) => (
+          <div className="flex justify-between">
+            <p className="text-black">{itemName}</p>
+          </div>
+        )}
+        value={SelectedItem}
+        noOptionsMessage={() => {
+          return <p>Add the item inn BDS file first then refresh.</p>;
         }}
-        filterOption={createFilter({ ignoreAccents: false })}
-        components={{ Option: CustomOption, MenuList: CustomMenuList }}
+        onChange={(e) => {
+          console.log("Selected item value: ", e);
+
+          if (!formData?.seriesType) {
+            toast.error("Select series type first");
+            return;
+          }
+
+          // new
+          setSelectedItem(e);
+          handleFormChange("item", e?.itemName);
+          handleFormChange("unitType", e?.unitName);
+
+          if (formData?.seriesType === "GST") {
+            handleFormChange("gstAmount", e?.gstPercentage || null);
+          }
+
+          // old
+          // handleChange({ target: { name: "unitType", value: e?.unit } });
+          // handleChange({ target: { name: "mrp", value: e?.mrp || null } });
+          // handleChange({ target: { name: "item", value: e?.value } });
+          // handleChange({ target: { name: "selectedItemRow", value: e?.row } });
+          // if (formData?.seriesType === "MAIN") return;
+          // handleChange({
+          //   target: { name: "gstAmount", value: e?.gst || null },
+          // });
+        }}
       />
       <div className="flex justify-center items-center flex-wrap">
         <input

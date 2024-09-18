@@ -136,14 +136,14 @@ export default function page() {
 
       const storedItemData = await purchaseIDB.get("ITEMS_DATA");
       const storedPartyData = await purchaseIDB.get("PARTIES_DATA");
-      const storedDiscoutStructure = await purchaseIDB.get(
+      const storedDiscountStructure = await purchaseIDB.get(
         "DISCOUNT_STRUCTURE"
       );
 
       if (storedItemData) setItemData(JSON.parse(storedItemData));
       if (storedPartyData) setPartyData(JSON.parse(storedPartyData));
-      if (storedDiscoutStructure)
-        setDiscountStructure(JSON.parse(storedDiscoutStructure));
+      if (storedDiscountStructure)
+        setDiscountStructure(JSON.parse(storedDiscountStructure));
 
       const responses = await Promise.all([
         fetch("/api/items"),
@@ -1065,16 +1065,7 @@ export default function page() {
                 </div>
               )}
               noOptionsMessage={() => {
-                return (
-                  <p
-                    onClick={() => {
-                      alert("Developer: A popup will come here.");
-                    }}
-                    className="hover:cursor-pointer"
-                  >
-                    ➕ Add An Item
-                  </p>
-                );
+                return <p>Add the item inn BDS file first then refresh.</p>;
               }}
             />
           )}
