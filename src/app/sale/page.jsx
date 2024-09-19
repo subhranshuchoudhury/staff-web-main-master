@@ -13,7 +13,7 @@ import xlsx from "json-as-xlsx";
 import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { SimpleIDB } from "@/utils/idb";
-import InvoiceDownloadButton from "../../../components/InvoiceDownloadButton";
+import saleInvoiceInvokePDF from "@/utils/saleInvoiceInvoke";
 
 const GlobalIDB = new SimpleIDB("GLOBAL", "global");
 
@@ -23,46 +23,6 @@ export default function page() {
   useEffect(() => {
     getAPIContent();
   }, []);
-
-  // const digLocalStorageQR = () => {
-  //   let localSavedItemApi = [];
-
-  //   if (localSavedItemApi?.length === 0) {
-  //     setQrResult("🔍 Searching...");
-  //   }
-
-  //   const setLocalITEM_API = (data) => {
-  //     localSavedItemApi = data;
-  //   };
-
-  //   checkLocalStorageSaved("ITEM_API_DATA", setLocalITEM_API);
-
-  //   // * This function will get the local item whenever the event "EXPO_LS_EVENT" triggered.
-
-  //   const res = localStorage.getItem("EXPO_SCN_RESULT");
-  //   const result = localSavedItemApi.find(
-  //     (obj) => obj.pn !== "" && res.includes(obj.pn)
-  //   );
-
-  //   if (result?.value) {
-  //     console.log("SCN_RES", result);
-  //     setQrResult(`✔ ${result?.value}-${result?.pn}`);
-
-  //     // * setting the matched value
-  //     handleChange({ target: { name: "unitType", value: result?.unit } });
-  //     handleChange({ target: { name: "mrp", value: result?.mrp || null } });
-  //     handleChange({ target: { name: "item", value: result?.value } });
-  //     handleChange({ target: { name: "selectedItemRow", value: result?.row } });
-  //     if (formData?.seriesType === "MAIN") return;
-  //     handleChange({
-  //       target: { name: "gstAmount", value: result?.gst || null },
-  //     });
-  //   } else {
-  //     localSavedItemApi?.length === 0
-  //       ? setQrResult(`❓ Oops! Kindly retry..`)
-  //       : setQrResult(`❌ No match: ${res}`);
-  //   }
-  // };
 
   const [formData, setFormData] = useState({
     seriesType: null,
@@ -482,6 +442,8 @@ export default function page() {
         },
       });
 
+      handleFormChange("mobileNo", localContent[0]?.one_field_mobile);
+
       // handleChange({
       //   target: {
       //     name: "saleDate",
@@ -558,6 +520,61 @@ export default function page() {
               className="btn bg-green-600"
             >
               Accept
+            </button>
+          </div>
+        </form>
+      </dialog>
+
+      {/* Preview entries */}
+
+      <dialog id="saleModal_4" className="modal">
+        <form method="dialog" className="modal-box">
+          <h3 className="font-bold text-lg">Preview</h3>
+          <div className="overflow-x-auto overflow-y-auto max-h-[400px]">
+            <table className="table">
+              {/* head */}
+              <thead>
+                <tr>
+                  <th>Sl No.</th>
+                  <th>Item</th>
+                  <th>Qty</th>
+                  <th>MRP</th>
+                  <th>Disc%</th>
+                  <th>Tot. Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {/* row 1 */}
+
+                {ExcelContent.map((item, index) => {
+                  console.log("Item", item);
+                  return (
+                    <tr key={index}>
+                      <th>{index + 1}</th>
+                      <td>{item?.itemName}</td>
+                      <td>{item?.qty}</td>
+                      <td>{item?.price}</td>
+                      <td>{item?.disc}</td>
+                      <td>{item?.amount}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            <div className="ml-2 mb-2">
+              Bill Amount:{" "}
+              <span className="font-extrabold">
+                {ExcelContent.map((item) => item?.amount).reduce(
+                  (acc, curr) => acc + (curr || 0),
+                  0
+                )}
+              </span>
+            </div>
+          </div>
+          <div className="modal-action">
+            <button className="btn bg-red-600">Cancel</button>
+            <button onClick={downloadSheet} className="btn bg-green-600">
+              Download
             </button>
           </div>
         </form>
@@ -667,34 +684,6 @@ export default function page() {
           disabled={ExcelContent?.length > 0}
         />
       </div>
-      {/* <div className="flex justify-center items-center flex-wrap">
-        <button
-          onClick={() => setShowQrScanner(!showQrScanner)}
-          className="btn btn-info glass w-[94%]"
-        >
-          {showQrScanner ? (
-            <Image
-              alt="qr scanner"
-              src={"/assets/images/close.png"}
-              width={40}
-              height={40}
-            />
-          ) : (
-            <Image
-              alt="qr scanner"
-              src={"/assets/images/scan-qr-code.png"}
-              width={40}
-              height={40}
-            />
-          )}
-        </button>
-      </div> */}
-
-      {/* <p className="text-center m-5 glass rounded-sm">{qrResult}</p> */}
-
-      {/* {showQrScanner && (
-        <MyQrScanner qrResultHandler={(r) => qrResultHandler(r)} />
-      )} */}
 
       {/* Item Section */}
       <Select
@@ -739,16 +728,6 @@ export default function page() {
             if (e?.gstPercentage)
               handleFormChange("gstAmount", e?.gstPercentage?.replace("%", ""));
           }
-
-          // old
-          // handleChange({ target: { name: "unitType", value: e?.unit } });
-          // handleChange({ target: { name: "mrp", value: e?.mrp || null } });
-          // handleChange({ target: { name: "item", value: e?.value } });
-          // handleChange({ target: { name: "selectedItemRow", value: e?.row } });
-          // if (formData?.seriesType === "MAIN") return;
-          // handleChange({
-          //   target: { name: "gstAmount", value: e?.gst || null },
-          // });
         }}
       />
       <div className="flex justify-center items-center flex-wrap">
@@ -844,7 +823,7 @@ export default function page() {
           }}
         />
       </div>
-      <InvoiceDownloadButton />
+
       <div className="py-20"></div>
 
       {/* Bottom Nav Bar */}
@@ -873,22 +852,47 @@ export default function page() {
           <Image
             className="mb-20"
             src="/assets/images/add-button.png"
-            width={70}
-            height={70}
+            width={60}
+            height={60}
             alt="icon"
           />
         </button>
         <button
-          onClick={downloadSheet}
+          onClick={() => {
+            if (ExcelContent?.length === 0) {
+              toast.error("No item has been added");
+              return;
+            }
+
+            window.saleModal_4.showModal();
+          }}
           className=" text-white hover:bg-blue-900"
         >
           <Image
             src="/assets/images/download (1).png"
-            width={50}
-            height={50}
+            width={40}
+            height={40}
             alt="icon"
           />
-          <span className="mb-6 text-xl font-mono">Download</span>
+          <span className="mb-6 text-md font-mono">Preview</span>
+        </button>
+        <button
+          onClick={async () => {
+            if (ExcelContent?.length === 0) {
+              toast.error("No item has been added");
+              return;
+            }
+            await saleInvoiceInvokePDF(ExcelContent);
+          }}
+          className=" text-white hover:bg-blue-900"
+        >
+          <Image
+            src="/assets/images/printer.png"
+            width={40}
+            height={40}
+            alt="icon"
+          />
+          <span className="mb-6 text-md font-mono">Invoice</span>
         </button>
         <button
           onClick={() => {
@@ -898,11 +902,11 @@ export default function page() {
         >
           <Image
             src="/assets/images/refresh-arrow.png"
-            width={50}
-            height={50}
+            width={40}
+            height={40}
             alt="icon"
           />
-          <span className="mb-6 text-xl font-mono">Refresh</span>
+          <span className="mb-6 text-md font-mono">Refresh</span>
         </button>
         <button
           onClick={() => {
@@ -929,11 +933,11 @@ export default function page() {
         >
           <Image
             src="/assets/images/remove.png"
-            width={50}
-            height={50}
+            width={40}
+            height={40}
             alt="icon"
           />
-          <span className="mb-6 text-xl font-mono">Reset</span>
+          <span className="mb-6 text-md font-mono">Reset</span>
         </button>
       </div>
     </>

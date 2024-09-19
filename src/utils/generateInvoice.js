@@ -18,18 +18,23 @@ export async function generateInvoice(invoiceData) {
   page.drawText("JYESHTHA MOTORS", {
     x: leftMargin,
     y: height - topMargin - 35,
-    size: 10,
+    size: 12,
     color: rgb(0, 0, 0),
     font: await pdfDoc.embedFont(StandardFonts.HelveticaBold),
   });
-  page.drawText("NEAR EICHER SHOWROOM, NH5 NIRGUNDI, CUTTACK", {
+  page.drawText("NEAR EICHER SHOWROOM, NH5 NIRGUNDI", {
     x: leftMargin,
     y: height - topMargin - 50,
     size: 8,
   });
+  page.drawText("CUTTACK", {
+    x: leftMargin,
+    y: height - topMargin - 60, // Move down to the next line
+    size: 8,
+  });
   page.drawText("Tel.:7381039614,9583967497", {
     x: leftMargin,
-    y: height - topMargin - 65,
+    y: height - topMargin - 75, // Adjusted the position to accommodate the new line
     size: 8,
   });
 
@@ -124,8 +129,13 @@ export async function generateInvoice(invoiceData) {
   });
 
   // Add the total, rounding off, and payment methods
-  page.drawText(`Less Rounded Off (@): ${invoiceData.roundedOff}`, {
+  page.drawText(`Less Rounded Off (@):`, {
     x: leftMargin,
+    y: yPosition - 15,
+    size: 8,
+  });
+  page.drawText(`${invoiceData.roundedOff}`, {
+    x: leftMargin + 130,
     y: yPosition - 15,
     size: 8,
   });
@@ -135,21 +145,33 @@ export async function generateInvoice(invoiceData) {
     size: 9,
     font: await pdfDoc.embedFont(StandardFonts.HelveticaBold),
   });
-  page.drawText(`GRAND TOTAL: ${invoiceData.total}`, {
+  page.drawText(`GRAND TOTAL:`, {
     x: leftMargin,
     y: yPosition - 30,
     size: 10,
     color: rgb(0, 0, 0),
     font: await pdfDoc.embedFont(StandardFonts.HelveticaBold),
   });
+  page.drawText(`${invoiceData.total}`, {
+    x: leftMargin + 130,
+    y: yPosition - 30,
+    size: 10,
+    color: rgb(0, 0, 0),
+    font: await pdfDoc.embedFont(StandardFonts.HelveticaBold),
+  });
   page.drawText("PHONE PE/GOOGLE PAY/PAYTM", {
-    x: leftMargin,
+    x: leftMargin + 15,
     y: yPosition - 45,
     size: 8,
   });
   page.drawText(`${invoiceData.paymentNumber}`, {
-    x: leftMargin,
+    x: leftMargin + 55,
     y: yPosition - 60,
+    size: 8,
+  });
+  page.drawText("*** THANKS FOR YOUR VISIT ***", {
+    x: leftMargin + 15,
+    y: yPosition - 75,
     size: 8,
   });
 
