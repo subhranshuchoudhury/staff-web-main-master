@@ -13,6 +13,7 @@ import xlsx from "json-as-xlsx";
 import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { SimpleIDB } from "@/utils/idb";
+import InvoiceDownloadButton from "../../../components/InvoiceDownloadButton";
 
 const GlobalIDB = new SimpleIDB("GLOBAL", "global");
 
@@ -206,7 +207,7 @@ export default function page() {
     handleChange({
       target: {
         name: "totalAmount",
-        value: mrp - discAmount,
+        value: (mrp - discAmount) * formData?.quantity,
       },
     });
   };
@@ -824,6 +825,7 @@ export default function page() {
           }}
         />
       </div>
+      <InvoiceDownloadButton />
       <div className="py-20"></div>
 
       {/* Bottom Nav Bar */}
