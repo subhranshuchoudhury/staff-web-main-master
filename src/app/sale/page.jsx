@@ -702,7 +702,7 @@ export default function page() {
         )}
         value={SelectedItem}
         noOptionsMessage={() => {
-          return <p>Add the item inn BDS file first then refresh.</p>;
+          return <p>Add the item in BUSY, then refresh.</p>;
         }}
         onChange={(e) => {
           console.log("Selected item value: ", e);
@@ -716,9 +716,17 @@ export default function page() {
           setSelectedItem(e);
           handleFormChange("item", e?.itemName);
           handleFormChange("unitType", e?.unitName);
+          handleFormChange("quantity", 1);
+
+          if (e?.unitPrice) {
+            handleFormChange("mrp", e?.unitPrice);
+          } else if (e?.mrp) {
+            handleFormChange("mrp", e?.mrp);
+          }
 
           if (formData?.seriesType === "GST") {
-            handleFormChange("gstAmount", e?.gstPercentage || null);
+            if (e?.gstPercentage)
+              handleFormChange("gstAmount", e?.gstPercentage?.replace("%", ""));
           }
 
           // old
