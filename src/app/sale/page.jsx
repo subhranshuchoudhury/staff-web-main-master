@@ -247,6 +247,12 @@ export default function page() {
       content.push(d);
     });
 
+    // Add mobile to first field
+
+    content[0].mobileNo = ExcelContent[0].one_field_mobile;
+
+    console.log("XLSX Content", content);
+
     let data = [
       {
         sheet: "Sheet1",
@@ -286,6 +292,10 @@ export default function page() {
           format: "0",
         }
       );
+
+    // add mobile to the row
+    data[0].columns.push({ label: "Mobile", value: "mobileNo", format: "0" });
+
     exportExcel(data);
   };
 
@@ -360,6 +370,7 @@ export default function page() {
       igstPercent: formData?.gstAmount,
       cgst: formData?.gstAmount / 2,
       sgst: formData?.gstAmount / 2,
+      one_field_mobile: formData?.mobileNo, // This will be only affect one row
     };
 
     setExcelContent((prevArray) => [...prevArray, tempContent]);
