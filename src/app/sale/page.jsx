@@ -874,7 +874,7 @@ export default function page() {
             height={40}
             alt="icon"
           />
-          <span className="mb-6 text-md font-mono">Preview</span>
+          <span className="mb-6 text-sm font-mono">Preview</span>
         </button>
         <button
           onClick={async () => {
@@ -892,7 +892,7 @@ export default function page() {
             height={40}
             alt="icon"
           />
-          <span className="mb-6 text-md font-mono">Invoice</span>
+          <span className="mb-6 text-sm font-mono">Invoice</span>
         </button>
         <button
           onClick={() => {
@@ -906,7 +906,7 @@ export default function page() {
             height={40}
             alt="icon"
           />
-          <span className="mb-6 text-md font-mono">Refresh</span>
+          <span className="mb-6 text-sm font-mono">Refresh</span>
         </button>
         <button
           onClick={() => {
@@ -937,7 +937,7 @@ export default function page() {
             height={40}
             alt="icon"
           />
-          <span className="mb-6 text-md font-mono">Reset</span>
+          <span className="mb-6 text-sm font-mono">Reset</span>
         </button>
       </div>
     </>
