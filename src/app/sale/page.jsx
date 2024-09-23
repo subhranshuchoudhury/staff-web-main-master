@@ -40,6 +40,7 @@ export default function page() {
     gstAmount: null,
     totalAmount: null,
     selectedItemRow: -1,
+    actualTotalAmount: null,
   });
 
   const [modalMessage, setModalMessage] = useState({
@@ -164,6 +165,7 @@ export default function page() {
         value: Number(discAmount.toFixed(2)),
       },
     });
+    handleFormChange("actualTotalAmount", mrp - discAmount);
     handleChange({
       target: {
         name: "totalAmount",
@@ -173,8 +175,12 @@ export default function page() {
   };
 
   const adjustDisc = (discAmount) => {
-    if (!formData?.mrp || !formData?.discAmount) return;
+    // console.log("Discount Amount is triggered", discAmount);
+
+    if (!formData?.mrp) return;
+
     const disc = (discAmount / formData?.mrp) * 100;
+
     handleChange({
       target: {
         name: "disc",
@@ -182,11 +188,12 @@ export default function page() {
       },
     });
 
+    handleFormChange("actualTotalAmount", formData?.mrp - discAmount);
+
     handleChange({
       target: {
         name: "totalAmount",
-
-        value: formData?.mrp - discAmount,
+        value: (formData?.mrp - discAmount) * formData?.quantity,
       },
     });
   };
@@ -737,7 +744,19 @@ export default function page() {
           type="number"
           name="quantity"
           value={formData?.quantity || ""}
-          onChange={handleChange}
+          onChange={(e) => {
+            // console.log("Actual value", formData?.actualTotalAmount);
+
+            handleChange(e);
+            if (e.target.value) {
+              handleFormChange(
+                "totalAmount",
+                formData?.actualTotalAmount * e.target.value
+              );
+            } else {
+              handleFormChange("totalAmount", formData?.actualTotalAmount);
+            }
+          }}
           onWheel={(e) => {
             e.target.blur();
           }}
