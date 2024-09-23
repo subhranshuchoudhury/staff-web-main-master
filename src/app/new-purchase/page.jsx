@@ -176,7 +176,7 @@ export default function page() {
           JSON.stringify(discountStructure)
         );
       } else {
-        toast.error("No item or party data found.");
+        toast.error("Some data could not load from database");
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -576,19 +576,30 @@ export default function page() {
       },
     ];
 
+    const barcodeCustomItemName = (item) => {
+      const { itemName, partNo } = item;
+
+      if (partNo) {
+        return partNo?.split("-")?.[0] || partNo;
+      }
+
+      if (itemName) {
+        return itemName?.split("-")?.[0] || itemName;
+      }
+
+      return "ERROR!";
+    };
+
     const barcodeContent = content.flatMap((item) => {
+      // generate itemName
+
       const date = new Date(item?.originDate);
       const day = date.getDate().toString().padStart(2, "0");
       const month = (date.getMonth() + 1).toString().padStart(2, "0");
       const year = date.getFullYear().toString().slice(-2);
       const roundedDisc = Math.round(item?.disc);
       const discCode = `${roundedDisc}${day}${month}${year}`;
-      const itemName =
-        item?.itemPartNo === "" ||
-        !item?.itemPartNo ||
-        item?.itemPartNo === "N/A"
-          ? item?.itemName
-          : item?.itemPartNo;
+      const itemName = barcodeCustomItemName(item);
 
       return Array(item.repetition).fill({
         itemName,
