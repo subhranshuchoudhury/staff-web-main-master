@@ -202,7 +202,7 @@ export default function page() {
     if (ExcelContent.length === 0) {
       handleModalMessage({
         name: "message",
-        value: `⚠ Add one document before exporting excel.`,
+        value: `⚠ Add one document before exporting excel`,
       });
       window.saleModal_1.showModal();
       return;
@@ -278,7 +278,7 @@ export default function page() {
     const callback = () => {
       handleModalMessage({
         name: "message",
-        value: `✔ Exporting excel successful.`,
+        value: `✅ Exporting excel successful`,
       });
       window.saleModal_1.showModal();
       localStorage.removeItem("SALE_TEMP_CONTENT");
@@ -333,7 +333,7 @@ export default function page() {
       unit: formData?.unitType,
       price: formData?.mrp,
       disc: discPercent(),
-      amount: Math.round(formData?.totalAmount * formData?.quantity),
+      amount: Math.round(formData?.totalAmount),
       igstPercent: formData?.gstAmount,
       cgst: formData?.gstAmount / 2,
       sgst: formData?.gstAmount / 2,
@@ -347,9 +347,46 @@ export default function page() {
 
     handleModalMessage({
       name: "message",
-      value: `✔ Item added successfully.`,
+      value: `✅ Item added successfully`,
     });
     window.saleModal_1.showModal();
+
+    // clear the field
+
+    // seriesType: null,
+    // saleDate: new Date(), // default today.
+    // saleType: null,
+    // partyName: null,
+    // vehicleNo: null,
+    // mobileNo: null,
+    // item: null,
+    // quantity: 1,
+    // unitType: null,
+    // mrp: null,
+    // disc: null,
+    // discAmount: null,
+    // gstAmount: null,
+    // totalAmount: null,
+    // selectedItemRow: -1,
+    // actualTotalAmount: null,
+    const clearFieldsList = [
+      "disc",
+      "mrp",
+      "item",
+      "unitType",
+      "discAmount",
+      "gstAmount",
+      "totalAmount",
+      "actualTotalAmount",
+      "quantity",
+    ];
+
+    clearFieldsList.forEach((key) => {
+      handleFormChange(key, null);
+    });
+
+    // clear the selected item
+    setSelectedItem(null);
   };
 
   const sendPurchaseHistory = (sheet) => {
@@ -386,13 +423,13 @@ export default function page() {
         if (response.status === 200) {
           handleModalMessage({
             name: "message",
-            value: `✔ Successfully uploaded.`,
+            value: `✅ Successfully uploaded`,
           });
           window.saleModal_1.showModal();
         } else {
           handleModalMessage({
             name: "message",
-            value: `❌ Uploading failed.`,
+            value: `❌ Uploading failed`,
           });
           window.saleModal_1.showModal();
         }
@@ -400,7 +437,7 @@ export default function page() {
       .catch((err) => {
         handleModalMessage({
           name: "message",
-          value: `❌ Server error, reupload or contact developer.`,
+          value: `❌ Server error, reupload or contact developer`,
         });
         window.saleModal_1.showModal();
       });
@@ -423,9 +460,9 @@ export default function page() {
 
   useEffect(() => {
     if (localStorage.getItem("SALE_TEMP_CONTENT") === null) return;
-    const localContent = JSON.parse(
-      localStorage.getItem("SALE_TEMP_CONTENT") || "[]"
-    );
+    // const localContent = JSON.parse(
+    //   localStorage.getItem("SALE_TEMP_CONTENT") || "[]"
+    // );
     window.saleModal_3.showModal();
   }, []);
 
@@ -441,6 +478,8 @@ export default function page() {
           value: localContent[0]?.narration,
         },
       });
+
+      handleFormChange("partyName", localContent[0]?.partyName);
 
       handleChange({
         target: {
@@ -510,7 +549,7 @@ export default function page() {
 
       <dialog id="saleModal_3" className="modal">
         <form method="dialog" className="modal-box">
-          <h3 className="font-bold text-lg">Unsaved data found!</h3>
+          <h3 className="font-bold text-lg">⚠️ Alert</h3>
           <p className="py-4">
             System found some unsaved data, if you want to restore, click on
             "Accept" otherwise "deny" it to delete.
@@ -854,7 +893,7 @@ export default function page() {
               if (isDuplicate(formData?.item)) {
                 handleModalMessage({
                   name: "message",
-                  value: `❌ Duplicate Item.`,
+                  value: `❌ Duplicate Item`,
                 });
                 window.saleModal_2.showModal();
                 return;
