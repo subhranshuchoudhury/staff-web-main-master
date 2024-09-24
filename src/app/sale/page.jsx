@@ -533,7 +533,7 @@ export default function page() {
             <p>QTY: {formData?.quantity}</p>
             <p>
               Total Amount:{" "}
-              {Math.round(formData?.totalAmount * formData?.quantity)}
+              {Math.round(formData?.totalAmount)}
             </p>
           </div>
           <div className="modal-action">
