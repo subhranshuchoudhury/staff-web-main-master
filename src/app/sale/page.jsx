@@ -111,6 +111,52 @@ export default function page() {
     return true;
   };
 
+  // Modify the excel sheet
+
+  const modifyExcelSheet = (action, rowNo) => {
+    if (action === "delete") {
+      const confirmation = window.confirm(
+        `Are you sure you want to delete ${ExcelContent?.[rowNo]?.itemName}?`
+      );
+
+      if (confirmation) {
+        setExcelContent((prevArray) => {
+          const newArray = prevArray.filter((item, index) => index !== rowNo);
+          return newArray;
+        });
+      }
+    } else if (action === "edit") {
+      // remove the row from the excel sheet
+      setExcelContent((prevArray) => {
+        const newArray = prevArray.filter((item, index) => index !== rowNo);
+        return newArray;
+      });
+
+      // close the modal
+      window.saleModal_4.close();
+
+      console.log("Edit action triggered", ExcelContent?.[rowNo]);
+      const item = ExcelContent?.[rowNo];
+
+      // restore the fields
+      setSelectedItem(item?.SAVE_selectedItem);
+
+      const restoreFields = {
+        item: item?.itemName,
+        quantity: item?.qty,
+        unitType: item?.unit,
+        mrp: item?.price,
+        disc: item?.SAVE_discPercentage,
+        discAmount: item?.SAVE_discAmount,
+        gstAmount: item?.SAVE_gstAmount,
+        totalAmount: item?.SAVE_totalAmount,
+        actualTotalAmount: item?.SAVE_actualTotalAmount,
+      };
+
+      setFormData((prev) => ({ ...prev, ...restoreFields }));
+    }
+  };
+
   // API CALLS
 
   const getAPIContent = async () => {
@@ -343,6 +389,12 @@ export default function page() {
       cgst: formData?.gstAmount / 2,
       sgst: formData?.gstAmount / 2,
       one_field_mobile: formData?.mobileNo, // This will be only affect one row
+      SAVE_discPercentage: formData?.disc,
+      SAVE_gstAmount: formData?.gstAmount,
+      SAVE_totalAmount: formData?.totalAmount,
+      SAVE_discAmount: formData?.discAmount,
+      SAVE_selectedItem: SelectedItem,
+      SAVE_actualTotalAmount: formData?.actualTotalAmount,
     };
 
     setExcelContent((prevArray) => [...prevArray, tempContent]);
@@ -591,6 +643,7 @@ export default function page() {
                 <tr>
                   <th>Sl No.</th>
                   <th>Item</th>
+                  <th>Action</th>
                   <th>Qty</th>
                   <th>MRP</th>
                   <th>Disc%</th>
@@ -603,9 +656,25 @@ export default function page() {
                 {ExcelContent.map((item, index) => {
                   console.log("Item", item);
                   return (
-                    <tr key={index}>
+                    <tr key={index} className="hover:bg-green-700">
                       <th>{index + 1}</th>
                       <td>{item?.itemName}</td>
+                      <td>
+                        <div className="flex flex-col gap-2">
+                          <button
+                            onClick={() => modifyExcelSheet("edit", index)}
+                            className="btn btn-sm btn-warning"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => modifyExcelSheet("delete", index)}
+                            className="btn btn-sm btn-error"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
                       <td>{item?.qty}</td>
                       <td>{item?.price}</td>
                       <td>{item?.disc}</td>
