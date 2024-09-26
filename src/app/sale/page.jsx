@@ -91,6 +91,11 @@ export default function page() {
 
   const isFormValidated = (form) => {
     for (let key in form) {
+      // Skip the "gstAmount" check if "saleType" is "Exempt"
+      // if (form.saleType === "Exempt" && key === "gstAmount") {
+      //   continue;
+      // }
+
       if (form[key] === null || form[key] === undefined || form[key] === "") {
         handleModalMessage({
           name: "message",
@@ -487,6 +492,12 @@ export default function page() {
           value: localContent[0]?.vchSeries,
         },
       });
+      handleChange({
+        target: {
+          name: "saleType",
+          value: localContent[0]?.saleType,
+        },
+      });
 
       handleFormChange("mobileNo", localContent[0]?.one_field_mobile);
 
@@ -531,10 +542,7 @@ export default function page() {
             <p>Item: {formData?.item}</p>
             <p>MRP: {formData?.mrp}</p>
             <p>QTY: {formData?.quantity}</p>
-            <p>
-              Total Amount:{" "}
-              {Math.round(formData?.totalAmount)}
-            </p>
+            <p>Total Amount: {Math.round(formData?.totalAmount)}</p>
           </div>
           <div className="modal-action">
             <button className="btn btn-success">Edit</button>
@@ -738,6 +746,7 @@ export default function page() {
         placeholder="SELECT ITEM"
         className="w-full m-auto p-5 text-blue-800 font-bold"
         options={ItemAPIData}
+        isClearable={true}
         getOptionLabel={(option) =>
           `${option["itemName"]} ${option["partNumber"]}`
         }
@@ -773,6 +782,10 @@ export default function page() {
           if (formData?.seriesType === "GST") {
             if (e?.gstPercentage)
               handleFormChange("gstAmount", e?.gstPercentage?.replace("%", ""));
+          }
+
+          if (formData?.saleType === "Exempt") {
+            handleChange({ target: { name: "gstAmount", value: "0" } });
           }
         }}
       />
