@@ -733,37 +733,48 @@ export default function page() {
             </div>
           </div>
           <div className="flex justify-center items-center m-5">
-            <div className="flex flex-row gap-2">
-              <input
-                value={formData?.cashPayment}
-                type="number"
-                className="input input-bordered input-secondary"
-                placeholder="Enter Cash amount"
-                min="0" // Prevents negative values
-                onWheel={(e) => {
-                  e.target.blur();
+            <div className="flex flex-col gap-2">
+              <div className="flex flex-row gap-2">
+                <input
+                  value={formData?.cashPayment}
+                  type="number"
+                  className="input input-bordered input-secondary"
+                  placeholder="Enter Cash amount"
+                  min="0" // Prevents negative values
+                  onWheel={(e) => {
+                    e.target.blur();
+                  }}
+                  onChange={(e) => {
+                    handleChange(e);
+                    const value = Math.max(0, e.target.value); // Ensure non-negative value
+                    handleInputSettlement("cash", value);
+                  }}
+                />
+                <input
+                  value={formData?.bankPayment}
+                  onChange={(e) => {
+                    handleChange(e);
+                    const value = Math.max(0, e.target.value); // Ensure non-negative value
+                    handleInputSettlement("online", value);
+                  }}
+                  type="number"
+                  className="input input-bordered input-secondary"
+                  placeholder="Enter Bank amount"
+                  min="0" // Prevents negative values
+                  onWheel={(e) => {
+                    e.target.blur();
+                  }}
+                />
+              </div>
+              <div
+                onClick={() => {
+                  handleFormChange("cashPayment", null);
+                  handleFormChange("bankPayment", null);
                 }}
-                onChange={(e) => {
-                  handleChange(e);
-                  const value = Math.max(0, e.target.value); // Ensure non-negative value
-                  handleInputSettlement("cash", value);
-                }}
-              />
-              <input
-                value={formData?.bankPayment}
-                onChange={(e) => {
-                  handleChange(e);
-                  const value = Math.max(0, e.target.value); // Ensure non-negative value
-                  handleInputSettlement("online", value);
-                }}
-                type="number"
-                className="input input-bordered input-secondary"
-                placeholder="Enter Bank amount"
-                min="0" // Prevents negative values
-                onWheel={(e) => {
-                  e.target.blur();
-                }}
-              />
+                className="btn bg-yellow-600 hover:bg-yellow-800"
+              >
+                Clear
+              </div>
             </div>
           </div>
           <div className="modal-action">
