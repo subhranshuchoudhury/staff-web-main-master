@@ -41,7 +41,7 @@ export default function page() {
     totalAmount: null,
     selectedItemRow: -1,
     actualTotalAmount: null,
-    phonePe: null,
+    bankPayment: null,
     cashPayment: null,
   });
 
@@ -75,12 +75,14 @@ export default function page() {
   // * for uncommon useState alternative
 
   const handleChange = (event) => {
+    // mostly used in input fields
     const name = event.target?.name;
     const value = event.target?.value;
     setFormData((values) => ({ ...values, [name]: value }));
   };
 
   const handleFormChange = (name, value) => {
+    // used in direct value change
     if (!name) return;
     setFormData((values) => ({ ...values, [name]: value }));
   };
@@ -104,10 +106,10 @@ export default function page() {
       ) {
         // mobile,vehicleNo, payment is only mandatory when partName is either Cash or Phone Pe
         if (key === "mobileNo" || key === "vehicleNo") continue;
-        // if (key === "phonePe" || key === "cashPayment") continue;
+        // if (key === "bankPayment" || key === "cashPayment") continue;
       }
 
-      if (key === "phonePe" || key === "cashPayment") continue;
+      if (key === "bankPayment" || key === "cashPayment") continue;
 
       if (form[key] === null || form[key] === undefined || form[key] === "") {
         handleModalMessage({
@@ -261,6 +263,12 @@ export default function page() {
       },
     });
   };
+
+  const getTotalBillAmount = () =>
+    ExcelContent.map((item) => item?.amount).reduce(
+      (acc, curr) => acc + (curr || 0),
+      0
+    );
 
   const downloadSheet = () => {
     if (ExcelContent.length === 0) {
@@ -577,6 +585,22 @@ export default function page() {
     }
   };
 
+  const handleInputSettlement = (type, amount) => {
+    const totalBillAmount = getTotalBillAmount();
+
+    if (amount > totalBillAmount) {
+      amount = totalBillAmount; // Ensure amount doesn't exceed the total bill
+    }
+
+    if (type === "online") {
+      const cashPayment = totalBillAmount - amount;
+      handleFormChange("cashPayment", Math.max(0, cashPayment)); // Ensure non-negative value
+    } else if (type === "cash") {
+      const bankPayment = totalBillAmount - amount;
+      handleFormChange("bankPayment", Math.max(0, bankPayment)); // Ensure non-negative value
+    }
+  };
+
   // ****
   return (
     <>
@@ -705,27 +729,44 @@ export default function page() {
             </table>
             <div className="ml-2 mb-2">
               Bill Amount:{" "}
-              <span className="font-extrabold">
-                {ExcelContent.map((item) => item?.amount).reduce(
-                  (acc, curr) => acc + (curr || 0),
-                  0
-                )}
-              </span>
+              <span className="font-extrabold">{getTotalBillAmount()}</span>
+            </div>
+          </div>
+          <div className="flex justify-center items-center m-5">
+            <div className="flex flex-row gap-2">
+              <input
+                value={formData?.cashPayment}
+                type="number"
+                className="input input-bordered input-secondary"
+                placeholder="Enter Cash amount"
+                min="0" // Prevents negative values
+                onWheel={(e) => {
+                  e.target.blur();
+                }}
+                onChange={(e) => {
+                  handleChange(e);
+                  const value = Math.max(0, e.target.value); // Ensure non-negative value
+                  handleInputSettlement("cash", value);
+                }}
+              />
+              <input
+                value={formData?.bankPayment}
+                onChange={(e) => {
+                  handleChange(e);
+                  const value = Math.max(0, e.target.value); // Ensure non-negative value
+                  handleInputSettlement("online", value);
+                }}
+                type="number"
+                className="input input-bordered input-secondary"
+                placeholder="Enter Bank amount"
+                min="0" // Prevents negative values
+                onWheel={(e) => {
+                  e.target.blur();
+                }}
+              />
             </div>
           </div>
           <div className="modal-action">
-            {formData?.partyName === "PHONE PE" && (
-              <div className="flex-1">
-                <input
-                  type="number"
-                  className="input input-bordered input-secondary"
-                  placeholder="Enter PhonePe Amount"
-                  onWheel={(e) => {
-                    e.target.blur();
-                  }}
-                />
-              </div>
-            )}
             <button className="btn bg-red-600">Cancel</button>
             <button onClick={downloadSheet} className="btn bg-green-600">
               Download
