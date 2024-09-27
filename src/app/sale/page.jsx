@@ -41,6 +41,8 @@ export default function page() {
     totalAmount: null,
     selectedItemRow: -1,
     actualTotalAmount: null,
+    phonePe: null,
+    cashPayment: null,
   });
 
   const [modalMessage, setModalMessage] = useState({
@@ -95,6 +97,17 @@ export default function page() {
       // if (form.saleType === "Exempt" && key === "gstAmount") {
       //   continue;
       // }
+
+      if (
+        formData?.partyName !== "Cash" &&
+        formData?.partyName !== "PHONE PE"
+      ) {
+        // mobile,vehicleNo, payment is only mandatory when partName is either Cash or Phone Pe
+        if (key === "mobileNo" || key === "vehicleNo") continue;
+        // if (key === "phonePe" || key === "cashPayment") continue;
+      }
+
+      if (key === "phonePe" || key === "cashPayment") continue;
 
       if (form[key] === null || form[key] === undefined || form[key] === "") {
         handleModalMessage({
@@ -635,7 +648,13 @@ export default function page() {
 
       <dialog id="saleModal_4" className="modal">
         <form method="dialog" className="modal-box">
-          <h3 className="font-bold text-lg">Preview</h3>
+          <h3 className="font-bold text-lg">Preview </h3>
+          <span className="text-sky-300 animate-pulse text-sm">
+            {formData?.partyName === "PHONE PE" ||
+            formData?.partyName === "Cash" ? (
+              <span>PhonePe / Cash</span>
+            ) : null}
+          </span>
           <div className="overflow-x-auto overflow-y-auto max-h-[400px]">
             <table className="table">
               {/* head */}
@@ -656,7 +675,7 @@ export default function page() {
                 {ExcelContent.map((item, index) => {
                   console.log("Item", item);
                   return (
-                    <tr key={index} className="hover:bg-green-700">
+                    <tr key={index} className="hover:bg-blue-700">
                       <th>{index + 1}</th>
                       <td>{item?.itemName}</td>
                       <td>
@@ -695,6 +714,18 @@ export default function page() {
             </div>
           </div>
           <div className="modal-action">
+            {formData?.partyName === "PHONE PE" && (
+              <div className="flex-1">
+                <input
+                  type="number"
+                  className="input input-bordered input-secondary"
+                  placeholder="Enter PhonePe Amount"
+                  onWheel={(e) => {
+                    e.target.blur();
+                  }}
+                />
+              </div>
+            )}
             <button className="btn bg-red-600">Cancel</button>
             <button onClick={downloadSheet} className="btn bg-green-600">
               Download
@@ -1050,24 +1081,30 @@ export default function page() {
         </button>
         <button
           onClick={() => {
-            setFormData({
-              seriesType: null,
-              saleDate: new Date(), // default today.
-              saleType: null,
-              partyName: null,
-              vehicleNo: null,
-              item: null,
-              quantity: null,
-              unitType: null,
-              mrp: null,
-              disc: null,
-              discAmount: null,
-              gstAmount: null,
-              totalAmount: null,
-            });
+            const confirmation = window.confirm(
+              `Are you sure you want to reset?`
+            );
 
-            setExcelContent([]);
-            localStorage.removeItem("SALE_TEMP_CONTENT");
+            if (confirmation) {
+              setFormData({
+                seriesType: null,
+                saleDate: new Date(), // default today.
+                saleType: null,
+                partyName: null,
+                vehicleNo: null,
+                item: null,
+                quantity: null,
+                unitType: null,
+                mrp: null,
+                disc: null,
+                discAmount: null,
+                gstAmount: null,
+                totalAmount: null,
+              });
+
+              setExcelContent([]);
+              localStorage.removeItem("SALE_TEMP_CONTENT");
+            }
           }}
           className="text-white hover:bg-blue-900"
         >
