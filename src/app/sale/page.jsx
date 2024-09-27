@@ -585,21 +585,21 @@ export default function page() {
     }
   };
 
-  const handleInputSettlement = (type, amount) => {
-    const totalBillAmount = getTotalBillAmount();
+  // const handleInputSettlement = (type, amount) => {
+  //   const totalBillAmount = getTotalBillAmount();
 
-    if (amount > totalBillAmount) {
-      amount = totalBillAmount; // Ensure amount doesn't exceed the total bill
-    }
+  //   if (amount > totalBillAmount) {
+  //     amount = totalBillAmount; // Ensure amount doesn't exceed the total bill
+  //   }
 
-    if (type === "online") {
-      const cashPayment = totalBillAmount - amount;
-      handleFormChange("cashPayment", Math.max(0, cashPayment)); // Ensure non-negative value
-    } else if (type === "cash") {
-      const bankPayment = totalBillAmount - amount;
-      handleFormChange("bankPayment", Math.max(0, bankPayment)); // Ensure non-negative value
-    }
-  };
+  //   if (type === "online") {
+  //     const cashPayment = totalBillAmount - amount;
+  //     handleFormChange("cashPayment", Math.max(0, cashPayment)); // Ensure non-negative value
+  //   } else if (type === "cash") {
+  //     const bankPayment = totalBillAmount - amount;
+  //     handleFormChange("bankPayment", Math.max(0, bankPayment)); // Ensure non-negative value
+  //   }
+  // };
 
   // ****
   return (
@@ -697,7 +697,7 @@ export default function page() {
                 {/* row 1 */}
 
                 {ExcelContent.map((item, index) => {
-                  console.log("Item", item);
+                  // console.log("Item", item);
                   return (
                     <tr key={index} className="hover:bg-blue-700">
                       <th>{index + 1}</th>
@@ -736,7 +736,8 @@ export default function page() {
             <div className="flex flex-col gap-2">
               <div className="flex flex-row gap-2">
                 <input
-                  value={formData?.cashPayment}
+                  name="cashPayment"
+                  value={formData?.cashPayment || ""}
                   type="number"
                   className="input input-bordered input-secondary"
                   placeholder="Enter Cash amount"
@@ -746,16 +747,17 @@ export default function page() {
                   }}
                   onChange={(e) => {
                     handleChange(e);
-                    const value = Math.max(0, e.target.value); // Ensure non-negative value
-                    handleInputSettlement("cash", value);
+                    // const value = Math.max(0, e.target.value); // Ensure non-negative value
+                    // handleInputSettlement("cash", value);
                   }}
                 />
                 <input
-                  value={formData?.bankPayment}
+                  name="bankPayment"
+                  value={formData?.bankPayment || ""}
                   onChange={(e) => {
                     handleChange(e);
-                    const value = Math.max(0, e.target.value); // Ensure non-negative value
-                    handleInputSettlement("online", value);
+                    // const value = Math.max(0, e.target.value); // Ensure non-negative value
+                    // handleInputSettlement("online", value);
                   }}
                   type="number"
                   className="input input-bordered input-secondary"
@@ -768,8 +770,9 @@ export default function page() {
               </div>
               <div
                 onClick={() => {
-                  handleFormChange("cashPayment", null);
-                  handleFormChange("bankPayment", null);
+                  handleFormChange("cashPayment", "");
+                  handleFormChange("bankPayment", "");
+                  toast.success("Cleared the payment fields");
                 }}
                 className="btn bg-yellow-600 hover:bg-yellow-800"
               >
