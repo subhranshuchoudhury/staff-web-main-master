@@ -652,7 +652,7 @@ export default function page() {
           <span className="text-sky-300 animate-pulse text-sm">
             {formData?.partyName === "PHONE PE" ||
             formData?.partyName === "Cash" ? (
-              <span>PhonePe / Cash</span>
+              <span>{formData?.partyName}</span>
             ) : null}
           </span>
           <div className="overflow-x-auto overflow-y-auto max-h-[400px]">
