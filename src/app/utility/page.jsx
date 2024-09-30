@@ -25,19 +25,30 @@ const Page = () => {
           <span className="loading loading-bars loading-lg"></span>
         </div>
       ) : null}
-      <div className="flex flex-wrap justify-center">
-        <div
-          onClick={() => routePath("utility/discount-matrix")}
-          className="btn btn-info text-white w-44 h-28 m-5 shadow-2xl hover:shadow-white flex-col bg-transparent"
-        >
-          <Image
-            src="/assets/images/settings.png"
-            alt="settings"
-            width={50}
-            height={50}
-          />
-          <p>Discount Matrix</p>
-        </div>
+      <div className="flex flex-wrap justify-center"></div>
+      <div
+        onClick={() => routePath("utility/pdf-barcode-generate")}
+        className="btn btn-info text-white w-44 h-28 m-5 shadow-2xl hover:shadow-white flex-col bg-transparent"
+      >
+        <Image
+          src="/assets/images/printer.png"
+          alt="settings"
+          width={50}
+          height={50}
+        />
+        <p>PDF Barcode Generate</p>
+      </div>
+      <div
+        onClick={() => routePath("utility/discount-matrix")}
+        className="btn btn-info text-white w-44 h-28 m-5 shadow-2xl hover:shadow-white flex-col bg-transparent"
+      >
+        <Image
+          src="/assets/images/settings.png"
+          alt="settings"
+          width={50}
+          height={50}
+        />
+        <p>Discount Matrix</p>
       </div>
     </div>
   );
