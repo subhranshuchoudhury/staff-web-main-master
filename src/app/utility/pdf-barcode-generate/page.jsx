@@ -74,13 +74,13 @@ export default function Page() {
     let page = pdfDoc.addPage(PageSizes.A4); // Create the first page
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-    let yPosition = 800; // Starting position on the page
-    const rowHeight = 100; // Height for each row to accommodate text and barcode
-    const maxItemsPerPage = 32; // Max number of items per page (8 rows x 4 items per row)
+    let yPosition = 820; // Starting position on the page
+    const rowHeight = 80; // Height for each row to accommodate text and barcode
+    const maxItemsPerPage = 40; // Max number of items per page (8 rows x 4 items per row)
     let itemsOnCurrentPage = 0;
 
     for (let row of ExcelJsonInput) {
-      let xPosition = 50; // Starting X position for each row
+      let xPosition = 20; // Starting X position for each row
 
       for (let item of row) {
         // Generate and embed the barcode image
@@ -121,7 +121,7 @@ export default function Page() {
           color: rgb(0, 0, 0),
         });
 
-        xPosition += 130; // Move to the next column for the next item
+        xPosition += 150; // Move to the next column for the next item
       }
 
       yPosition -= rowHeight; // Move to the next row
