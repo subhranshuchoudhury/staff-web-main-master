@@ -280,6 +280,25 @@ export default function page() {
       return;
     }
 
+    if (formData?.partyName === "Cash" || formData?.partyName === "PHONE PE") {
+      if (!formData?.cashPayment && !formData?.bankPayment) {
+        handleModalMessage({
+          name: "message",
+          value: `⚠ Add the payment amount before exporting excel`,
+        });
+        window.saleModal_1.showModal();
+        return;
+      }
+
+      if (formData?.partyName === "Cash" && formData?.bankPayment > 0) {
+        // Change the partyname to PHONE PE
+        handleFormChange("partyName", "PHONE PE");
+        ExcelContent.forEach((item) => {
+          item.partyName = "PHONE PE";
+        });
+      }
+    }
+
     let content = [];
 
     ExcelContent.forEach((d) => {
@@ -289,6 +308,12 @@ export default function page() {
     // Add mobile to first field
 
     content[0].mobileNo = ExcelContent[0].one_field_mobile;
+    content[0].one_field_cashPayment = formData?.cashPayment;
+    content[0].one_field_bankPayment = formData?.bankPayment;
+
+    if (formData?.bankPayment > 0) {
+      content[0].SETTLEMENT_NARR2 = "Bank";
+    }
 
     console.log("XLSX Content", content);
 
@@ -332,8 +357,29 @@ export default function page() {
         }
       );
 
-    // add mobile to the row
-    data[0].columns.push({ label: "Mobile", value: "mobileNo", format: "0" });
+    data[0].columns.push(
+      {
+        label: "BILLED_PARTY_MOBILE_NO",
+        value: "mobileNo",
+        format: "0",
+      },
+      {
+        label: "BILLED_PARTY_NAME",
+        value: "narration",
+      },
+      {
+        label: "SETTLEMENT_AMT1",
+        value: "one_field_cashPayment",
+      },
+      {
+        label: "SETTLEMENT_AMT2",
+        value: "one_field_bankPayment",
+      },
+      {
+        label: "SETTLEMENT_NARR2",
+        value: "SETTLEMENT_NARR2",
+      }
+    );
 
     exportExcel(data);
   };
@@ -410,6 +456,8 @@ export default function page() {
       cgst: formData?.gstAmount / 2,
       sgst: formData?.gstAmount / 2,
       one_field_mobile: formData?.mobileNo, // This will be only affect one row
+      // one_field_bankPayment: formData?.bankPayment,
+      // one_field_cashPayment: formData?.cashPayment,
       SAVE_discPercentage: formData?.disc,
       SAVE_gstAmount: formData?.gstAmount,
       SAVE_totalAmount: formData?.totalAmount,
@@ -741,7 +789,7 @@ export default function page() {
                   type="number"
                   className="input input-bordered input-secondary"
                   placeholder="Enter Cash amount"
-                  min="0" // Prevents negative values
+                  min={0} // Prevents negative values
                   onWheel={(e) => {
                     e.target.blur();
                   }}
@@ -762,7 +810,7 @@ export default function page() {
                   type="number"
                   className="input input-bordered input-secondary"
                   placeholder="Enter Bank amount"
-                  min="0" // Prevents negative values
+                  min={0} // Prevents negative values
                   onWheel={(e) => {
                     e.target.blur();
                   }}
