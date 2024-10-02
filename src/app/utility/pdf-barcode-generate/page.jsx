@@ -15,7 +15,9 @@ export default function Page() {
     );
 
     if (!selectedFile) {
+      toast.dismiss(loading);
       toast.error("Please select an excel file");
+      setExcelJsonInput(null);
       return;
     }
     let excelData = null;
@@ -74,8 +76,8 @@ export default function Page() {
     let page = pdfDoc.addPage(PageSizes.A4); // Create the first page
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-    let yPosition = 812; // Starting position on the page
-    const rowHeight = 85; // Height for each row to accommodate text and barcode
+    let yPosition = 815; // Starting position on the page
+    const rowHeight = 82; // Height for each row to accommodate text and barcode
     const maxItemsPerPage = 40; // Max number of items per page (8 rows x 4 items per row)
     let itemsOnCurrentPage = 0;
 
