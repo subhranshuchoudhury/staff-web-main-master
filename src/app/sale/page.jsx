@@ -515,6 +515,32 @@ export default function page() {
     setSelectedItem(null);
   };
 
+  const fullFieldReset = () => {
+    setFormData({
+      seriesType: null,
+      saleDate: new Date(), // default today.
+      saleType: null,
+      partyName: null,
+      vehicleNo: null,
+      mobileNo: null,
+      item: null,
+      quantity: 1,
+      unitType: null,
+      mrp: null,
+      disc: null,
+      discAmount: null,
+      gstAmount: null,
+      totalAmount: null,
+      selectedItemRow: -1,
+      actualTotalAmount: null,
+      bankPayment: null,
+      cashPayment: null,
+    });
+
+    setExcelContent([]);
+    localStorage.removeItem("SALE_TEMP_CONTENT");
+  };
+
   const sendPurchaseHistory = (sheet) => {
     handleModalMessage({
       name: "message",
@@ -547,6 +573,8 @@ export default function page() {
     fetch("/api/sales", options)
       .then((response) => {
         if (response.status === 200) {
+          fullFieldReset();
+
           handleModalMessage({
             name: "message",
             value: `✅ Successfully uploaded`,
@@ -747,7 +775,7 @@ export default function page() {
                 {ExcelContent.map((item, index) => {
                   // console.log("Item", item);
                   return (
-                    <tr key={index} className="hover:bg-blue-700">
+                    <tr key={index} className="hover:bg-indigo-950">
                       <th>{index + 1}</th>
                       <td>{item?.itemName}</td>
                       <td>
@@ -780,15 +808,15 @@ export default function page() {
               <span className="font-extrabold">{getTotalBillAmount()}</span>
             </div>
           </div>
-          <div className="flex justify-center items-center m-5">
-            <div className="flex flex-col gap-2">
-              <div className="flex flex-row gap-2">
+          <div className="flex justify-center items-center mt-4 bg-indigo-950 rounded-lg p-3">
+            <div className="flex flex-col gap-2 w-[50%] items-center">
+              <div className="flex flex-col gap-2">
                 <input
                   name="cashPayment"
                   value={formData?.cashPayment || ""}
                   type="number"
-                  className="input input-bordered input-secondary"
-                  placeholder="Enter Cash amount"
+                  className="input input-bordered input-secondary w-full"
+                  placeholder="Cash"
                   min={0} // Prevents negative values
                   onWheel={(e) => {
                     e.target.blur();
@@ -808,8 +836,8 @@ export default function page() {
                     // handleInputSettlement("online", value);
                   }}
                   type="number"
-                  className="input input-bordered input-secondary"
-                  placeholder="Enter Bank amount"
+                  className="input input-bordered input-secondary w-full"
+                  placeholder="Bank"
                   min={0} // Prevents negative values
                   onWheel={(e) => {
                     e.target.blur();
@@ -822,7 +850,7 @@ export default function page() {
                   handleFormChange("bankPayment", "");
                   toast.success("Cleared the payment fields");
                 }}
-                className="btn bg-yellow-600 hover:bg-yellow-800"
+                className="btn bg-yellow-600 hover:bg-yellow-800 w-full"
               >
                 Clear
               </div>
@@ -1170,7 +1198,9 @@ export default function page() {
         </button>
         <button
           onClick={() => {
-            getAPIContent();
+            if (!APILoading) {
+              getAPIContent();
+            }
           }}
           className="text-white hover:bg-blue-900"
         >
@@ -1189,24 +1219,7 @@ export default function page() {
             );
 
             if (confirmation) {
-              setFormData({
-                seriesType: null,
-                saleDate: new Date(), // default today.
-                saleType: null,
-                partyName: null,
-                vehicleNo: null,
-                item: null,
-                quantity: null,
-                unitType: null,
-                mrp: null,
-                disc: null,
-                discAmount: null,
-                gstAmount: null,
-                totalAmount: null,
-              });
-
-              setExcelContent([]);
-              localStorage.removeItem("SALE_TEMP_CONTENT");
+              fullFieldReset();
             }
           }}
           className="text-white hover:bg-blue-900"
