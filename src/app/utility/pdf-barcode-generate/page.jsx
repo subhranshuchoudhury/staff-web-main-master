@@ -76,7 +76,7 @@ export default function Page() {
     let page = pdfDoc.addPage(PageSizes.A4); // Create the first page
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-    let yPosition = 815; // Starting position on the page
+    let yPosition = 815; // Starting position on the page (Increase to move up)
     const rowHeight = 82; // Height for each row to accommodate text and barcode
     const maxItemsPerPage = 40; // Max number of items per page (8 rows x 4 items per row)
     let itemsOnCurrentPage = 0;

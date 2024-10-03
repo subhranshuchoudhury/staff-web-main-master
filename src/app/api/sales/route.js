@@ -36,7 +36,7 @@ export const POST = async (request) => {
     const payload = new Sale({
       sheetdata: data?.sheetdata,
       items: data?.items,
-      vehicle: data?.vehicle,
+      vehicle: data?.vehicle || "N/A",
       desc: data?.desc,
       totalAmount: data?.totalAmount,
     });

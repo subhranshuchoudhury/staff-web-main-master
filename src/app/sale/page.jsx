@@ -386,7 +386,9 @@ export default function page() {
 
   const exportExcel = (data) => {
     const settings = {
-      fileName: `${formData?.vehicleNo?.toUpperCase()}_${new Date().getTime()}`,
+      fileName: `${
+        formData?.vehicleNo?.toUpperCase() || formData?.partyName
+      }_${new Date().getTime()}`,
       extraLength: 3,
       writeMode: "writeFile",
       writeOptions: {},
@@ -559,7 +561,7 @@ export default function page() {
     const payload = {
       sheetdata: JSON.stringify(sheet),
       items: sheet[0]?.content?.length,
-      vehicle: formData?.vehicleNo,
+      vehicle: formData?.vehicleNo || formData?.partyName,
       desc: "sale",
       totalAmount: totalAmount,
     };
