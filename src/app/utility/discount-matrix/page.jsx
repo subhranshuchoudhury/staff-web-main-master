@@ -4,13 +4,13 @@ import toast, { Toaster } from "react-hot-toast";
 import Select, { createFilter } from "react-select";
 import CustomOption from "../../Dropdown/CustomOption";
 import CustomMenuList from "../../Dropdown/CustomMenuList";
-import Itemgroup from "@/app/DB/Purchase/Itemgroup";
 
 const page = () => {
   useEffect(() => {
     loadData();
   }, []);
 
+  const [GroupList, setGroupList] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [Data, setData] = useState(null);
   const [PartyData, setPartyData] = useState(null);
@@ -35,14 +35,17 @@ const page = () => {
           "https://script.google.com/macros/s/AKfycbwr8ndVgq8gTbhOCRZChJT8xEOZZCOrjev29Uk6DCDLQksysu80oTb8VSnoZMsCQa3g/exec"
         ),
         fetch("/api/discount-matrix"),
+        fetch(
+          "https://script.google.com/macros/s/AKfycbxmPVf5TSB83HA_CPj8Eu6vHKEAVHk25ufoNQmrvsetWqQUCCRuSPXEm4vbLCrUtBwP/exec"
+        ),
       ]);
 
       const data = await Promise.all(
         responses.map((response) => response.json())
       );
 
-      const [partyData, discountStructure] = data;
-
+      const [partyData, discountStructure, groupData] = data;
+      setGroupList(groupData);
       setData(discountStructure);
       setPartyData(partyData);
     } catch (error) {
@@ -241,6 +244,7 @@ const page = () => {
         formData={formData}
         onDelete={deleteData}
         partyData={PartyData}
+        groupData={GroupList}
       />
     </>
   );
@@ -254,6 +258,7 @@ const ItemModal = ({
   onUpdate,
   onDelete,
   partyData,
+  groupData,
 }) => {
   return (
     <dialog id={id} className="modal">
@@ -288,7 +293,7 @@ const ItemModal = ({
           placeholder="Group Name"
           className="w-full m-auto p-5 text-blue-800 font-bold"
           getOptionLabel={(option) => `${option["value"]}`}
-          options={Itemgroup}
+          options={groupData}
           value={
             formData.groupName && {
               value: formData.groupName,
