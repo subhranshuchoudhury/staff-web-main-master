@@ -59,11 +59,11 @@ export default function page(props) {
     gstPercentage: null,
     amount: null,
     finalDisc: "ERROR!",
-    selectedItemRow: -1,
+    // selectedItemRow: -1,
     isIGST: false,
     dynamicdisc: null,
   });
-  const [SelectedItem, setSelectedItem] = useState(null);
+  // const [SelectedItem, setSelectedItem] = useState(null);
   const [modalMessage, setModalMessage] = useState({
     title: "",
     message: "",
@@ -241,12 +241,12 @@ export default function page(props) {
         },
       });
 
-      handleFormChange({
-        target: {
-          name: "selectedItemRow",
-          value: finalItemData?.row,
-        },
-      });
+      // handleFormChange({
+      //   target: {
+      //     name: "selectedItemRow",
+      //     value: finalItemData?.row,
+      //   },
+      // });
 
       if (formData?.gstType !== "Exempt") {
         handleFormChange({
@@ -1813,7 +1813,7 @@ export default function page(props) {
                   //       value: e?.loc || "N/A",
                   //     },
                   //   });
-                  setSelectedItem(e);
+                  // setSelectedItem(e);
                   handleFormDataChange("itemPartNo", e?.itemName);
                   handleFormDataChange("itemPartNoOrg", e?.partNumber || "N/A");
                   handleFormDataChange(
@@ -1828,12 +1828,12 @@ export default function page(props) {
                   //     },
                   // });
 
-                  handleFormChange({
-                    target: {
-                      name: "selectedItemRow",
-                      value: e?.row,
-                    },
-                  });
+                  // handleFormChange({
+                  //   target: {
+                  //     name: "selectedItemRow",
+                  //     value: e?.row,
+                  //   },
+                  // });
 
                   if (formData?.gstType !== "Exempt") {
                     // * if gst type is exempt, then it will not change the gst percentage
