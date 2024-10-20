@@ -76,7 +76,7 @@ export default function Page() {
     let page = pdfDoc.addPage(PageSizes.A4); // Create the first page
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-    let yPosition = 815; // Starting position on the page (Increase to move up)
+    let yPosition = 810; // Starting position on the page (Increase to move up)
     const rowHeight = 82; // Height for each row to accommodate text and barcode
     const maxItemsPerPage = 40; // Max number of items per page (8 rows x 4 items per row)
     let itemsOnCurrentPage = 0;
@@ -132,7 +132,7 @@ export default function Page() {
       // Check if we need to create a new page after 32 items
       if (itemsOnCurrentPage >= maxItemsPerPage) {
         page = pdfDoc.addPage(PageSizes.A4); // Add a new page
-        yPosition = 800; // Reset the starting yPosition for the new page
+        yPosition = 810; // Reset the starting yPosition for the new page
         itemsOnCurrentPage = 0; // Reset the item count for the new page
       }
     }
