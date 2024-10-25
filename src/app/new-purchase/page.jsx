@@ -1281,7 +1281,7 @@ export default function page() {
         <button
           onClick={() => {
             clearLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA");
-            window.location.href = "/cloned-purchase";
+            window.location.href = "/new-purchase";
           }}
           className="text-white hover:bg-blue-900"
         >
