@@ -690,6 +690,8 @@ export default function page() {
           // ? show modal
           handleModal("Uploaded ✔", "The document has been uploaded", "Okay");
           window.purchase_modal_1.showModal();
+          clearLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA");
+          resetSessionFields();
         } else {
           handleModal(
             "Uploaded Failed ❌",
@@ -762,6 +764,37 @@ export default function page() {
     formData?.partyName,
     formData?.quantity,
   ]);
+
+  const resetSessionFields = () => {
+    setFormData({
+      partyName: null,
+      invoiceNo: null,
+      invoiceDate: new Date(), // default date is today
+      gstType: null,
+      unit: "Pcs", // default value
+      purchaseType: "DNM",
+      mDiscPercentage: 0, // mention discount percentage
+      itemName: null,
+      itemPartNoOrg: null, // part no of the item
+      itemLocation: null, // from item data
+      quantity: 0,
+      mrp: null, // D4 value
+      unitPriceAfterDiscount_D6: null,
+      gstPercentage: null,
+      amount: null,
+      finalDisc: "ERROR!",
+      selectedItemRow: -1,
+      isIGST: false,
+      dynamicdisc: null,
+      unitPrice: 0,
+      repetitionPrint: 0,
+    });
+
+    setExcelContent([]);
+    setSelectedItem(null);
+    toast.success("Session has been reset");
+  };
+
   return (
     <>
       <Toaster />
@@ -1281,7 +1314,7 @@ export default function page() {
         <button
           onClick={() => {
             clearLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA");
-            window.location.href = "/new-purchase";
+            resetSessionFields();
           }}
           className="text-white hover:bg-blue-900"
         >
