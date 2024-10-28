@@ -270,6 +270,24 @@ export default function page() {
       0
     );
 
+  function addDaysToDate(dateStr, daysToAdd) {
+    // Split the date string into parts
+    const [day, month, year] = dateStr.split("/").map(Number);
+
+    // Create a Date object from the input date
+    const date = new Date(year, month - 1, day);
+
+    // Add the specified number of days
+    date.setDate(date.getDate() + daysToAdd);
+
+    // Format the new date back to DD/MM/YYYY format
+    const futureDay = String(date.getDate()).padStart(2, "0");
+    const futureMonth = String(date.getMonth() + 1).padStart(2, "0");
+    const futureYear = date.getFullYear();
+
+    return `${futureDay}/${futureMonth}/${futureYear}`;
+  }
+
   const downloadSheet = () => {
     if (ExcelContent.length === 0) {
       handleModalMessage({
@@ -310,6 +328,8 @@ export default function page() {
     content[0].mobileNo = ExcelContent[0].one_field_mobile;
     content[0].one_field_cashPayment = formData?.cashPayment;
     content[0].one_field_bankPayment = formData?.bankPayment;
+    content[0].BILL_REF_AMOUNT = getTotalBillAmount();
+    content[0].BILL_REF_DUE_DATE = addDaysToDate(content[0].billDate, 5);
 
     if (formData?.bankPayment > 0) {
       content[0].SETTLEMENT_NARR2 = "Bank";
@@ -378,6 +398,14 @@ export default function page() {
       {
         label: "SETTLEMENT_NARR2",
         value: "SETTLEMENT_NARR2",
+      },
+      {
+        label: "BILL_REF_AMOUNT",
+        value: "BILL_REF_AMOUNT",
+      },
+      {
+        label: "BILL_REF_DUE_DATE",
+        value: "BILL_REF_DUE_DATE",
       }
     );
 
@@ -901,6 +929,7 @@ export default function page() {
           className="input input-bordered input-secondary w-[295px] m-5 hover:cursor-pointer"
           placeholderText="SALE DATE"
           showPopperArrow={true}
+          disabled={ExcelContent?.length > 0}
           maxDate={new Date()}
           selected={formData?.saleDate ?? new Date()}
           onChange={(selectedDate) => {
