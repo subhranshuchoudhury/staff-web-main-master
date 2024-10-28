@@ -463,11 +463,14 @@ export default function page() {
   const addContent = async () => {
     // if (!isFormValidated(formData)) return;
 
-    if (BillSeriesRef === null) {
+    let remoteLabel = BillSeriesRef;
+
+    if (remoteLabel === null) {
       const loading = toast.loading("Getting the bill ref no...");
-      const label = await getNewBillRefNo();
+      remoteLabel = await getNewBillRefNo();
+      console.log("Remote Label", remoteLabel);
       toast.dismiss(loading);
-      if (label === null) {
+      if (remoteLabel === null) {
         handleModalMessage({
           name: "message",
           value: `❌ Failed to get the bill ref no`,
@@ -531,7 +534,10 @@ export default function page() {
       SAVE_discAmount: formData?.discAmount,
       SAVE_selectedItem: SelectedItem,
       SAVE_actualTotalAmount: formData?.actualTotalAmount,
+      REMOTE_BILL_REF_NO: remoteLabel,
     };
+
+    console.log("Bill remote ref", remoteLabel, tempContent);
 
     setExcelContent((prevArray) => [...prevArray, tempContent]);
 
@@ -603,7 +609,7 @@ export default function page() {
       bankPayment: null,
       cashPayment: null,
     });
-
+    setBillSeriesRef(null);
     setExcelContent([]);
     localStorage.removeItem("SALE_TEMP_CONTENT");
   };
@@ -664,8 +670,6 @@ export default function page() {
       });
   };
 
-  // * update the mrp field if any changes happened in the mrp field.
-
   const localStorageBackup = (tempContent) => {
     const checkLocal = localStorage.getItem("SALE_TEMP_CONTENT");
     let localContent = [];
@@ -692,7 +696,11 @@ export default function page() {
       const localContent = JSON.parse(
         localStorage.getItem("SALE_TEMP_CONTENT") || "[]"
       );
+
+      console.log("Local Content", localContent);
+
       setExcelContent(localContent);
+      setBillSeriesRef(localContent[0]?.REMOTE_BILL_REF_NO); // maybe vchSeries later
       handleChange({
         target: {
           name: "vehicleNo",
