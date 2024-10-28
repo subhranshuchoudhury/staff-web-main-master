@@ -24,6 +24,28 @@ export default function page() {
     getAPIContent();
   }, []);
 
+  const getNewBillRefNo = async () => {
+    try {
+      const response = await fetch("/api/bill-ref-no/new");
+      const data = await response.json();
+      if (data.newLabel) {
+        // handleChange({
+        //   target: {
+        //     name: "seriesType",
+        //     value: data.newLabel,
+        //   },
+        // });
+        setBillSeriesRef(data.newLabel);
+        return data.newLabel;
+      }
+      return null;
+    } catch (error) {
+      console.error("Error while fetching new bill ref no:", error);
+      toast.error("Failed while getting new bill ref no.");
+      return null;
+    }
+  };
+
   const [formData, setFormData] = useState({
     seriesType: null,
     saleDate: new Date(), // default today.
@@ -54,6 +76,7 @@ export default function page() {
   const [APILoading, setAPILoading] = useState(true);
   const [SelectedItem, setSelectedItem] = useState(null);
   const [ExcelContent, setExcelContent] = useState([]);
+  const [BillSeriesRef, setBillSeriesRef] = useState(null);
   // const [qrResult, setQrResult] = useState("...");
 
   // * Duplicate check
@@ -437,8 +460,22 @@ export default function page() {
     xlsx(data, settings, callback);
   };
 
-  const addContent = () => {
+  const addContent = async () => {
     // if (!isFormValidated(formData)) return;
+
+    if (BillSeriesRef === null) {
+      const loading = toast.loading("Getting the bill ref no...");
+      const label = await getNewBillRefNo();
+      toast.dismiss(loading);
+      if (label === null) {
+        handleModalMessage({
+          name: "message",
+          value: `❌ Failed to get the bill ref no`,
+        });
+        window.saleModal_1.showModal();
+        return;
+      }
+    }
 
     const convertToDateString = (date) => {
       var dateString = `${date}`;
@@ -900,6 +937,17 @@ export default function page() {
       <p className="glass text-center text-[40px] font-mono mb-9 m-auto rounded-xl w-[98%] text-white">
         SALE
       </p>
+      <div className="text-center">
+        <button
+          className={`p-2 rounded-md ${
+            BillSeriesRef ? "bg-green-500" : "bg-red-500 animate-pulse"
+          }`}
+        >
+          {BillSeriesRef
+            ? `Bill Series: ${BillSeriesRef}`
+            : "Add one item to get the bill ref no."}
+        </button>
+      </div>
       <div className="text-center">
         {APILoading && (
           <span className="loading loading-infinity w-[80px] text-sky-500"></span>
