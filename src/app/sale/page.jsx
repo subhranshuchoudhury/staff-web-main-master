@@ -363,15 +363,24 @@ export default function page() {
     // check if we need to generate the columns T, U and V (Bill Ref No, bill ref Amount,bill ref  Due Date)
     //Below fields will get updated when Series is APP, Party Name is other than Cash and Amount – (SETTLEMENT_AMT1 + SETTLEMENT_AMT2) > 0. If the value is zero then these fields will be blank.
 
+    console.log(
+      "Total Bill Amount, Cash Payment, Bank Payment, Party Name",
+      totalBillAmount,
+      content[0].settlement_amount_1_cashPayment,
+      content[0].settlement_amount_2_bankPayment,
+      content[0].partyName
+    );
+
     if (
       content[0].vchSeries === "APP" &&
       content[0].partyName !== "Cash" &&
       // formData?.partyName !== "PHONE PE" &&
       totalBillAmount -
-        (content[0].settlement_amount_1_cashPayment +
-          content[0].settlement_amount_2_bankPayment) >
+        (Number(content[0].settlement_amount_1_cashPayment || 0) +
+          Number(content[0].settlement_amount_2_bankPayment || 0)) >
         0
     ) {
+      console.log("Bill Ref No, bill ref Amount,bill ref  Due Date");
       content[0].BILL_REF_NO = REMOTE_BILL_REF_NO;
       content[0].BILL_REF_AMOUNT = totalBillAmount;
       content[0].BILL_REF_DUE_DATE = addDaysToDate(content[0].billDate, 5);
