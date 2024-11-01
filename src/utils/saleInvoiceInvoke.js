@@ -21,7 +21,7 @@ const saleInvoiceInvokePDF = async (contents) => {
     date: contents[0]?.billDate,
     time: new Date().toLocaleTimeString(),
     partyName: contents[0]?.partyName,
-    billNo: "M/4857/2425", // This will generate dynamically
+    billNo: contents[0]?.REMOTE_BILL_REF_NO,
     vehicleNo: contents[0]?.narration,
     items,
     roundedOff: "0.10",

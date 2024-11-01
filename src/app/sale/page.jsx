@@ -321,7 +321,7 @@ export default function page() {
       return;
     }
 
-    if (formData?.partyName === "Cash" || formData?.partyName === "PHONE PE") {
+    if (formData?.partyName === "PHONE PE") {
       if (!formData?.cashPayment && !formData?.bankPayment) {
         handleModalMessage({
           name: "message",
@@ -349,13 +349,32 @@ export default function page() {
     // Add mobile to first field
 
     content[0].mobileNo = ExcelContent[0].one_field_mobile;
-    content[0].one_field_cashPayment = formData?.cashPayment;
-    content[0].one_field_bankPayment = formData?.bankPayment;
-    content[0].BILL_REF_AMOUNT = getTotalBillAmount();
-    content[0].BILL_REF_DUE_DATE = addDaysToDate(content[0].billDate, 5);
+    content[0].settlement_amount_1_cashPayment = formData?.cashPayment; // settlement amount 1
+    content[0].settlement_amount_2_bankPayment = formData?.bankPayment; // settlement amount 2
+    const REMOTE_BILL_REF_NO = content[0].REMOTE_BILL_REF_NO; // the dynamic bill ref no eg. APP/16/2425
+    content[0].VCH_BILL_NO =
+      REMOTE_BILL_REF_NO.split("/")[1] + "/" + REMOTE_BILL_REF_NO.split("/")[2];
+    const totalBillAmount = getTotalBillAmount();
 
     if (formData?.bankPayment > 0) {
       content[0].SETTLEMENT_NARR2 = "Bank";
+    }
+
+    // check if we need to generate the columns T, U and V (Bill Ref No, bill ref Amount,bill ref  Due Date)
+    //Below fields will get updated when Series is APP, Party Name is other than Cash and Amount – (SETTLEMENT_AMT1 + SETTLEMENT_AMT2) > 0. If the value is zero then these fields will be blank.
+
+    if (
+      content[0].vchSeries === "APP" &&
+      content[0].partyName !== "Cash" &&
+      // formData?.partyName !== "PHONE PE" &&
+      totalBillAmount -
+        (content[0].settlement_amount_1_cashPayment +
+          content[0].settlement_amount_2_bankPayment) >
+        0
+    ) {
+      content[0].BILL_REF_NO = REMOTE_BILL_REF_NO;
+      content[0].BILL_REF_AMOUNT = totalBillAmount;
+      content[0].BILL_REF_DUE_DATE = addDaysToDate(content[0].billDate, 5);
     }
 
     console.log("XLSX Content", content);
@@ -412,15 +431,23 @@ export default function page() {
       },
       {
         label: "SETTLEMENT_AMT1",
-        value: "one_field_cashPayment",
+        value: "settlement_amount_1_cashPayment",
       },
       {
         label: "SETTLEMENT_AMT2",
-        value: "one_field_bankPayment",
+        value: "settlement_amount_2_bankPayment",
       },
       {
         label: "SETTLEMENT_NARR2",
         value: "SETTLEMENT_NARR2",
+      },
+      {
+        label: "VEHICLE_NO",
+        value: "narration",
+      },
+      {
+        label: "BILL_REF_NO",
+        value: "BILL_REF_NO",
       },
       {
         label: "BILL_REF_AMOUNT",
@@ -429,6 +456,10 @@ export default function page() {
       {
         label: "BILL_REF_DUE_DATE",
         value: "BILL_REF_DUE_DATE",
+      },
+      {
+        label: "VCH/BILL_NO",
+        value: "VCH_BILL_NO", // eg. 1/2526 , 2/2526
       }
     );
 
@@ -458,6 +489,14 @@ export default function page() {
     };
 
     xlsx(data, settings, callback);
+  };
+
+  const getVchSeries = (saleType, series) => {
+    if (saleType === "Exempt") {
+      //  return APP when sale type is Exempt
+      return "APP";
+    }
+    return series;
   };
 
   const addContent = async () => {
@@ -511,7 +550,7 @@ export default function page() {
     };
 
     const tempContent = {
-      vchSeries: formData?.seriesType,
+      vchSeries: getVchSeries(formData?.saleType, formData?.seriesType),
       billDate: convertToDateString(formData?.saleDate),
       saleType: formData?.saleType,
       partyName: formData?.partyName,
@@ -526,8 +565,8 @@ export default function page() {
       cgst: formData?.gstAmount / 2,
       sgst: formData?.gstAmount / 2,
       one_field_mobile: formData?.mobileNo, // This will be only affect one row
-      // one_field_bankPayment: formData?.bankPayment,
-      // one_field_cashPayment: formData?.cashPayment,
+      // settlement_amount_2_bankPayment: formData?.bankPayment,
+      // settlement_amount_1_cashPayment: formData?.cashPayment,
       SAVE_discPercentage: formData?.disc,
       SAVE_gstAmount: formData?.gstAmount,
       SAVE_totalAmount: formData?.totalAmount,
@@ -700,7 +739,7 @@ export default function page() {
       console.log("Local Content", localContent);
 
       setExcelContent(localContent);
-      setBillSeriesRef(localContent[0]?.REMOTE_BILL_REF_NO); // maybe vchSeries later
+      setBillSeriesRef(localContent[0]?.REMOTE_BILL_REF_NO);
       handleChange({
         target: {
           name: "vehicleNo",
