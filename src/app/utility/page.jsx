@@ -36,7 +36,19 @@ const Page = () => {
             width={50}
             height={50}
           />
-          <p>PDF Barcode Generate</p>
+          <p>Barcode PDF Generate (V1)</p>
+        </div>
+        <div
+          onClick={() => routePath("utility/pdf-barcode-generate-v2")}
+          className="btn btn-info text-white w-44 h-28 m-5 shadow-2xl hover:shadow-white flex-col bg-transparent"
+        >
+          <Image
+            src="/assets/images/printer.png"
+            alt="settings"
+            width={50}
+            height={50}
+          />
+          <p>Barcode PDF Generate (V2)</p>
         </div>
         <div
           onClick={() => routePath("utility/discount-matrix")}
