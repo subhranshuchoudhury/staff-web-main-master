@@ -10,39 +10,46 @@ export default function Component() {
   const [excelJsonInput, setExcelJsonInput] = useState(null);
 
   const handleExcelFileInput = (e) => {
-    const selectedFile = e.target.files?.[0];
     const loading = toast.loading(
       "Please wait while we are processing your file..."
     );
+    try {
+      const selectedFile = e.target.files?.[0];
 
-    if (!selectedFile) {
+      if (!selectedFile) {
+        toast.dismiss(loading);
+        toast.error("Please select an excel file");
+        setExcelJsonInput(null);
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.readAsArrayBuffer(selectedFile);
+      reader.onload = (e) => {
+        const data = new Uint8Array(e.target?.result);
+        const workbook = XLSX.read(data, { type: "array" });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+
+        const excelData = XLSX.utils.sheet_to_json(sheet, {
+          blankrows: false,
+          skipHidden: true,
+          raw: false,
+          rawNumbers: false,
+          defval: null,
+        });
+
+        setExcelJsonInput(excelData);
+        console.log(excelData);
+        toast.dismiss(loading);
+        toast.success("File processed successfully");
+      };
+    } catch (error) {
       toast.dismiss(loading);
-      toast.error("Please select an excel file");
+      toast.error("Excel sheet parsing failed");
+      console.log(error);
       setExcelJsonInput(null);
-      return;
     }
-
-    const reader = new FileReader();
-    reader.readAsArrayBuffer(selectedFile);
-    reader.onload = (e) => {
-      const data = new Uint8Array(e.target?.result);
-      const workbook = XLSX.read(data, { type: "array" });
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-
-      const excelData = XLSX.utils.sheet_to_json(sheet, {
-        blankrows: false,
-        skipHidden: true,
-        raw: false,
-        rawNumbers: false,
-        defval: null,
-      });
-
-      setExcelJsonInput(excelData);
-      console.log(excelData);
-      toast.success("File processed successfully");
-      toast.dismiss(loading);
-    };
   };
 
   const generateBarcode = (code) => {
@@ -60,6 +67,7 @@ export default function Component() {
     const toastLoading = toast.loading("Generating PDF...");
 
     if (!excelJsonInput) {
+      toast.dismiss(toastLoading);
       toast.error("No data available to generate PDF");
       return;
     }
@@ -84,8 +92,8 @@ export default function Component() {
       // Calculate positions to center the content
       const barcodeWidth = pageWidth * 0.9;
       const barcodeHeight = pageHeight * 0.6;
-      const barcodeX = (pageWidth - barcodeWidth) / 2;
-      const barcodeY = pageHeight - barcodeHeight - 2;
+      const barcodeX = (pageWidth - barcodeWidth) / 2 + 4;
+      const barcodeY = pageHeight - barcodeHeight - 2 - 4;
 
       // Draw the barcode image
       page.drawImage(barcodeImage, {
@@ -100,8 +108,8 @@ export default function Component() {
       const discCodeTextWidth = font.widthOfTextAtSize(discCodeText, 6);
       page.drawText(discCodeText, {
         x: (pageWidth - discCodeTextWidth) / 2,
-        y: barcodeY - 8,
-        size: 6,
+        y: barcodeY - 5,
+        size: 8,
         font: font,
         color: rgb(0, 0, 0),
       });
@@ -111,8 +119,8 @@ export default function Component() {
       const locTextWidth = font.widthOfTextAtSize(locText, 6);
       page.drawText(locText, {
         x: (pageWidth - locTextWidth) / 2,
-        y: barcodeY - 16,
-        size: 6,
+        y: barcodeY - 12,
+        size: 8,
         font: font,
         color: rgb(0, 0, 0),
       });
