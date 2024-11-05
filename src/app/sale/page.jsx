@@ -1294,6 +1294,7 @@ export default function page() {
             alt="icon"
           />
         </button>
+
         <button
           onClick={() => {
             if (ExcelContent?.length === 0) {
@@ -1313,6 +1314,7 @@ export default function page() {
           />
           <span className="mb-6 text-sm font-mono">Preview</span>
         </button>
+
         <button
           onClick={async () => {
             if (ExcelContent?.length === 0) {
@@ -1331,6 +1333,7 @@ export default function page() {
           />
           <span className="mb-6 text-sm font-mono">Invoice</span>
         </button>
+        
         <button
           onClick={() => {
             if (!APILoading) {

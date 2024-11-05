@@ -37,6 +37,8 @@ import {
   exclusiveTaxTotalAmount,
   inclusiveExemptTaxTotalAmount,
 } from "@/utils/purchase/calc";
+
+
 const purchaseIDB = new SimpleIDB("Purchase", "purchase");
 
 export default function page() {
@@ -45,12 +47,12 @@ export default function page() {
     getItemsData();
   }, []);
 
-  const [loadingExcel, setLoadingExcel] = useState(true);
-  const [excelContent, setExcelContent] = useState([]);
-  const [partyData, setPartyData] = useState([]);
-  const [itemData, setItemData] = useState([]);
-  const [DiscountStructure, setDiscountStructure] = useState([]);
-  const [gotDbValue, setGotDbValue] = useState(false);
+  const [ loadingExcel , setLoadingExcel] = useState(true);
+  const [ excelContent , setExcelContent] = useState([]);
+  const [ partyData , setPartyData] = useState([]);
+  const [ itemData , setItemData] = useState([]);
+  const [ DiscountStructure , setDiscountStructure] = useState([]);
+  const [ gotDbValue , setGotDbValue] = useState(false);
   // const [qrResult, setQrResult] = useState("");
   // const [barcodeScannedData, setBarcodeScannedData] = useState(null);
   const [formData, setFormData] = useState({
@@ -795,6 +797,179 @@ export default function page() {
     toast.success("Session has been reset");
   };
 
+  
+  const getTotalBillAmount = () =>
+    excelContent.map((item) => item?.amount).reduce(
+      (acc, curr) => acc + (curr || 0),
+      0
+    );
+
+    
+  const downloadSheet = () => {
+    if (ExcelContent.length === 0) {
+      handleModalMessage({
+        name: "message",
+        value: `⚠ Add one document before exporting excel`,
+      });
+      window.saleModal_1.showModal();
+      return;
+    }
+
+    if (formData?.partyName === "PHONE PE") {
+      if (!formData?.cashPayment && !formData?.bankPayment) {
+        handleModalMessage({
+          name: "message",
+          value: `⚠ Add the payment amount before exporting excel`,
+        });
+        window.saleModal_1.showModal();
+        return;
+      }
+
+      if (formData?.partyName === "Cash" && formData?.bankPayment > 0) {
+        // Change the partyname to PHONE PE
+        handleFormChange("partyName", "PHONE PE");
+        ExcelContent.forEach((item) => {
+          item.partyName = "PHONE PE";
+        });
+      }
+    }
+
+    let content = [];
+
+    ExcelContent.forEach((d) => {
+      content.push(d);
+    });
+
+    // Add mobile to first field
+
+    content[0].mobileNo = ExcelContent[0].one_field_mobile;
+    content[0].settlement_amount_1_cashPayment = formData?.cashPayment; // settlement amount 1
+    content[0].settlement_amount_2_bankPayment = formData?.bankPayment; // settlement amount 2
+    const REMOTE_BILL_REF_NO = content[0].REMOTE_BILL_REF_NO; // the dynamic bill ref no eg. APP/16/2425
+    content[0].VCH_BILL_NO =
+      REMOTE_BILL_REF_NO.split("/")[1] + "/" + REMOTE_BILL_REF_NO.split("/")[2];
+    const totalBillAmount = getTotalBillAmount();
+
+    if (formData?.bankPayment > 0) {
+      content[0].SETTLEMENT_NARR2 = "Bank";
+    }
+
+    // check if we need to generate the columns T, U and V (Bill Ref No, bill ref Amount,bill ref  Due Date)
+    //Below fields will get updated when Series is APP, Party Name is other than Cash and Amount – (SETTLEMENT_AMT1 + SETTLEMENT_AMT2) > 0. If the value is zero then these fields will be blank.
+
+    console.log(
+      "Total Bill Amount, Cash Payment, Bank Payment, Party Name",
+      totalBillAmount,
+      content[0].settlement_amount_1_cashPayment,
+      content[0].settlement_amount_2_bankPayment,
+      content[0].partyName
+    );
+
+    if (
+      content[0].vchSeries === "APP" &&
+      content[0].partyName !== "Cash" &&
+      // formData?.partyName !== "PHONE PE" &&
+      totalBillAmount -
+        (Number(content[0].settlement_amount_1_cashPayment || 0) +
+          Number(content[0].settlement_amount_2_bankPayment || 0)) >
+        0
+    ) {
+      console.log("Bill Ref No, bill ref Amount,bill ref  Due Date");
+      content[0].BILL_REF_NO = REMOTE_BILL_REF_NO;
+      content[0].BILL_REF_AMOUNT = totalBillAmount;
+      content[0].BILL_REF_DUE_DATE = addDaysToDate(content[0].billDate, 5);
+    }
+
+    console.log("XLSX Content", content);
+
+    let data = [
+      {
+        sheet: "Sheet1",
+        columns: [
+          { label: "vch_series", value: "vchSeries" },
+          { label: "bill date", value: "billDate" },
+          { label: "sale type", value: "saleType" },
+          { label: "party name", value: "partyName" },
+          { label: "narration", value: "narration" },
+          { label: "item name", value: "itemName" },
+          { label: "qty", value: "qty", format: "0.00" },
+          { label: "unit", value: "unit" },
+          { label: "price", value: "price", format: "0.00" },
+          { label: "disc", value: "disc", format: "0.00" },
+          { label: "Amount", value: "amount", format: "0.00" },
+        ],
+        content,
+      },
+    ];
+
+    if (formData?.saleType === "IGST")
+      data[0].columns.push({
+        label: "igst percent",
+        value: "igstPercent",
+        format: "0",
+      });
+    else
+      data[0].columns.push(
+        {
+          label: "CGST",
+          value: "cgst",
+          format: "0",
+        },
+        {
+          label: "SGST",
+          value: "sgst",
+          format: "0",
+        }
+      );
+
+    data[0].columns.push(
+      {
+        label: "BILLED_PARTY_MOBILE_NO",
+        value: "mobileNo",
+        format: "0",
+      },
+      {
+        label: "BILLED_PARTY_NAME",
+        value: "narration",
+      },
+      {
+        label: "SETTLEMENT_AMT1",
+        value: "settlement_amount_1_cashPayment",
+      },
+      {
+        label: "SETTLEMENT_AMT2",
+        value: "settlement_amount_2_bankPayment",
+      },
+      {
+        label: "SETTLEMENT_NARR2",
+        value: "SETTLEMENT_NARR2",
+      },
+      {
+        label: "VEHICLE_NO",
+        value: "narration",
+      },
+      {
+        label: "BILL_REF_NO",
+        value: "BILL_REF_NO",
+      },
+      {
+        label: "BILL_REF_AMOUNT",
+        value: "BILL_REF_AMOUNT",
+      },
+      {
+        label: "BILL_REF_DUE_DATE",
+        value: "BILL_REF_DUE_DATE",
+      },
+      {
+        label: "VCH/BILL_NO",
+        value: "VCH_BILL_NO", // eg. 1/2526 , 2/2526
+      }
+    );
+
+    exportExcel(data);
+  };
+
+
   return (
     <>
       <Toaster />
@@ -885,6 +1060,127 @@ export default function page() {
               className="btn"
             >
               {modalConfirmation?.button_2}
+            </button>
+          </div>
+        </form>
+      </dialog>
+
+      {/* Preview entries */}
+
+      <dialog id="purchase_modal_3" className="modal">
+        <form method="dialog" className="modal-box">
+          <h3 className="font-bold text-lg">Preview </h3>
+          <span className="text-sky-300 animate-pulse text-sm">
+            {formData?.partyName === "PHONE PE" ||
+            formData?.partyName === "Cash" ? (
+              <span>{formData?.partyName}</span>
+            ) : null}
+          </span>
+          <div className="overflow-x-auto overflow-y-auto max-h-[400px]">
+            <table className="table">
+              {/* head */}
+              <thead>
+                <tr>
+                  <th>Sl No.</th>
+                  <th>Item</th>
+                  <th>Action</th>
+                  <th>Qty</th>
+                  <th>MRP</th>
+                  <th>Disc%</th>
+                  <th>Tot. Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {/* row 1 */}
+
+                {excelContent.map((item, index) => {
+                  // console.log("Item", item);
+                  return (
+                    <tr key={index} className="hover:bg-indigo-950">
+                      <th>{index + 1}</th>
+                      <td>{item?.itemName}</td>
+                      <td>
+                        <div className="flex flex-col gap-2">
+                          <button
+                            onClick={() => modifyExcelSheet("edit", index)}
+                            className="btn btn-sm btn-warning"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => modifyExcelSheet("delete", index)}
+                            className="btn btn-sm btn-error"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                      <td>{item?.qty}</td>
+                      <td>{item?.price}</td>
+                      <td>{item?.disc}</td>
+                      <td>{item?.amount}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            <div className="ml-2 mb-2">
+              Bill Amount:{" "}
+              <span className="font-extrabold">{getTotalBillAmount()}</span>
+            </div>
+          </div>
+          <div className="flex justify-center items-center mt-4 bg-indigo-950 rounded-lg p-3">
+            <div className="flex flex-col gap-2 w-[50%] items-center">
+              <div className="flex flex-col gap-2">
+                <input
+                  name="cashPayment"
+                  value={formData?.cashPayment || ""}
+                  type="number"
+                  className="input input-bordered input-secondary w-full"
+                  placeholder="Cash"
+                  min={0} // Prevents negative values
+                  onWheel={(e) => {
+                    e.target.blur();
+                  }}
+                  onChange={(e) => {
+                    handleChange(e);
+                    // const value = Math.max(0, e.target.value); // Ensure non-negative value
+                    // handleInputSettlement("cash", value);
+                  }}
+                />
+                <input
+                  name="bankPayment"
+                  value={formData?.bankPayment || ""}
+                  onChange={(e) => {
+                    handleChange(e);
+                    // const value = Math.max(0, e.target.value); // Ensure non-negative value
+                    // handleInputSettlement("online", value);
+                  }}
+                  type="number"
+                  className="input input-bordered input-secondary w-full"
+                  placeholder="Bank"
+                  min={0} // Prevents negative values
+                  onWheel={(e) => {
+                    e.target.blur();
+                  }}
+                />
+              </div>
+              <div
+                onClick={() => {
+                  handleFormChange("cashPayment", "");
+                  handleFormChange("bankPayment", "");
+                  toast.success("Cleared the payment fields");
+                }}
+                className="btn bg-yellow-600 hover:bg-yellow-800 w-full"
+              >
+                Clear
+              </div>
+            </div>
+          </div>
+          <div className="modal-action">
+            <button className="btn bg-red-600">Cancel</button>
+            <button onClick={downloadSheet} className="btn bg-green-600">
+              Download
             </button>
           </div>
         </form>
@@ -1278,11 +1574,33 @@ export default function page() {
           <Image
             className="mb-20"
             src="/assets/images/add-button.png"
-            width={80}
-            height={80}
+            width={60}
+            height={60}
             alt="icon"
           ></Image>
         </button>
+
+        {/* preview button added here  */}
+        <button
+          onClick={() => {
+            if (excelContent?.length === 0) {
+              toast.error("No item has been added");
+              return;
+            }
+
+            window.purchase_modal_3.showModal();
+          }}
+          className=" text-white hover:bg-blue-900"
+        >
+          <Image
+            src="/assets/images/download (1).png"
+            width={40}
+            height={40}
+            alt="icon"
+          />
+          <span className="mb-6 text-xl font-mono">Preview</span>
+        </button>
+
         <button
           onClick={() => {
             createSheet();
@@ -1291,12 +1609,13 @@ export default function page() {
         >
           <Image
             src="/assets/images/download (1).png"
-            width={50}
-            height={50}
+            width={40}
+            height={40}
             alt="icon"
           ></Image>
           <span className="mb-6 text-xl font-mono">Download</span>
         </button>
+
         <button
           onClick={() => {
             getItemsData();
@@ -1305,8 +1624,8 @@ export default function page() {
         >
           <Image
             src="/assets/images/refresh-arrow.png"
-            width={50}
-            height={50}
+            width={40}
+            height={40}
             alt="icon"
           ></Image>
           <span className="mb-6 text-xl font-mono">Refresh</span>
@@ -1320,8 +1639,8 @@ export default function page() {
         >
           <Image
             src="/assets/images/remove.png"
-            width={50}
-            height={50}
+            width={40}
+            height={40}
             alt="icon"
           ></Image>
           <span className="mb-6 text-xl font-mono">Reset</span>
