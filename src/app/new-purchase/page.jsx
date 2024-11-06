@@ -1092,7 +1092,8 @@ export default function page() {
               </thead>
               <tbody>
                 {/* row 1 */}
-
+                {console.log("excelContent console logged")}
+                {console.log(excelContent)}
                 {excelContent.map((item, index) => {
                   // console.log("Item", item);
                   return (
@@ -1115,8 +1116,8 @@ export default function page() {
                           </button>
                         </div>
                       </td>
-                      <td>{item?.qty}</td>
-                      <td>{item?.price}</td>
+                      <td>{item?.quantity}</td>
+                      <td>{item?.mrp}</td>
                       <td>{item?.disc}</td>
                       <td>{item?.amount}</td>
                     </tr>
