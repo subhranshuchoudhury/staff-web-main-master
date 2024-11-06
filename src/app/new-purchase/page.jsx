@@ -739,65 +739,76 @@ export default function page() {
 
   // * upload the document to history
 
-  const sendPurchaseHistory = (partyname, invoice, sheet , barcodeSheet) => {
+const sendPurchaseHistory = async (partyname, invoice, sheet, barcodeSheet) => {
+  try {
+    // Verify formData and data before accessing
+    if (!formData || !formData.partyName) {
+      throw new Error("Missing formData or partyName");
+    }
+    if (!data || !data[0] || !data[0].content) {
+      throw new Error("Data is not in expected format");
+    }
+
+    console.log("Form data--------->>>>>", formData);
     console.log("Barcode Data", barcodeSheet);
-    console.log("Sheet Data",data );
+    console.log("Sheet Data", data);
+
     handleModalMessage(
       "⏳ Uploading...",
       "Please wait while we upload your document...",
       "Okay"
     );
-    // window.purchase_modal_1.showModal();
 
-    let totalAmount = 0
+    // Calculate total amount
+    let totalAmount = data[0].content.reduce(
+      (acc, element) => acc + (element?.amount || 0),
+      0
+    );
 
-    data[0].content.forEach((element) => {
-      totalAmount += element?.amount;
-    });
-
-
+    // Prepare payload for the request
     const payload = {
-      sheetdata: JSON.stringify(sheet),
+      sheetdata: JSON.stringify(data),
       barcodedata: JSON.stringify(barcodeSheet),
-      items: data[0]?.content?.length,
-      invoice,
-      partyname,
+      items: data[0].content.length,
+      invoice:formData.invoiceDate,
+      partyname: formData.partyName,
       desc: "purchase",
-      totalAmount: totalAmount,
+      totalAmount,
     };
 
+    // Set options for fetch
     const options = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     };
 
-    fetch("/api/purchases", options)
-      .then((response) => {
-        if (response.status === 200) {
-          // ? show modal
-          handleModal("Uploaded ✔", "The document has been uploaded", "Okay");
-          window.purchase_modal_1.showModal();
-          clearLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA");
-          resetSessionFields();
-        } else {
-          handleModal(
-            "Uploaded Failed ❌",
-            "Kindly re-download the document",
-            "Okay"
-          );
-          window.purchase_modal_1.showModal();
-        }
-      })
-      .catch((err) => {
-        handleModal(
-          "Uploaded Failed ❌",
-          "Kindly re-download the document",
-          "Okay"
-        );
-        window.purchase_modal_1.showModal();
-      });
-  };
+    // Send request and handle response
+    const response = await fetch("/api/purchases", options);
+
+    if (response.ok) {
+      handleModal("Uploaded ✔", "The document has been uploaded", "Okay");
+      window.purchase_modal_1.showModal();
+      clearLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA");
+      resetSessionFields();
+    } else {
+      handleModal(
+        "Upload Failed ❌",
+        "Please re-download the document and try again.",
+        "Okay"
+      );
+      window.purchase_modal_1.showModal();
+    }
+  } catch (error) {
+    console.error("Error uploading purchase history:", error);
+    handleModal(
+      "Upload Failed ❌",
+      "An error occurred. Please try again.",
+      "Okay"
+    );
+    window.purchase_modal_1.showModal();
+  }
+};
 
   // * Finding the value with the selected party name and group name
   const handleFindValue = async () => {
@@ -1032,7 +1043,7 @@ export default function page() {
       });
 
       // close the modal
-      window.saleModal_4.close();
+      window.purchase_modal_3.close();
 
       console.log("Edit action triggered", excelContent?.[rowNo]);
       const item = excelContent?.[rowNo];
