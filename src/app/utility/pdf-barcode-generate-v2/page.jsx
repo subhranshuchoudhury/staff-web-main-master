@@ -58,7 +58,6 @@ export default function Component() {
       format: "CODE128",
       width: 2,
       height: 20,
-      // fontSize: 20,
       displayValue: false,
     });
     return canvas.toDataURL("image/png");
@@ -122,7 +121,7 @@ export default function Component() {
         x: (pageWidth - discCodeTextWidth) / 2 - 3,
         y: barcodeY - 5,
         size: 8,
-        font: fontBold,
+        font: font,
         color: rgb(0, 0, 0),
       });
 
@@ -148,7 +147,6 @@ export default function Component() {
     link.href = url;
     link.download = `BarcodeLabels_${new Date().toLocaleString()}.pdf`;
     link.click();
-
     toast.dismiss(toastLoading);
     toast.success("PDF generated successfully");
   };
