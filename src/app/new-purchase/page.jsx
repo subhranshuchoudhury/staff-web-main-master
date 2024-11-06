@@ -52,7 +52,6 @@ export default function page() {
   const [itemData, setItemData] = useState([]);
   const [DiscountStructure, setDiscountStructure] = useState([]);
   const [gotDbValue, setGotDbValue] = useState(false);
-  const [BillSeriesRef, setBillSeriesRef] = useState(null);
 
   // const [qrResult, setQrResult] = useState("");
   // const [barcodeScannedData, setBarcodeScannedData] = useState(null);
@@ -352,9 +351,12 @@ export default function page() {
     // * setting the content after all operations
 
     const tempContent = {
+      partyName: formData?.partyName,
+      gstType: formData?.gstType,
       billSeries: bill,
       billDate: dateToFormattedString(formData?.invoiceDate),
       originDate: formData?.invoiceDate,
+      isIGST: formData?.isIGST,
       purchaseType: purchaseType,
       partyName: formData?.partyName,
       eligibility: eligibility,
@@ -370,6 +372,7 @@ export default function page() {
       sgst: cgst,
       itemLocation: formData?.itemLocation,
       repetition: parseInt(formData?.repetitionPrint),
+
       // REMOTE_BILL_REF_NO: remoteLabel,
     };
     // dynamic discount calculation
@@ -1037,6 +1040,46 @@ const sendPurchaseHistory = async (partyname, invoice, sheet, barcodeSheet) => {
       }
     } else if (action === "edit") {
       // remove the row from the excel sheet
+      // Retrieve the array from localStorage and parse it
+      const retrivedArr = JSON.parse(
+        localStorage.getItem("PURCHASE_NOT_DOWNLOAD_DATA")
+      );
+
+      const currentRow = retrivedArr[rowNo];
+
+      console.log(
+        "Current row from local storage ::::::::::::: ",
+        currentRow
+      )
+      // Now, directly log the parsed array
+      console.log(
+        "retrived Array from local storage ::::::::::::: ",
+        retrivedArr
+      );
+
+      console.log("mrp---------------->",currentRow);
+
+    setFormData({
+        partyName: currentRow.partyName,
+        invoiceNo: currentRow.invoiceNo,
+        invoiceDate: new Date(), // default date is today
+        gstType: currentRow.gstType,
+        unit: currentRow.unit, // default value
+        purchaseType: currentRow.purchaseType,
+        mDiscPercentage: currentRow.disc, // mention discount percentage
+        itemName: currentRow.itemName,
+        itemPartNoOrg: currentRow.itemPartNo, // part no of the item
+        itemLocation: currentRow.itemLocation, // from item data
+        quantity: parseFloat(currentRow.quantity),
+        mrp: parseFloat(currentRow.mrp), // D4 value
+        unitPriceAfterDiscount_D6: currentRow.amount, // amount
+        gstPercentage: null,
+        amount: null,
+        finalDisc: currentRow.disc,
+        isIGST: false,
+        dynamicdisc: currentRow.disc,
+    });
+
       setExcelContent((prevArray) => {
         const newArray = prevArray.filter((item, index) => index !== rowNo);
         return newArray;
@@ -1297,7 +1340,10 @@ const sendPurchaseHistory = async (partyname, invoice, sheet, barcodeSheet) => {
           </div>
           <div className="modal-action">
             <button className="btn bg-red-600">Cancel</button>
-            <button onClick={downloadSheet} className="btn bg-green-600">
+            <button onClick={()=>{downloadSheet();
+                              clearLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA");
+                              resetSessionFields();
+            }} className="btn bg-green-600">
               Download
             </button>
           </div>
@@ -1581,7 +1627,8 @@ const sendPurchaseHistory = async (partyname, invoice, sheet, barcodeSheet) => {
                     handleFormChange("amount", inclExemptTotalAmount);
                   }
                 }
-              }}
+              }
+            }
               className="input input-bordered input-secondary w-[295px] m-5"
               placeholder="Quantity"
               type="number"
