@@ -38,7 +38,6 @@ import {
   inclusiveExemptTaxTotalAmount,
 } from "@/utils/purchase/calc";
 
-
 const purchaseIDB = new SimpleIDB("Purchase", "purchase");
 
 export default function page() {
@@ -47,12 +46,14 @@ export default function page() {
     getItemsData();
   }, []);
 
-  const [ loadingExcel , setLoadingExcel] = useState(true);
-  const [ excelContent , setExcelContent] = useState([]);
-  const [ partyData , setPartyData] = useState([]);
-  const [ itemData , setItemData] = useState([]);
-  const [ DiscountStructure , setDiscountStructure] = useState([]);
-  const [ gotDbValue , setGotDbValue] = useState(false);
+  const [loadingExcel, setLoadingExcel] = useState(true);
+  const [excelContent, setExcelContent] = useState([]);
+  const [partyData, setPartyData] = useState([]);
+  const [itemData, setItemData] = useState([]);
+  const [DiscountStructure, setDiscountStructure] = useState([]);
+  const [gotDbValue, setGotDbValue] = useState(false);
+  const [BillSeriesRef, setBillSeriesRef] = useState(null);
+
   // const [qrResult, setQrResult] = useState("");
   // const [barcodeScannedData, setBarcodeScannedData] = useState(null);
   const [formData, setFormData] = useState({
@@ -369,6 +370,7 @@ export default function page() {
       sgst: cgst,
       itemLocation: formData?.itemLocation,
       repetition: parseInt(formData?.repetitionPrint),
+      // REMOTE_BILL_REF_NO: remoteLabel,
     };
     // dynamic discount calculation
     handleFormChange("dynamicdisc", disc);
@@ -664,12 +666,19 @@ export default function page() {
   const sendPurchaseHistory = (partyname, invoice, sheet, barcodeSheet) => {
     console.log("Barcode Data", barcodeSheet);
     console.log("Sheet Data", sheet);
-    handleModal(
+    handleModalMessage(
       "⏳ Uploading...",
       "Please wait while we upload your document...",
       "Okay"
     );
     window.purchase_modal_1.showModal();
+
+    let totalAmount = 0;
+
+    data[0].content.forEach((element) => {
+      totalAmount += element?.amount;
+    });
+
 
     const payload = {
       sheetdata: JSON.stringify(sheet),
@@ -678,6 +687,7 @@ export default function page() {
       invoice,
       partyname,
       desc: "purchase",
+      totalAmount: totalAmount,
     };
 
     const options = {
@@ -797,21 +807,24 @@ export default function page() {
     toast.success("Session has been reset");
   };
 
-  
   const getTotalBillAmount = () =>
-    excelContent.map((item) => item?.amount).reduce(
-      (acc, curr) => acc + (curr || 0),
-      0
-    );
+    excelContent
+      .map((item) => item?.amount)
+      .reduce((acc, curr) => acc + (curr || 0), 0);
 
-    
+  const handleModalMessage = (message) => {
+    const name = message?.name;
+    const value = message?.value;
+    setModalMessage((values) => ({ ...values, [name]: value }));
+  };
+
   const downloadSheet = () => {
-    if (ExcelContent.length === 0) {
+    if (excelContent.length === 0) {
       handleModalMessage({
         name: "message",
         value: `⚠ Add one document before exporting excel`,
       });
-      window.saleModal_1.showModal();
+      window.purchase_Modal_1.showModal();
       return;
     }
 
@@ -821,14 +834,14 @@ export default function page() {
           name: "message",
           value: `⚠ Add the payment amount before exporting excel`,
         });
-        window.saleModal_1.showModal();
+        window.purchase_Modal_1.showModal();
         return;
       }
 
       if (formData?.partyName === "Cash" && formData?.bankPayment > 0) {
         // Change the partyname to PHONE PE
         handleFormChange("partyName", "PHONE PE");
-        ExcelContent.forEach((item) => {
+        excelContent.forEach((item) => {
           item.partyName = "PHONE PE";
         });
       }
@@ -836,18 +849,18 @@ export default function page() {
 
     let content = [];
 
-    ExcelContent.forEach((d) => {
+    excelContent.forEach((d) => {
       content.push(d);
     });
 
     // Add mobile to first field
 
-    content[0].mobileNo = ExcelContent[0].one_field_mobile;
+    content[0].mobileNo = excelContent[0].one_field_mobile;
     content[0].settlement_amount_1_cashPayment = formData?.cashPayment; // settlement amount 1
     content[0].settlement_amount_2_bankPayment = formData?.bankPayment; // settlement amount 2
-    const REMOTE_BILL_REF_NO = content[0].REMOTE_BILL_REF_NO; // the dynamic bill ref no eg. APP/16/2425
-    content[0].VCH_BILL_NO =
-      REMOTE_BILL_REF_NO.split("/")[1] + "/" + REMOTE_BILL_REF_NO.split("/")[2];
+    // const REMOTE_BILL_REF_NO = content[0].REMOTE_BILL_REF_NO; // the dynamic bill ref no eg. APP/16/2425
+    // content[0].VCH_BILL_NO =
+    //   REMOTE_BILL_REF_NO.split("/")[1] + "/" + REMOTE_BILL_REF_NO.split("/")[2];
     const totalBillAmount = getTotalBillAmount();
 
     if (formData?.bankPayment > 0) {
@@ -969,10 +982,99 @@ export default function page() {
     exportExcel(data);
   };
 
+  
+  const exportExcel = (data) => {
+    const settings = {
+      fileName: `${
+        formData?.vehicleNo?.toUpperCase() || formData?.partyName
+      }_${new Date().getTime()}`,
+      extraLength: 3,
+      writeMode: "writeFile",
+      writeOptions: {},
+      RTL: false,
+    };
+
+    const callback = () => {
+      handleModalMessage({
+        name: "message",
+        value: `✅ Exporting excel successful`,
+      });
+      window.purchase_Modal_0.showModal();
+      localStorage.removeItem("SALE_TEMP_CONTENT");
+
+      sendPurchaseHistory(data);
+    };
+
+    xlsx(data, settings, callback);
+  };
+
+  const modifyExcelSheet = (action, rowNo) => {
+    if (action === "delete") {
+      const confirmation = window.confirm(
+        `Are you sure you want to delete ${excelContent?.[rowNo]?.itemName}?`
+      );
+
+      if (confirmation) {
+        setExcelContent((prevArray) => {
+          const newArray = prevArray.filter((item, index) => index !== rowNo);
+          return newArray;
+        });
+      }
+    } else if (action === "edit") {
+      // remove the row from the excel sheet
+      setExcelContent((prevArray) => {
+        const newArray = prevArray.filter((item, index) => index !== rowNo);
+        return newArray;
+      });
+
+      // close the modal
+      window.saleModal_4.close();
+
+      console.log("Edit action triggered", excelContent?.[rowNo]);
+      const item = excelContent?.[rowNo];
+
+      // restore the fields
+      setSelectedItem(item?.SAVE_selectedItem);
+
+      const restoreFields = {
+        item: item?.itemName,
+        quantity: item?.qty,
+        unitType: item?.unit,
+        mrp: item?.price,
+        disc: item?.SAVE_discPercentage,
+        discAmount: item?.SAVE_discAmount,
+        gstAmount: item?.SAVE_gstAmount,
+        totalAmount: item?.SAVE_totalAmount,
+        actualTotalAmount: item?.SAVE_actualTotalAmount,
+      };
+
+      setFormData((prev) => ({ ...prev, ...restoreFields }));
+    }
+  };
+
+  
+  const handleChange = (event) => {
+    // mostly used in input fields
+    const name = event.target?.name;
+    const value = event.target?.value;
+    setFormData((values) => ({ ...values, [name]: value }));
+  };
+
 
   return (
     <>
       <Toaster />
+
+      <dialog id="purchase_Modal_0" className="modal">
+        <form method="dialog" className="modal-box">
+          <h3 className="font-bold text-lg">Message!</h3>
+          <p className="py-4">{modalMessage?.message}</p>
+          <div className="modal-action">
+            <button className="btn">Close</button>
+          </div>
+        </form>
+      </dialog>
+
       <dialog id="purchase_modal_1" className="modal">
         <form method="dialog" className="modal-box">
           <h3 className="font-bold text-lg">{modalMessage?.title}</h3>
@@ -1575,8 +1677,8 @@ export default function page() {
           <Image
             className="mb-20"
             src="/assets/images/add-button.png"
-            width={60}
-            height={60}
+            width={70}
+            height={70}
             alt="icon"
           ></Image>
         </button>
@@ -1595,13 +1697,13 @@ export default function page() {
         >
           <Image
             src="/assets/images/download (1).png"
-            width={40}
-            height={40}
+            width={50}
+            height={50}
             alt="icon"
           />
           <span className="mb-6 text-xl font-mono">Preview</span>
         </button>
-
+{/* 
         <button
           onClick={() => {
             createSheet();
@@ -1615,7 +1717,7 @@ export default function page() {
             alt="icon"
           ></Image>
           <span className="mb-6 text-xl font-mono">Download</span>
-        </button>
+        </button> */}
 
         <button
           onClick={() => {
@@ -1625,8 +1727,8 @@ export default function page() {
         >
           <Image
             src="/assets/images/refresh-arrow.png"
-            width={40}
-            height={40}
+            width={50}
+            height={50}
             alt="icon"
           ></Image>
           <span className="mb-6 text-xl font-mono">Refresh</span>
@@ -1640,8 +1742,8 @@ export default function page() {
         >
           <Image
             src="/assets/images/remove.png"
-            width={40}
-            height={40}
+            width={50}
+            height={50}
             alt="icon"
           ></Image>
           <span className="mb-6 text-xl font-mono">Reset</span>
