@@ -675,7 +675,7 @@ export default function page() {
 
     let totalAmount = 0;
 
-    data[0].content.forEach((element) => {
+    sheet[0].content.forEach((element) => {
       totalAmount += element?.amount;
     });
 
