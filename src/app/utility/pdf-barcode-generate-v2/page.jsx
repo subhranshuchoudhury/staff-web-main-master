@@ -57,8 +57,9 @@ export default function Component() {
     JsBarcode(canvas, code, {
       format: "CODE128",
       width: 2,
-      height: 40,
-      fontSize: 12,
+      height: 20,
+      // fontSize: 20,
+      displayValue: false,
     });
     return canvas.toDataURL("image/png");
   };
@@ -74,6 +75,7 @@ export default function Component() {
 
     const pdfDoc = await PDFDocument.create();
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
     // Convert mm to points (1 mm = 2.83465 points)
     const pageWidth = 30 * 2.83465;
@@ -104,13 +106,23 @@ export default function Component() {
       });
 
       // Draw Disc Code text
+      const codeText = item["Item Name"];
+      const codeTextWidth = font.widthOfTextAtSize(codeText, 6);
+      page.drawText(codeText, {
+        x: (pageWidth - codeTextWidth) / 2,
+        y: barcodeY + 2,
+        size: 7,
+        font: fontBold,
+        color: rgb(0, 0, 0),
+      });
+      // Draw Disc Code text
       const discCodeText = `${item["Disc Code"]}`;
       const discCodeTextWidth = font.widthOfTextAtSize(discCodeText, 6);
       page.drawText(discCodeText, {
-        x: (pageWidth - discCodeTextWidth) / 2,
+        x: (pageWidth - discCodeTextWidth) / 2 - 3,
         y: barcodeY - 5,
         size: 8,
-        font: font,
+        font: fontBold,
         color: rgb(0, 0, 0),
       });
 
@@ -120,7 +132,7 @@ export default function Component() {
       page.drawText(locText, {
         x: (pageWidth - locTextWidth) / 2,
         y: barcodeY - 12,
-        size: 8,
+        size: 6,
         font: font,
         color: rgb(0, 0, 0),
       });
