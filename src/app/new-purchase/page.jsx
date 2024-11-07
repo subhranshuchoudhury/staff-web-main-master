@@ -827,49 +827,49 @@ export default function page() {
         }
       );
 
-    data[0].columns.push(
-      {
-        label: "BILLED_PARTY_MOBILE_NO",
-        value: "mobileNo",
-        format: "0",
-      },
-      {
-        label: "BILLED_PARTY_NAME",
-        value: "narration",
-      },
-      {
-        label: "SETTLEMENT_AMT1",
-        value: "settlement_amount_1_cashPayment",
-      },
-      {
-        label: "SETTLEMENT_AMT2",
-        value: "settlement_amount_2_bankPayment",
-      },
-      {
-        label: "SETTLEMENT_NARR2",
-        value: "SETTLEMENT_NARR2",
-      },
-      {
-        label: "VEHICLE_NO",
-        value: "narration",
-      },
-      {
-        label: "BILL_REF_NO",
-        value: "BILL_REF_NO",
-      },
-      {
-        label: "BILL_REF_AMOUNT",
-        value: "BILL_REF_AMOUNT",
-      },
-      {
-        label: "BILL_REF_DUE_DATE",
-        value: "BILL_REF_DUE_DATE",
-      },
-      {
-        label: "VCH/BILL_NO",
-        value: "VCH_BILL_NO", // eg. 1/2526 , 2/2526
-      }
-    );
+    // data[0].columns.push(
+    //   {
+    //     label: "BILLED_PARTY_MOBILE_NO",
+    //     value: "mobileNo",
+    //     format: "0",
+    //   },
+    //   {
+    //     label: "BILLED_PARTY_NAME",
+    //     value: "narration",
+    //   },
+    //   {
+    //     label: "SETTLEMENT_AMT1",
+    //     value: "settlement_amount_1_cashPayment",
+    //   },
+    //   {
+    //     label: "SETTLEMENT_AMT2",
+    //     value: "settlement_amount_2_bankPayment",
+    //   },
+    //   {
+    //     label: "SETTLEMENT_NARR2",
+    //     value: "SETTLEMENT_NARR2",
+    //   },
+    //   {
+    //     label: "VEHICLE_NO",
+    //     value: "narration",
+    //   },
+    //   {
+    //     label: "BILL_REF_NO",
+    //     value: "BILL_REF_NO",
+    //   },
+    //   {
+    //     label: "BILL_REF_AMOUNT",
+    //     value: "BILL_REF_AMOUNT",
+    //   },
+    //   {
+    //     label: "BILL_REF_DUE_DATE",
+    //     value: "BILL_REF_DUE_DATE",
+    //   },
+    //   {
+    //     label: "VCH/BILL_NO",
+    //     value: "VCH_BILL_NO", // eg. 1/2526 , 2/2526
+    //   }
+    // );
 
     exportExcel(data);
   };
@@ -906,11 +906,23 @@ export default function page() {
       );
 
       if (confirmation) {
-        setExcelContent((prevArray) => {
-          const newArray = prevArray.filter((item, index) => index !== rowNo);
+         const retrivedArr = await JSON.parse(
+           localStorage.getItem("PURCHASE_NOT_DOWNLOAD_DATA")
+         );
+
+         
+        setExcelContent((retrivedArr) => {
+          const newArray = retrivedArr.filter((item, index) => index !== rowNo);
+          setLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA", newArray);
           return newArray;
         });
+
+        // setExcelContent((prevArray) => {
+        //   const newArray = prevArray.filter((item, index) => index !== rowNo);
+        //   return newArray;
+        // });
       }
+
     } else if (action === "edit") {
       // remove the row from the excel sheet
 
