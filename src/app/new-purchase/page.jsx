@@ -52,6 +52,7 @@ export default function page() {
   const [itemData, setItemData] = useState([]);
   const [DiscountStructure, setDiscountStructure] = useState([]);
   const [gotDbValue, setGotDbValue] = useState(false);
+  const [BillSeriesRef, setBillSeriesRef] = useState(null);
 
   // const [qrResult, setQrResult] = useState("");
   // const [barcodeScannedData, setBarcodeScannedData] = useState(null);
@@ -351,30 +352,35 @@ export default function page() {
     // * setting the content after all operations
 
     const tempContent = {
+      itemName: formData?.itemName,
+      quantity: Number(formData?.quantity),
+      unit: formData?.unit,
       partyName: formData?.partyName,
+      mrp: Number(formData?.mrp),
+      // mDiscPrecentage: formData?.mDiscPercentage,
+      dynamicdisc: formData?.dynamicdisc,
+      gstPercentage: formData?.gstPercentage,
+      purchaseType: purchaseType,
+      invoiceNo: formData?.invoiceNo,
+      isIGST: formData?.isIGST,
       gstType: formData?.gstType,
+      itemLocation: formData?.itemLocation,
       billSeries: bill,
+      amount: amountField,
       billDate: dateToFormattedString(formData?.invoiceDate),
       originDate: formData?.invoiceDate,
-      isIGST: formData?.isIGST,
-      purchaseType: purchaseType,
-      partyName: formData?.partyName,
       eligibility: eligibility,
-      invoiceNo: formData?.invoiceNo,
-      itemName: formData?.itemName,
-      quantity: formData?.quantity,
-      unit: formData?.unit,
-      mrp: formData?.mrp,
       itemPartNo: formData?.itemPartNoOrg,
       disc: disc,
-      amount: amountField,
+      discountStructure: formData?.discountStructure,
       cgst: cgst,
       sgst: cgst,
-      itemLocation: formData?.itemLocation,
       repetition: parseInt(formData?.repetitionPrint),
 
       // REMOTE_BILL_REF_NO: remoteLabel,
     };
+    console.log("prevArray====================>", tempContent);
+
     // dynamic discount calculation
     handleFormChange("dynamicdisc", disc);
 
@@ -531,195 +537,59 @@ export default function page() {
     }
   };
 
-  // * create Excel file
+  let content = [];
 
-  const createSheet = () => {
-    if (excelContent.length === 0) {
-      handleModal(
-        "⚠ Empty",
-        "The file is empty. Add one item before generating excel file.",
-        "Okay"
-      );
-      window.purchase_modal_1.showModal();
-      return;
-    }
+  excelContent.forEach((d) => {
+    content.push(d);
+  });
 
-    let totalBillAmount = 0;
-    const content = excelContent.map((item) => {
-      totalBillAmount += item?.amount || 0;
-      return { ...item };
-    });
-    content[0].BILL_REF_AMOUNT = Math.round(totalBillAmount);
+  const getTotalBillAmount = () =>
+    excelContent
+      .map((item) => item?.amount)
+      .reduce((acc, curr) => acc + (curr || 0), 0);
 
-    const data = [
-      {
-        sheet: "Sheet1",
-        columns: formData?.isIGST
-          ? purchaseBillFormat
-              .filter((col) => col.value !== "cgst" && col.value !== "sgst")
-              .concat({
-                label: "IGST PERCENT",
-                value: "igstPercent",
-                format: "0",
-              })
-          : purchaseBillFormat,
-        content: formData?.isIGST
-          ? content.map((item) => ({
-              ...item,
-              igstPercent: parseInt(item?.sgst + item?.cgst),
-              disc: IGSTnewDiscPercentage(
-                item?.disc,
-                parseInt(item?.sgst + item?.cgst)
-              ),
-              amount: IGSTnewAmount(
-                item?.mrp,
-                item?.disc,
-                parseInt(item?.quantity),
-                parseInt(item?.sgst + item?.cgst)
-              ),
-              purchaseType: "IGST",
-            }))
-          : content,
-      },
-    ];
+  // console.log("total Bill Amount: " + totalBillAmount);
+  // Add mobile to first field
 
-    const barcodeCustomItemName = (item) => {
-      const { itemName, partNo } = item;
+  // content[0].mobileNo = excelContent[0].one_field_mobile;
+  // content[0].settlement_amount_1_cashPayment = formData?.cashPayment; // settlement amount 1
+  // content[0].settlement_amount_2_bankPayment = formData?.bankPayment; // settlement amount 2
+  // const REMOTE_BILL_REF_NO = content[0].REMOTE_BILL_REF_NO; // the dynamic bill ref no eg. APP/16/2425
+  // content[0].VCH_BILL_NO =
+  //   REMOTE_BILL_REF_NO.split("/")[1] + "/" + REMOTE_BILL_REF_NO.split("/")[2];
+  const totalBillAmount = getTotalBillAmount();
 
-      if (partNo) {
-        return partNo?.split("-")?.[0] || partNo;
-      }
+  if (formData?.bankPayment > 0) {
+    content[0].SETTLEMENT_NARR2 = "Bank";
+  }
 
-      if (itemName) {
-        return itemName?.split("-")?.[0] || itemName;
-      }
+  // check if we need to generate the columns T, U and V (Bill Ref No, bill ref Amount,bill ref  Due Date)
+  //Below fields will get updated when Series is APP, Party Name is other than Cash and Amount – (SETTLEMENT_AMT1 + SETTLEMENT_AMT2) > 0. If the value is zero then these fields will be blank.
 
-      return "ERROR!";
-    };
+  console.log(
+    "Total Bill Amount, Cash Payment, Bank Payment, Party Name",
+    totalBillAmount
+    // content[0].settlement_amount_1_cashPayment,
+    // content[0].settlement_amount_2_bankPayment,
+    // content[0].partyName
+  );
 
-    const barcodeContent = content.flatMap((item) => {
-      // generate itemName
+  // if (
+  //   content[0].vchSeries === "APP" &&
+  //   content[0].partyName !== "Cash" &&
+  //   // formData?.partyName !== "PHONE PE" &&
+  //   totalBillAmount -
+  //     (Number(content[0].settlement_amount_1_cashPayment || 0) +
+  //       Number(content[0].settlement_amount_2_bankPayment || 0)) >
+  //     0
+  // ) {
+  //   console.log("Bill Ref No, bill ref Amount,bill ref  Due Date");
+  //   content[0].BILL_REF_NO = REMOTE_BILL_REF_NO;
+  //   content[0].BILL_REF_AMOUNT = totalBillAmount;
+  //   content[0].BILL_REF_DUE_DATE = addDaysToDate(content[0].billDate, 5);
+  // }
 
-      const date = new Date(item?.originDate);
-      const day = date.getDate().toString().padStart(2, "0");
-      const month = (date.getMonth() + 1).toString().padStart(2, "0");
-      const year = date.getFullYear().toString().slice(-2);
-      const roundedDisc = Math.round(item?.disc);
-      const discCode = `${roundedDisc}${day}${month}${year}`;
-      const itemName = barcodeCustomItemName(item);
-
-      return Array(item.repetition).fill({
-        itemName,
-        discCode,
-        location: item?.itemLocation || "N/A",
-        coupon: "",
-      });
-    });
-
-    const barcodeData = [
-      {
-        sheet: "Sheet1",
-        columns: purchaseBarcodeFormat,
-        content: barcodeContent,
-      },
-    ];
-
-    DownloadExcel(
-      content[0]?.partyName,
-      content[0]?.invoiceNo,
-      data,
-      barcodeData
-    );
-    DownloadBarcodeExcel(content[0]?.invoiceNo, barcodeData);
-  };
-
-  // * download the excel file
-
-  const DownloadExcel = (fileName, invoice, data, barcodeData) => {
-    const settings = {
-      fileName: `${fileName}-${invoice?.split("-")[1] || invoice}`,
-      extraLength: 3,
-      writeMode: "writeFile",
-      writeOptions: {},
-      RTL: false,
-    };
-    let callback = function () {
-      // * send the document to purchase history
-      sendPurchaseHistory(fileName, invoice, data, barcodeData);
-      // * clear the localStorage
-      clearLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA");
-    };
-    xlsx(data, settings, callback);
-  };
-
-  const DownloadBarcodeExcel = (invoice, data) => {
-    const settings = {
-      fileName: `BARCODE-${invoice?.split("-")?.[1] || invoice}`,
-      extraLength: 3,
-      writeMode: "writeFile",
-      writeOptions: {},
-      RTL: false,
-    };
-    let callback = function () {};
-    xlsx(data, settings, callback);
-  };
-
-  
-    let content = [];
-
-    
-    excelContent.forEach((d) => {
-      content.push(d);
-    });
-
-    const getTotalBillAmount = () =>
-      excelContent.map((item) => item?.amount).reduce(
-        (acc, curr) => acc + (curr || 0),
-        0
-      );
-
-
-    // Add mobile to first field
-
-    // content[0].mobileNo = excelContent[0].one_field_mobile;
-    // content[0].settlement_amount_1_cashPayment = formData?.cashPayment; // settlement amount 1
-    // content[0].settlement_amount_2_bankPayment = formData?.bankPayment; // settlement amount 2
-    // const REMOTE_BILL_REF_NO = content[0].REMOTE_BILL_REF_NO; // the dynamic bill ref no eg. APP/16/2425
-    // content[0].VCH_BILL_NO =
-    //   REMOTE_BILL_REF_NO.split("/")[1] + "/" + REMOTE_BILL_REF_NO.split("/")[2];
-    const totalBillAmount = getTotalBillAmount();
-
-    if (formData?.bankPayment > 0) {
-      content[0].SETTLEMENT_NARR2 = "Bank";
-    }
-
-    // check if we need to generate the columns T, U and V (Bill Ref No, bill ref Amount,bill ref  Due Date)
-    //Below fields will get updated when Series is APP, Party Name is other than Cash and Amount – (SETTLEMENT_AMT1 + SETTLEMENT_AMT2) > 0. If the value is zero then these fields will be blank.
-
-    console.log(
-      "Total Bill Amount, Cash Payment, Bank Payment, Party Name",
-      totalBillAmount,
-      // content[0].settlement_amount_1_cashPayment,
-      // content[0].settlement_amount_2_bankPayment,
-      // content[0].partyName
-    );
-
-    // if (
-    //   content[0].vchSeries === "APP" &&
-    //   content[0].partyName !== "Cash" &&
-    //   // formData?.partyName !== "PHONE PE" &&
-    //   totalBillAmount -
-    //     (Number(content[0].settlement_amount_1_cashPayment || 0) +
-    //       Number(content[0].settlement_amount_2_bankPayment || 0)) >
-    //     0
-    // ) {
-    //   console.log("Bill Ref No, bill ref Amount,bill ref  Due Date");
-    //   content[0].BILL_REF_NO = REMOTE_BILL_REF_NO;
-    //   content[0].BILL_REF_AMOUNT = totalBillAmount;
-    //   content[0].BILL_REF_DUE_DATE = addDaysToDate(content[0].billDate, 5);
-    // }
-
-    console.log("XLSX Content", content);
+  console.log("XLSX Content", content);
 
   let data = [
     {
@@ -742,76 +612,81 @@ export default function page() {
 
   // * upload the document to history
 
-const sendPurchaseHistory = async (partyname, invoice, sheet, barcodeSheet) => {
-  try {
-    // Verify formData and data before accessing
-    if (!formData || !formData.partyName) {
-      throw new Error("Missing formData or partyName");
-    }
-    if (!data || !data[0] || !data[0].content) {
-      throw new Error("Data is not in expected format");
-    }
+  const sendPurchaseHistory = async (
+    partyname,
+    invoice,
+    sheet,
+    barcodeSheet
+  ) => {
+    try {
+      // Verify formData and data before accessing
+      if (!formData || !formData.partyName) {
+        throw new Error("Missing formData or partyName");
+      }
+      if (!data || !data[0] || !data[0].content) {
+        throw new Error("Data is not in expected format");
+      }
 
-    console.log("Form data--------->>>>>", formData);
-    console.log("Barcode Data", barcodeSheet);
-    console.log("Sheet Data", data);
+      console.log("Form data--------->>>>>", formData);
+      console.log("Barcode Data", barcodeSheet);
+      console.log("Sheet Data", data);
 
-    handleModalMessage(
-      "⏳ Uploading...",
-      "Please wait while we upload your document...",
-      "Okay"
-    );
+      handleModalMessage(
+        "⏳ Uploading...",
+        "Please wait while we upload your document...",
+        "Okay"
+      );
 
-    // Calculate total amount
-    let totalAmount = data[0].content.reduce(
-      (acc, element) => acc + (element?.amount || 0),
-      0
-    );
+      // Calculate total amount
+      let totalAmount = data[0].content.reduce(
+        (acc, element) => acc + (element?.amount || 0),
+        0
+      );
 
-    // Prepare payload for the request
-    const payload = {
-      sheetdata: JSON.stringify(data),
-      barcodedata: JSON.stringify(barcodeSheet),
-      items: data[0].content.length,
-      invoice:formData.invoiceDate,
-      partyname: formData.partyName,
-      desc: "purchase",
-      totalAmount,
-    };
+      // Prepare payload for the request
+      const payload = {
+        sheetdata: JSON.stringify(data),
+        barcodedata: JSON.stringify(barcodeSheet),
+        items: data[0].content.length,
+        invoice: formData.invoiceDate,
+        partyname: formData.partyName,
+        desc: "purchase",
+        totalAmount,
+      };
 
-    // Set options for fetch
-    const options = {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    };
+      // Set options for fetch
+      const options = {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      };
 
-    // Send request and handle response
-    const response = await fetch("/api/purchases", options);
+      // Send request and handle response
+      const response = await fetch("/api/purchases", options);
 
-    if (response.ok) {
-      handleModal("Uploaded ✔", "The document has been uploaded", "Okay");
-      window.purchase_modal_1.showModal();
-      clearLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA");
-      resetSessionFields();
-    } else {
+      if (response.ok) {
+        handleModal("Uploaded ✔", "The document has been uploaded", "Okay");
+        window.purchase_modal_1.showModal();
+        clearLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA");
+        resetSessionFields();
+      } else {
+        handleModal(
+          "Upload Failed ❌",
+          "Please re-download the document and try again.",
+          "Okay"
+        );
+        window.purchase_modal_1.showModal();
+      }
+    } catch (error) {
+      console.error("Error uploading purchase history:", error);
       handleModal(
         "Upload Failed ❌",
-        "Please re-download the document and try again.",
+        "An error occurred. Please try again.",
         "Okay"
       );
       window.purchase_modal_1.showModal();
     }
-  } catch (error) {
-    console.error("Error uploading purchase history:", error);
-    handleModal(
-      "Upload Failed ❌",
-      "An error occurred. Please try again.",
-      "Okay"
-    );
-    window.purchase_modal_1.showModal();
-  }
-};
+  };
 
   // * Finding the value with the selected party name and group name
   const handleFindValue = async () => {
@@ -896,7 +771,6 @@ const sendPurchaseHistory = async (partyname, invoice, sheet, barcodeSheet) => {
     setSelectedItem(null);
     toast.success("Session has been reset");
   };
-
 
   const handleModalMessage = (message) => {
     const name = message?.name;
@@ -1000,7 +874,6 @@ const sendPurchaseHistory = async (partyname, invoice, sheet, barcodeSheet) => {
     exportExcel(data);
   };
 
-  
   const exportExcel = (data) => {
     const settings = {
       fileName: `${
@@ -1026,7 +899,7 @@ const sendPurchaseHistory = async (partyname, invoice, sheet, barcodeSheet) => {
     xlsx(data, settings, callback);
   };
 
-  const modifyExcelSheet = (action, rowNo) => {
+  const modifyExcelSheet = async (action, rowNo) => {
     if (action === "delete") {
       const confirmation = window.confirm(
         `Are you sure you want to delete ${excelContent?.[rowNo]?.itemName}?`
@@ -1040,45 +913,63 @@ const sendPurchaseHistory = async (partyname, invoice, sheet, barcodeSheet) => {
       }
     } else if (action === "edit") {
       // remove the row from the excel sheet
+
       // Retrieve the array from localStorage and parse it
-      const retrivedArr = JSON.parse(
+      const retrivedArr = await JSON.parse(
         localStorage.getItem("PURCHASE_NOT_DOWNLOAD_DATA")
       );
 
-      const currentRow = retrivedArr[rowNo];
-
-      console.log(
-        "Current row from local storage ::::::::::::: ",
-        currentRow
-      )
       // Now, directly log the parsed array
       console.log(
         "retrived Array from local storage ::::::::::::: ",
         retrivedArr
       );
 
-      console.log("mrp---------------->",currentRow);
+      console.log("Excel content=========================>", excelContent);
+      console.log("Form data =========================>", formData);
 
-    setFormData({
-        partyName: currentRow.partyName,
-        invoiceNo: currentRow.invoiceNo,
-        invoiceDate: new Date(), // default date is today
-        gstType: currentRow.gstType,
-        unit: currentRow.unit, // default value
-        purchaseType: currentRow.purchaseType,
-        mDiscPercentage: currentRow.disc, // mention discount percentage
+      // here I have to set the form data form the local storage
+      let currentRow = await retrivedArr[rowNo];
+
+      console.log(
+        "current row:::::::::::::::::::::::::::::::::::::::::::::::::::: ",
+        currentRow
+      );
+
+      console.log(
+        "form data before updating-------------------------->",
+        formData
+      );
+
+      // there are some datat like GST TYPE that are not passed to the local storage , I have to pass them....
+
+      const restoreFields = {
         itemName: currentRow.itemName,
-        itemPartNoOrg: currentRow.itemPartNo, // part no of the item
-        itemLocation: currentRow.itemLocation, // from item data
-        quantity: parseFloat(currentRow.quantity),
-        mrp: parseFloat(currentRow.mrp), // D4 value
-        unitPriceAfterDiscount_D6: currentRow.amount, // amount
-        gstPercentage: null,
-        amount: null,
-        finalDisc: currentRow.disc,
-        isIGST: false,
-        dynamicdisc: currentRow.disc,
-    });
+        quantity: currentRow.quantity,
+        unit: currentRow.unit,
+        partyName: currentRow.partyName,
+        mrp: currentRow.mrp,
+        // mDiscPrecentage: currentRow.mDiscPercentage,
+        dynamicdisc: currentRow.dynamicdisc,
+        gstPercentage: currentRow.gstPercentage,
+        purchaseType: currentRow.purchaseType,
+        invoiceNo: currentRow.invoiceNo,
+        isIGST: currentRow.isIGST,
+        gstType: currentRow.gstType,
+        itemLocation: currentRow.itemLocation,
+        amount: currentRow.amount,
+      };
+
+      setFormData((prevState) => ({
+        ...prevState,
+
+        ...restoreFields,
+      }));
+
+      console.log(
+        "form data after updating-------------------------->",
+        formData
+      );
 
       setExcelContent((prevArray) => {
         const newArray = prevArray.filter((item, index) => index !== rowNo);
@@ -1092,32 +983,30 @@ const sendPurchaseHistory = async (partyname, invoice, sheet, barcodeSheet) => {
       const item = excelContent?.[rowNo];
 
       // restore the fields
-      setSelectedItem(item?.SAVE_selectedItem);
+      // setSelectedItem(item?.SAVE_selectedItem);
 
-      const restoreFields = {
-        item: item?.itemName,
-        quantity: item?.qty,
-        unitType: item?.unit,
-        mrp: item?.price,
-        disc: item?.SAVE_discPercentage,
-        discAmount: item?.SAVE_discAmount,
-        gstAmount: item?.SAVE_gstAmount,
-        totalAmount: item?.SAVE_totalAmount,
-        actualTotalAmount: item?.SAVE_actualTotalAmount,
-      };
+      // const restoreFields = {
+      //   item: item?.itemName,
+      //   quantity: item?.qty,
+      //   unitType: item?.unit,
+      //   mrp: item?.price,
+      //   disc: item?.SAVE_discPercentage,
+      //   discAmount: item?.SAVE_discAmount,
+      //   gstAmount: item?.SAVE_gstAmount,
+      //   totalAmount: item?.SAVE_totalAmount,
+      //   actualTotalAmount: item?.SAVE_actualTotalAmount,
+      // };
 
-      setFormData((prev) => ({ ...prev, ...restoreFields }));
+      // setFormData((prev) => ({ ...prev, ...restoreFields }));
     }
   };
 
-  
   const handleChange = (event) => {
     // mostly used in input fields
     const name = event.target?.name;
     const value = event.target?.value;
     setFormData((values) => ({ ...values, [name]: value }));
   };
-
 
   return (
     <>
@@ -1340,10 +1229,7 @@ const sendPurchaseHistory = async (partyname, invoice, sheet, barcodeSheet) => {
           </div>
           <div className="modal-action">
             <button className="btn bg-red-600">Cancel</button>
-            <button onClick={()=>{downloadSheet();
-                              clearLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA");
-                              resetSessionFields();
-            }} className="btn bg-green-600">
+            <button onClick={downloadSheet} className="btn bg-green-600">
               Download
             </button>
           </div>
@@ -1484,6 +1370,7 @@ const sendPurchaseHistory = async (partyname, invoice, sheet, barcodeSheet) => {
               defaultValue={{ label: "Choose IGST? (NO)", value: "NO" }}
               isClearable={false}
             />
+            {/* mentioned discount % */}
             <input
               hidden={formData?.purchaseType === "DNM"}
               value={formData?.mDiscPercentage || ""}
@@ -1627,8 +1514,7 @@ const sendPurchaseHistory = async (partyname, invoice, sheet, barcodeSheet) => {
                     handleFormChange("amount", inclExemptTotalAmount);
                   }
                 }
-              }
-            }
+              }}
               className="input input-bordered input-secondary w-[295px] m-5"
               placeholder="Quantity"
               type="number"
@@ -1765,7 +1651,7 @@ const sendPurchaseHistory = async (partyname, invoice, sheet, barcodeSheet) => {
           />
           <span className="mb-6 text-xl font-mono">Preview</span>
         </button>
-{/* 
+        {/* 
         <button
           onClick={() => {
             createSheet();
@@ -1795,6 +1681,7 @@ const sendPurchaseHistory = async (partyname, invoice, sheet, barcodeSheet) => {
           ></Image>
           <span className="mb-6 text-xl font-mono">Refresh</span>
         </button>
+
         <button
           onClick={() => {
             clearLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA");
