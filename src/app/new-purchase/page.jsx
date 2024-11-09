@@ -906,11 +906,10 @@ export default function page() {
       );
 
       if (confirmation) {
-         const retrivedArr = await JSON.parse(
-           localStorage.getItem("PURCHASE_NOT_DOWNLOAD_DATA")
-         );
+        const retrivedArr = await JSON.parse(
+          localStorage.getItem("PURCHASE_NOT_DOWNLOAD_DATA")
+        );
 
-         
         setExcelContent((retrivedArr) => {
           const newArray = retrivedArr.filter((item, index) => index !== rowNo);
           setLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA", newArray);
@@ -922,7 +921,6 @@ export default function page() {
         //   return newArray;
         // });
       }
-
     } else if (action === "edit") {
       // remove the row from the excel sheet
 
@@ -1191,7 +1189,7 @@ export default function page() {
               <span className="font-extrabold">{getTotalBillAmount()}</span>
             </div>
           </div>
-          <div className="flex justify-center items-center mt-4 bg-indigo-950 rounded-lg p-3">
+          {/* <div className="flex justify-center items-center mt-4 bg-indigo-950 rounded-lg p-3">
             <div className="flex flex-col gap-2 w-[50%] items-center">
               <div className="flex flex-col gap-2">
                 <input
@@ -1238,7 +1236,7 @@ export default function page() {
                 Clear
               </div>
             </div>
-          </div>
+          </div> */}
           <div className="modal-action">
             <button className="btn bg-red-600">Cancel</button>
             <button onClick={downloadSheet} className="btn bg-green-600">
