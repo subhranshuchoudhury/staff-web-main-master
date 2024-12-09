@@ -438,6 +438,7 @@ export default function page() {
       handleFormChange("itemName", null);
       handleFormChange("dynamicdisc", null);
       handleFormChange("quantity", null);
+      
       handleFormChange("repetitionPrint", null);
       handleFormChange("mrp", null);
       handleFormChange("itemLocation", null);
@@ -944,9 +945,7 @@ export default function page() {
       );
 
       if (confirmation) {
-         const retrivedArr = await JSON.parse(
-           localStorage.getItem("PURCHASE_NOT_DOWNLOAD_DATA")
-         );
+
 
          
         setExcelContent((retrivedArr) => {
