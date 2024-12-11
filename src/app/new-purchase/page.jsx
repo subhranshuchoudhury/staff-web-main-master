@@ -57,6 +57,7 @@ export default function page() {
   // const [qrResult, setQrResult] = useState("");
   // const [barcodeScannedData, setBarcodeScannedData] = useState(null);
   const [formData, setFormData] = useState({
+
     partyName: null,
     invoiceNo: null,
     invoiceDate: new Date(), // default date is today
@@ -79,7 +80,8 @@ export default function page() {
     unitPrice: 0,
     repetitionPrint: 0,
   });
-  const [SelectedItem, setSelectedItem] = useState(null);
+  const [SelectedItem, setSelectedItem] = useState("");
+  
   const [modalMessage, setModalMessage] = useState({
     title: "",
     message: "",
@@ -125,9 +127,10 @@ export default function page() {
       norm_f_3: f3,
     });
   };
-
-  const handleFormChange = (name, value) => {
+  const handleFormChange = (name, valueOrFunction) => {
     if (!name) return;
+    // Check if valueOrFunction is a function, then call it
+    const value = typeof valueOrFunction === 'function' ? valueOrFunction() : valueOrFunction;
     setFormData((values) => ({ ...values, [name]: value }));
   };
 
@@ -298,6 +301,9 @@ export default function page() {
   // * handle the add button
 
   const addSingleFormContent = () => {
+
+    console.log("Form data after editing and pressed on add button  " , formData)
+
     // * mutable values
     let gstValue =
       formData?.gstType === "Exempt"
@@ -345,7 +351,7 @@ export default function page() {
 
     const amountField = TotalAmountCalc(
       formData?.mrp,
-      disc,
+      formData?.mDiscPercentage,
       formData?.quantity
     );
 
@@ -357,7 +363,7 @@ export default function page() {
       unit: formData?.unit,
       partyName: formData?.partyName,
       mrp: Number(formData?.mrp),
-      // mDiscPrecentage: formData?.mDiscPercentage,
+      mDiscPrecentage: formData?.mDiscPercentage,
       dynamicdisc: formData?.dynamicdisc,
       gstPercentage: formData?.gstPercentage,
       purchaseType: purchaseType,
@@ -371,12 +377,18 @@ export default function page() {
       originDate: formData?.invoiceDate,
       eligibility: eligibility,
       itemPartNo: formData?.itemPartNoOrg,
-      disc: disc,
+      disc: formData?.mDiscPercentage,
       discountStructure: formData?.discountStructure,
       cgst: cgst,
       sgst: cgst,
       repetition: parseInt(formData?.repetitionPrint),
-
+      SAVE_discPercentage: formData?.disc,
+      SAVE_gstAmount: formData?.gstAmount,
+      SAVE_totalAmount: formData?.totalAmount,
+      SAVE_discAmount: formData?.discAmount,
+      SAVE_selectedItem: SelectedItem,
+      SAVE_actualTotalAmount: formData?.actualTotalAmount,
+      // REMOTE_BILL_REF_NO: remoteLabel,
       // REMOTE_BILL_REF_NO: remoteLabel,
     };
     console.log("prevArray====================>", tempContent);
@@ -426,6 +438,7 @@ export default function page() {
       handleFormChange("itemName", null);
       handleFormChange("dynamicdisc", null);
       handleFormChange("quantity", null);
+      
       handleFormChange("repetitionPrint", null);
       handleFormChange("mrp", null);
       handleFormChange("itemLocation", null);
@@ -448,7 +461,7 @@ export default function page() {
         "No",
         [
           {
-            data: `🎫 Discount: ${disc}%`,
+            data: `🎫 Discount: ${formData?.mDiscPercentage}%`,
             style: "text-xl font-bold text-orange-500",
           },
           {
@@ -484,7 +497,7 @@ export default function page() {
         "No",
         [
           {
-            data: `🎫 Discount: ${disc}%`,
+            data: `🎫 Discount: ${formData?.mDiscPercentage}%`,
             style: "text-xl font-bold text-orange-500",
           },
           {
@@ -508,7 +521,7 @@ export default function page() {
         "No",
         [
           {
-            data: `🎫 Discount: ${disc}%`,
+            data: `🎫 Discount: ${formData?.mDiscPercentage}%`,
             style: "text-xl font-bold text-red-500",
           },
           {
@@ -769,6 +782,8 @@ export default function page() {
 
     setExcelContent([]);
     setSelectedItem(null);
+    localStorage.removeItem("NPUR_TEMP_CONTENT");
+
     toast.success("Session has been reset");
   };
 
@@ -891,7 +906,7 @@ export default function page() {
         value: `✅ Exporting excel successful`,
       });
       window.purchase_Modal_0.showModal();
-      localStorage.removeItem("SALE_TEMP_CONTENT");
+      localStorage.removeItem("NPUR_TEMP_CONTENT");
 
       sendPurchaseHistory(data);
     };
@@ -899,115 +914,191 @@ export default function page() {
     xlsx(data, settings, callback);
   };
 
+  function removeItemFromLocalStorage(rowNo) {
+    // Step 1: Retrieve the data from local storage
+    let data = localStorage.getItem('PURCHASE_NOT_DOWNLOAD_DATA');
+    
+    // Step 2: Parse the data (assuming it is JSON)
+    if (data) {
+        data = JSON.parse(data);
+        
+        // Step 3: Check if rowNo is valid and remove the item at that index
+        if (Array.isArray(data) && rowNo >= 0 && rowNo < data.length) {
+            data.splice(rowNo, 1);  // Remove the item at rowNo index
+        }
+        
+        // Step 4: Update local storage with the modified data
+        localStorage.setItem('PURCHASE_NOT_DOWNLOAD_DATA', JSON.stringify(data));
+    } else {
+        console.log('No data found in local storage.');
+    }
+}
+
+// Example usage: Remove item at index 2
+
+
   const modifyExcelSheet = async (action, rowNo) => {
+    // deleting
     if (action === "delete") {
       const confirmation = window.confirm(
         `Are you sure you want to delete ${excelContent?.[rowNo]?.itemName}?`
       );
 
       if (confirmation) {
-        const retrivedArr = await JSON.parse(
-          localStorage.getItem("PURCHASE_NOT_DOWNLOAD_DATA")
-        );
 
+
+         
         setExcelContent((retrivedArr) => {
           const newArray = retrivedArr.filter((item, index) => index !== rowNo);
           setLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA", newArray);
           return newArray;
         });
 
-        // setExcelContent((prevArray) => {
-        //   const newArray = prevArray.filter((item, index) => index !== rowNo);
-        //   return newArray;
-        // });
+        setExcelContent((prevArray) => {
+          const newArray = prevArray.filter((item, index) => index !== rowNo);
+          return newArray;
+        });
       }
-    } else if (action === "edit") {
+
+    } 
+    // editing
+    else if (action === "edit") {
       // remove the row from the excel sheet
 
       // Retrieve the array from localStorage and parse it
-      const retrivedArr = await JSON.parse(
-        localStorage.getItem("PURCHASE_NOT_DOWNLOAD_DATA")
-      );
+      // const retrivedArr = await JSON.parse(
+      //   localStorage.getItem("PURCHASE_NOT_DOWNLOAD_DATA")
+      // );
 
-      // Now, directly log the parsed array
-      console.log(
-        "retrived Array from local storage ::::::::::::: ",
-        retrivedArr
-      );
-
-      console.log("Excel content=========================>", excelContent);
-      console.log("Form data =========================>", formData);
-
-      // here I have to set the form data form the local storage
-      let currentRow = await retrivedArr[rowNo];
-
-      console.log(
-        "current row:::::::::::::::::::::::::::::::::::::::::::::::::::: ",
-        currentRow
-      );
-
-      console.log(
-        "form data before updating-------------------------->",
-        formData
-      );
-
-      // there are some datat like GST TYPE that are not passed to the local storage , I have to pass them....
-
-      const restoreFields = {
-        itemName: currentRow.itemName,
-        quantity: currentRow.quantity,
-        unit: currentRow.unit,
-        partyName: currentRow.partyName,
-        mrp: currentRow.mrp,
-        // mDiscPrecentage: currentRow.mDiscPercentage,
-        dynamicdisc: currentRow.dynamicdisc,
-        gstPercentage: currentRow.gstPercentage,
-        purchaseType: currentRow.purchaseType,
-        invoiceNo: currentRow.invoiceNo,
-        isIGST: currentRow.isIGST,
-        gstType: currentRow.gstType,
-        itemLocation: currentRow.itemLocation,
-        amount: currentRow.amount,
-      };
-
-      setFormData((prevState) => ({
-        ...prevState,
-
-        ...restoreFields,
-      }));
-
-      console.log(
-        "form data after updating-------------------------->",
-        formData
-      );
-
-      setExcelContent((prevArray) => {
-        const newArray = prevArray.filter((item, index) => index !== rowNo);
+      setExcelContent((retrivedArr) => {
+        const newArray = retrivedArr.filter((item, index) => index !== rowNo);
+        setLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA", newArray);
         return newArray;
       });
 
-      // close the modal
+
+
       window.purchase_modal_3.close();
 
-      console.log("Edit action triggered", excelContent?.[rowNo]);
+      
+      
+      console.log("Edit action triggered and this is excel content data =============>>>>", excelContent?.[rowNo]);
       const item = excelContent?.[rowNo];
 
-      // restore the fields
-      // setSelectedItem(item?.SAVE_selectedItem);
+      setSelectedItem(item?.SAVE_selectedItem);
+      
 
-      // const restoreFields = {
-      //   item: item?.itemName,
-      //   quantity: item?.qty,
-      //   unitType: item?.unit,
-      //   mrp: item?.price,
-      //   disc: item?.SAVE_discPercentage,
-      //   discAmount: item?.SAVE_discAmount,
-      //   gstAmount: item?.SAVE_gstAmount,
-      //   totalAmount: item?.SAVE_totalAmount,
-      //   actualTotalAmount: item?.SAVE_actualTotalAmount,
-      // };
 
-      // setFormData((prev) => ({ ...prev, ...restoreFields }));
+
+
+      // console.log(
+      //   "form data before updating-------------------------->",
+      //   formData
+      // );
+
+
+      const restoreFields = {
+        itemName: item?.itemName,
+        quantity: item?.quantity,
+        unit: item?.unit,
+        partyName: item?.partyName,
+        mrp: item?.mrp,
+        mDiscPrecentage: parseInt(item?.disc),
+        dynamicdisc: item?.dynamicdisc,
+        gstPercentage: item?.gstPercentage,
+        purchaseType: item?.purchaseType,
+        invoiceNo: item?.invoiceNo,
+        isIGST: item?.isIGST,
+        gstType: item?.gstType,
+        itemLocation: item?.itemLocation,
+        amount: item?.amount,
+        repetitionPrint:item?.repetition,
+      };
+
+      // console.log("Form data before SETTING THE FORMDATA after restoringfield  " , formData)
+
+
+
+      console.log("resotredfiled " , restoreFields)
+
+
+      setFormData((prev) => ({ ...prev, ...restoreFields }));
+
+      console.log("Form data AFTER SETTING THE FORMDATA after restoringfield  " , formData)
+
+
+
+      // close the modal
+
+    }
+  };
+
+  
+  
+  const localStorageBackup = (tempContent) => {
+    const checkLocal = localStorage.getItem("NPUR_TEMP_CONTENT");
+    let localContent = [];
+    if (checkLocal !== null && checkLocal !== undefined) {
+      localContent = JSON.parse(checkLocal || "[]");
+      localContent.push(tempContent);
+    } else {
+      localContent.push(tempContent);
+    }
+
+    localStorage.setItem("NPUR_TEMP_CONTENT", JSON.stringify(localContent));
+  };
+
+  useEffect(() => {
+    if (localStorage.getItem("NPUR_TEMP_CONTENT") === null) return;
+    // const localContent = JSON.parse(
+    //   localStorage.getItem("SALE_TEMP_CONTENT") || "[]"
+    // );
+    window.saleModal_3.showModal();
+  }, []);
+
+  
+  const userRestoreConfirmation = (accepted) => {
+    if (accepted) {
+      const localContent = JSON.parse(
+        localStorage.getItem("NPUR_TEMP_CONTENT") || "[]"
+      );
+
+      console.log("Local Content", localContent);
+
+      setExcelContent(localContent);
+      setBillSeriesRef(localContent[0]?.REMOTE_BILL_REF_NO);
+      handleChange({
+        target: {
+          name: "vehicleNo",
+          value: localContent[0]?.narration,
+        },
+      });
+
+      handleFormChange("partyName", localContent[0]?.partyName);
+
+      handleChange({
+        target: {
+          name: "seriesType",
+          value: localContent[0]?.vchSeries,
+        },
+      });
+      handleChange({
+        target: {
+          name: "saleType",
+          value: localContent[0]?.saleType,
+        },
+      });
+
+      handleFormChange("mobileNo", localContent[0]?.one_field_mobile);
+
+      // handleChange({
+      //   target: {
+      //     name: "saleDate",
+      //     value: localContent[0]?.billDate,
+      //   },
+      // });
+    } else {
+      localStorage.removeItem("NPUR_TEMP_CONTENT");
     }
   };
 
@@ -1151,7 +1242,7 @@ export default function page() {
               </thead>
               <tbody>
                 {/* row 1 */}
-                {console.log("excelContent console logged")}
+                {console.log("excelContent console logged at the table ")}
                 {console.log(excelContent)}
                 {excelContent.map((item, index) => {
                   // console.log("Item", item);
@@ -1189,7 +1280,7 @@ export default function page() {
               <span className="font-extrabold">{getTotalBillAmount()}</span>
             </div>
           </div>
-          {/* <div className="flex justify-center items-center mt-4 bg-indigo-950 rounded-lg p-3">
+          <div className="flex justify-center items-center mt-4 bg-indigo-950 rounded-lg p-3">
             <div className="flex flex-col gap-2 w-[50%] items-center">
               <div className="flex flex-col gap-2">
                 <input
@@ -1236,7 +1327,7 @@ export default function page() {
                 Clear
               </div>
             </div>
-          </div> */}
+          </div>
           <div className="modal-action">
             <button className="btn bg-red-600">Cancel</button>
             <button onClick={downloadSheet} className="btn bg-green-600">
@@ -1508,7 +1599,8 @@ export default function page() {
                   }
 
                   handleFormChange("amount", unitPrice * e.target.value);
-                } else if (formData?.unitPriceAfterDiscount_D6) {
+                } 
+                else if (formData?.unitPriceAfterDiscount_D6) {
                   if (formData?.gstType === "Exclusive") {
                     const exclusiveTotalAmount = exclusiveTaxTotalAmount(
                       formData.unitPriceAfterDiscount_D6,
@@ -1603,6 +1695,7 @@ export default function page() {
           ].join(" ")}
           placeholder="Total Amount"
           type="number"
+          // value=
           hidden={formData?.purchaseType === "DM"}
           onWheel={(e) => {
             e.target.blur();
