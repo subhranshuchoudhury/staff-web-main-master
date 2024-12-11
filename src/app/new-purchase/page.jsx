@@ -37,6 +37,7 @@ import {
   exclusiveTaxTotalAmount,
   inclusiveExemptTaxTotalAmount,
 } from "@/utils/purchase/calc";
+
 const purchaseIDB = new SimpleIDB("Purchase", "purchase");
 
 export default function page() {
@@ -51,9 +52,12 @@ export default function page() {
   const [itemData, setItemData] = useState([]);
   const [DiscountStructure, setDiscountStructure] = useState([]);
   const [gotDbValue, setGotDbValue] = useState(false);
+  const [BillSeriesRef, setBillSeriesRef] = useState(null);
+
   // const [qrResult, setQrResult] = useState("");
   // const [barcodeScannedData, setBarcodeScannedData] = useState(null);
   const [formData, setFormData] = useState({
+
     partyName: null,
     invoiceNo: null,
     invoiceDate: new Date(), // default date is today
@@ -76,7 +80,8 @@ export default function page() {
     unitPrice: 0,
     repetitionPrint: 0,
   });
-  const [SelectedItem, setSelectedItem] = useState(null);
+  const [SelectedItem, setSelectedItem] = useState("");
+  
   const [modalMessage, setModalMessage] = useState({
     title: "",
     message: "",
@@ -122,9 +127,10 @@ export default function page() {
       norm_f_3: f3,
     });
   };
-
-  const handleFormChange = (name, value) => {
+  const handleFormChange = (name, valueOrFunction) => {
     if (!name) return;
+    // Check if valueOrFunction is a function, then call it
+    const value = typeof valueOrFunction === 'function' ? valueOrFunction() : valueOrFunction;
     setFormData((values) => ({ ...values, [name]: value }));
   };
 
@@ -295,6 +301,9 @@ export default function page() {
   // * handle the add button
 
   const addSingleFormContent = () => {
+
+    console.log("Form data after editing and pressed on add button  " , formData)
+
     // * mutable values
     let gstValue =
       formData?.gstType === "Exempt"
@@ -342,32 +351,48 @@ export default function page() {
 
     const amountField = TotalAmountCalc(
       formData?.mrp,
-      disc,
+      formData?.mDiscPercentage,
       formData?.quantity
     );
 
     // * setting the content after all operations
 
     const tempContent = {
+      itemName: formData?.itemName,
+      quantity: Number(formData?.quantity),
+      unit: formData?.unit,
+      partyName: formData?.partyName,
+      mrp: Number(formData?.mrp),
+      mDiscPrecentage: formData?.mDiscPercentage,
+      dynamicdisc: formData?.dynamicdisc,
+      gstPercentage: formData?.gstPercentage,
+      purchaseType: purchaseType,
+      invoiceNo: formData?.invoiceNo,
+      isIGST: formData?.isIGST,
+      gstType: formData?.gstType,
+      itemLocation: formData?.itemLocation,
       billSeries: bill,
+      amount: amountField,
       billDate: dateToFormattedString(formData?.invoiceDate),
       originDate: formData?.invoiceDate,
-      purchaseType: purchaseType,
-      partyName: formData?.partyName,
       eligibility: eligibility,
-      invoiceNo: formData?.invoiceNo,
-      itemName: formData?.itemName,
-      quantity: formData?.quantity,
-      unit: formData?.unit,
-      mrp: formData?.mrp,
       itemPartNo: formData?.itemPartNoOrg,
-      disc: disc,
-      amount: amountField,
+      disc: formData?.mDiscPercentage,
+      discountStructure: formData?.discountStructure,
       cgst: cgst,
       sgst: cgst,
-      itemLocation: formData?.itemLocation,
       repetition: parseInt(formData?.repetitionPrint),
+      SAVE_discPercentage: formData?.disc,
+      SAVE_gstAmount: formData?.gstAmount,
+      SAVE_totalAmount: formData?.totalAmount,
+      SAVE_discAmount: formData?.discAmount,
+      SAVE_selectedItem: SelectedItem,
+      SAVE_actualTotalAmount: formData?.actualTotalAmount,
+      // REMOTE_BILL_REF_NO: remoteLabel,
+      // REMOTE_BILL_REF_NO: remoteLabel,
     };
+    console.log("prevArray====================>", tempContent);
+
     // dynamic discount calculation
     handleFormChange("dynamicdisc", disc);
 
@@ -413,6 +438,7 @@ export default function page() {
       handleFormChange("itemName", null);
       handleFormChange("dynamicdisc", null);
       handleFormChange("quantity", null);
+      
       handleFormChange("repetitionPrint", null);
       handleFormChange("mrp", null);
       handleFormChange("itemLocation", null);
@@ -435,7 +461,7 @@ export default function page() {
         "No",
         [
           {
-            data: `🎫 Discount: ${disc}%`,
+            data: `🎫 Discount: ${formData?.mDiscPercentage}%`,
             style: "text-xl font-bold text-orange-500",
           },
           {
@@ -471,7 +497,7 @@ export default function page() {
         "No",
         [
           {
-            data: `🎫 Discount: ${disc}%`,
+            data: `🎫 Discount: ${formData?.mDiscPercentage}%`,
             style: "text-xl font-bold text-orange-500",
           },
           {
@@ -495,7 +521,7 @@ export default function page() {
         "No",
         [
           {
-            data: `🎫 Discount: ${disc}%`,
+            data: `🎫 Discount: ${formData?.mDiscPercentage}%`,
             style: "text-xl font-bold text-red-500",
           },
           {
@@ -524,191 +550,155 @@ export default function page() {
     }
   };
 
-  // * create Excel file
+  let content = [];
 
-  const createSheet = () => {
-    if (excelContent.length === 0) {
-      handleModal(
-        "⚠ Empty",
-        "The file is empty. Add one item before generating excel file.",
-        "Okay"
-      );
-      window.purchase_modal_1.showModal();
-      return;
-    }
+  excelContent.forEach((d) => {
+    content.push(d);
+  });
 
-    let totalBillAmount = 0;
-    const content = excelContent.map((item) => {
-      totalBillAmount += item?.amount || 0;
-      return { ...item };
-    });
-    content[0].BILL_REF_AMOUNT = Math.round(totalBillAmount);
+  const getTotalBillAmount = () =>
+    excelContent
+      .map((item) => item?.amount)
+      .reduce((acc, curr) => acc + (curr || 0), 0);
 
-    const data = [
-      {
-        sheet: "Sheet1",
-        columns: formData?.isIGST
-          ? purchaseBillFormat
-              .filter((col) => col.value !== "cgst" && col.value !== "sgst")
-              .concat({
-                label: "IGST PERCENT",
-                value: "igstPercent",
-                format: "0",
-              })
-          : purchaseBillFormat,
-        content: formData?.isIGST
-          ? content.map((item) => ({
-              ...item,
-              igstPercent: parseInt(item?.sgst + item?.cgst),
-              disc: IGSTnewDiscPercentage(
-                item?.disc,
-                parseInt(item?.sgst + item?.cgst)
-              ),
-              amount: IGSTnewAmount(
-                item?.mrp,
-                item?.disc,
-                parseInt(item?.quantity),
-                parseInt(item?.sgst + item?.cgst)
-              ),
-              purchaseType: "IGST",
-            }))
-          : content,
-      },
-    ];
+  // console.log("total Bill Amount: " + totalBillAmount);
+  // Add mobile to first field
 
-    const barcodeCustomItemName = (item) => {
-      const { itemName, partNo } = item;
+  // content[0].mobileNo = excelContent[0].one_field_mobile;
+  // content[0].settlement_amount_1_cashPayment = formData?.cashPayment; // settlement amount 1
+  // content[0].settlement_amount_2_bankPayment = formData?.bankPayment; // settlement amount 2
+  // const REMOTE_BILL_REF_NO = content[0].REMOTE_BILL_REF_NO; // the dynamic bill ref no eg. APP/16/2425
+  // content[0].VCH_BILL_NO =
+  //   REMOTE_BILL_REF_NO.split("/")[1] + "/" + REMOTE_BILL_REF_NO.split("/")[2];
+  const totalBillAmount = getTotalBillAmount();
 
-      if (partNo) {
-        return partNo?.split("-")?.[0] || partNo;
-      }
+  if (formData?.bankPayment > 0) {
+    content[0].SETTLEMENT_NARR2 = "Bank";
+  }
 
-      if (itemName) {
-        return itemName?.split("-")?.[0] || itemName;
-      }
+  // check if we need to generate the columns T, U and V (Bill Ref No, bill ref Amount,bill ref  Due Date)
+  //Below fields will get updated when Series is APP, Party Name is other than Cash and Amount – (SETTLEMENT_AMT1 + SETTLEMENT_AMT2) > 0. If the value is zero then these fields will be blank.
 
-      return "ERROR!";
-    };
+  console.log(
+    "Total Bill Amount, Cash Payment, Bank Payment, Party Name",
+    totalBillAmount
+    // content[0].settlement_amount_1_cashPayment,
+    // content[0].settlement_amount_2_bankPayment,
+    // content[0].partyName
+  );
 
-    const barcodeContent = content.flatMap((item) => {
-      // generate itemName
+  // if (
+  //   content[0].vchSeries === "APP" &&
+  //   content[0].partyName !== "Cash" &&
+  //   // formData?.partyName !== "PHONE PE" &&
+  //   totalBillAmount -
+  //     (Number(content[0].settlement_amount_1_cashPayment || 0) +
+  //       Number(content[0].settlement_amount_2_bankPayment || 0)) >
+  //     0
+  // ) {
+  //   console.log("Bill Ref No, bill ref Amount,bill ref  Due Date");
+  //   content[0].BILL_REF_NO = REMOTE_BILL_REF_NO;
+  //   content[0].BILL_REF_AMOUNT = totalBillAmount;
+  //   content[0].BILL_REF_DUE_DATE = addDaysToDate(content[0].billDate, 5);
+  // }
 
-      const date = new Date(item?.originDate);
-      const day = date.getDate().toString().padStart(2, "0");
-      const month = (date.getMonth() + 1).toString().padStart(2, "0");
-      const year = date.getFullYear().toString().slice(-2);
-      const roundedDisc = Math.round(item?.disc);
-      const discCode = `${roundedDisc}${day}${month}${year}`;
-      const itemName = barcodeCustomItemName(item);
+  console.log("XLSX Content", content);
 
-      return Array(item.repetition).fill({
-        itemName,
-        discCode,
-        location: item?.itemLocation || "N/A",
-        coupon: "",
-      });
-    });
-
-    const barcodeData = [
-      {
-        sheet: "Sheet1",
-        columns: purchaseBarcodeFormat,
-        content: barcodeContent,
-      },
-    ];
-
-    DownloadExcel(
-      content[0]?.partyName,
-      content[0]?.invoiceNo,
-      data,
-      barcodeData
-    );
-    DownloadBarcodeExcel(content[0]?.invoiceNo, barcodeData);
-  };
-
-  // * download the excel file
-
-  const DownloadExcel = (fileName, invoice, data, barcodeData) => {
-    const settings = {
-      fileName: `${fileName}-${invoice?.split("-")[1] || invoice}`,
-      extraLength: 3,
-      writeMode: "writeFile",
-      writeOptions: {},
-      RTL: false,
-    };
-    let callback = function () {
-      // * send the document to purchase history
-      sendPurchaseHistory(fileName, invoice, data, barcodeData);
-      // * clear the localStorage
-      clearLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA");
-    };
-    xlsx(data, settings, callback);
-  };
-
-  const DownloadBarcodeExcel = (invoice, data) => {
-    const settings = {
-      fileName: `BARCODE-${invoice?.split("-")?.[1] || invoice}`,
-      extraLength: 3,
-      writeMode: "writeFile",
-      writeOptions: {},
-      RTL: false,
-    };
-    let callback = function () {};
-    xlsx(data, settings, callback);
-  };
+  let data = [
+    {
+      sheet: "Sheet1",
+      columns: [
+        { label: "vch_series", value: "vchSeries" },
+        { label: "bill date", value: "billDate" },
+        { label: "party name", value: "partyName" },
+        { label: "narration", value: "narration" },
+        { label: "item name", value: "itemName" },
+        { label: "qty", value: "quantity", format: "0.00" },
+        { label: "unit", value: "unit" },
+        { label: "price", value: "mrp", format: "0.00" },
+        { label: "disc", value: "disc", format: "0.00" },
+        { label: "Amount", value: "amount", format: "0.00" },
+      ],
+      content,
+    },
+  ];
 
   // * upload the document to history
 
-  const sendPurchaseHistory = (partyname, invoice, sheet, barcodeSheet) => {
-    console.log("Barcode Data", barcodeSheet);
-    console.log("Sheet Data", sheet);
-    handleModal(
-      "⏳ Uploading...",
-      "Please wait while we upload your document...",
-      "Okay"
-    );
-    window.purchase_modal_1.showModal();
+  const sendPurchaseHistory = async (
+    partyname,
+    invoice,
+    sheet,
+    barcodeSheet
+  ) => {
+    try {
+      // Verify formData and data before accessing
+      if (!formData || !formData.partyName) {
+        throw new Error("Missing formData or partyName");
+      }
+      if (!data || !data[0] || !data[0].content) {
+        throw new Error("Data is not in expected format");
+      }
 
-    const payload = {
-      sheetdata: JSON.stringify(sheet),
-      barcodedata: JSON.stringify(barcodeSheet),
-      items: sheet[0]?.content?.length,
-      invoice,
-      partyname,
-      desc: "purchase",
-    };
+      console.log("Form data--------->>>>>", formData);
+      console.log("Barcode Data", barcodeSheet);
+      console.log("Sheet Data", data);
 
-    const options = {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    };
+      handleModalMessage(
+        "⏳ Uploading...",
+        "Please wait while we upload your document...",
+        "Okay"
+      );
 
-    fetch("/api/purchases", options)
-      .then((response) => {
-        if (response.status === 200) {
-          // ? show modal
-          handleModal("Uploaded ✔", "The document has been uploaded", "Okay");
-          window.purchase_modal_1.showModal();
-          clearLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA");
-          resetSessionFields();
-        } else {
-          handleModal(
-            "Uploaded Failed ❌",
-            "Kindly re-download the document",
-            "Okay"
-          );
-          window.purchase_modal_1.showModal();
-        }
-      })
-      .catch((err) => {
+      // Calculate total amount
+      let totalAmount = data[0].content.reduce(
+        (acc, element) => acc + (element?.amount || 0),
+        0
+      );
+
+      // Prepare payload for the request
+      const payload = {
+        sheetdata: JSON.stringify(data),
+        barcodedata: JSON.stringify(barcodeSheet),
+        items: data[0].content.length,
+        invoice: formData.invoiceDate,
+        partyname: formData.partyName,
+        desc: "purchase",
+        totalAmount,
+      };
+
+      // Set options for fetch
+      const options = {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      };
+
+      // Send request and handle response
+      const response = await fetch("/api/purchases", options);
+
+      if (response.ok) {
+        handleModal("Uploaded ✔", "The document has been uploaded", "Okay");
+        window.purchase_modal_1.showModal();
+        clearLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA");
+        resetSessionFields();
+      } else {
         handleModal(
-          "Uploaded Failed ❌",
-          "Kindly re-download the document",
+          "Upload Failed ❌",
+          "Please re-download the document and try again.",
           "Okay"
         );
         window.purchase_modal_1.showModal();
-      });
+      }
+    } catch (error) {
+      console.error("Error uploading purchase history:", error);
+      handleModal(
+        "Upload Failed ❌",
+        "An error occurred. Please try again.",
+        "Okay"
+      );
+      window.purchase_modal_1.showModal();
+    }
   };
 
   // * Finding the value with the selected party name and group name
@@ -792,12 +782,347 @@ export default function page() {
 
     setExcelContent([]);
     setSelectedItem(null);
+    localStorage.removeItem("NPUR_TEMP_CONTENT");
+
     toast.success("Session has been reset");
+  };
+
+  const handleModalMessage = (message) => {
+    const name = message?.name;
+    const value = message?.value;
+    setModalMessage((values) => ({ ...values, [name]: value }));
+  };
+
+  const downloadSheet = () => {
+    if (excelContent.length === 0) {
+      handleModalMessage({
+        name: "message",
+        value: `⚠ Add one document before exporting excel`,
+      });
+      window.purchase_Modal_1.showModal();
+      return;
+    }
+
+    if (formData?.partyName === "PHONE PE") {
+      if (!formData?.cashPayment && !formData?.bankPayment) {
+        handleModalMessage({
+          name: "message",
+          value: `⚠ Add the payment amount before exporting excel`,
+        });
+        window.purchase_Modal_1.showModal();
+        return;
+      }
+
+      if (formData?.partyName === "Cash" && formData?.bankPayment > 0) {
+        // Change the partyname to PHONE PE
+        handleFormChange("partyName", "PHONE PE");
+        excelContent.forEach((item) => {
+          item.partyName = "PHONE PE";
+        });
+      }
+    }
+
+    if (formData?.saleType === "IGST")
+      data[0].columns.push({
+        label: "igst percent",
+        value: "igstPercent",
+        format: "0",
+      });
+    else
+      data[0].columns.push(
+        {
+          label: "CGST",
+          value: "cgst",
+          format: "0",
+        },
+        {
+          label: "SGST",
+          value: "sgst",
+          format: "0",
+        }
+      );
+
+    // data[0].columns.push(
+    //   {
+    //     label: "BILLED_PARTY_MOBILE_NO",
+    //     value: "mobileNo",
+    //     format: "0",
+    //   },
+    //   {
+    //     label: "BILLED_PARTY_NAME",
+    //     value: "narration",
+    //   },
+    //   {
+    //     label: "SETTLEMENT_AMT1",
+    //     value: "settlement_amount_1_cashPayment",
+    //   },
+    //   {
+    //     label: "SETTLEMENT_AMT2",
+    //     value: "settlement_amount_2_bankPayment",
+    //   },
+    //   {
+    //     label: "SETTLEMENT_NARR2",
+    //     value: "SETTLEMENT_NARR2",
+    //   },
+    //   {
+    //     label: "VEHICLE_NO",
+    //     value: "narration",
+    //   },
+    //   {
+    //     label: "BILL_REF_NO",
+    //     value: "BILL_REF_NO",
+    //   },
+    //   {
+    //     label: "BILL_REF_AMOUNT",
+    //     value: "BILL_REF_AMOUNT",
+    //   },
+    //   {
+    //     label: "BILL_REF_DUE_DATE",
+    //     value: "BILL_REF_DUE_DATE",
+    //   },
+    //   {
+    //     label: "VCH/BILL_NO",
+    //     value: "VCH_BILL_NO", // eg. 1/2526 , 2/2526
+    //   }
+    // );
+
+    exportExcel(data);
+  };
+
+  const exportExcel = (data) => {
+    const settings = {
+      fileName: `${
+        formData?.vehicleNo?.toUpperCase() || formData?.partyName
+      }_${new Date().getTime()}`,
+      extraLength: 3,
+      writeMode: "writeFile",
+      writeOptions: {},
+      RTL: false,
+    };
+
+    const callback = () => {
+      handleModalMessage({
+        name: "message",
+        value: `✅ Exporting excel successful`,
+      });
+      window.purchase_Modal_0.showModal();
+      localStorage.removeItem("NPUR_TEMP_CONTENT");
+
+      sendPurchaseHistory(data);
+    };
+
+    xlsx(data, settings, callback);
+  };
+
+  function removeItemFromLocalStorage(rowNo) {
+    // Step 1: Retrieve the data from local storage
+    let data = localStorage.getItem('PURCHASE_NOT_DOWNLOAD_DATA');
+    
+    // Step 2: Parse the data (assuming it is JSON)
+    if (data) {
+        data = JSON.parse(data);
+        
+        // Step 3: Check if rowNo is valid and remove the item at that index
+        if (Array.isArray(data) && rowNo >= 0 && rowNo < data.length) {
+            data.splice(rowNo, 1);  // Remove the item at rowNo index
+        }
+        
+        // Step 4: Update local storage with the modified data
+        localStorage.setItem('PURCHASE_NOT_DOWNLOAD_DATA', JSON.stringify(data));
+    } else {
+        console.log('No data found in local storage.');
+    }
+}
+
+// Example usage: Remove item at index 2
+
+
+  const modifyExcelSheet = async (action, rowNo) => {
+    // deleting
+    if (action === "delete") {
+      const confirmation = window.confirm(
+        `Are you sure you want to delete ${excelContent?.[rowNo]?.itemName}?`
+      );
+
+      if (confirmation) {
+
+
+         
+        setExcelContent((retrivedArr) => {
+          const newArray = retrivedArr.filter((item, index) => index !== rowNo);
+          setLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA", newArray);
+          return newArray;
+        });
+
+        setExcelContent((prevArray) => {
+          const newArray = prevArray.filter((item, index) => index !== rowNo);
+          return newArray;
+        });
+      }
+
+    } 
+    // editing
+    else if (action === "edit") {
+      // remove the row from the excel sheet
+
+      // Retrieve the array from localStorage and parse it
+      // const retrivedArr = await JSON.parse(
+      //   localStorage.getItem("PURCHASE_NOT_DOWNLOAD_DATA")
+      // );
+
+      setExcelContent((retrivedArr) => {
+        const newArray = retrivedArr.filter((item, index) => index !== rowNo);
+        setLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA", newArray);
+        return newArray;
+      });
+
+
+
+      window.purchase_modal_3.close();
+
+      
+      
+      console.log("Edit action triggered and this is excel content data =============>>>>", excelContent?.[rowNo]);
+      const item = excelContent?.[rowNo];
+
+      setSelectedItem(item?.SAVE_selectedItem);
+      
+
+
+
+
+      // console.log(
+      //   "form data before updating-------------------------->",
+      //   formData
+      // );
+
+
+      const restoreFields = {
+        itemName: item?.itemName,
+        quantity: item?.quantity,
+        unit: item?.unit,
+        partyName: item?.partyName,
+        mrp: item?.mrp,
+        mDiscPrecentage: parseInt(item?.disc),
+        dynamicdisc: item?.dynamicdisc,
+        gstPercentage: item?.gstPercentage,
+        purchaseType: item?.purchaseType,
+        invoiceNo: item?.invoiceNo,
+        isIGST: item?.isIGST,
+        gstType: item?.gstType,
+        itemLocation: item?.itemLocation,
+        amount: item?.amount,
+        repetitionPrint:item?.repetition,
+      };
+
+      // console.log("Form data before SETTING THE FORMDATA after restoringfield  " , formData)
+
+
+
+      console.log("resotredfiled " , restoreFields)
+
+
+      setFormData((prev) => ({ ...prev, ...restoreFields }));
+
+      console.log("Form data AFTER SETTING THE FORMDATA after restoringfield  " , formData)
+
+
+
+      // close the modal
+
+    }
+  };
+
+  
+  
+  const localStorageBackup = (tempContent) => {
+    const checkLocal = localStorage.getItem("NPUR_TEMP_CONTENT");
+    let localContent = [];
+    if (checkLocal !== null && checkLocal !== undefined) {
+      localContent = JSON.parse(checkLocal || "[]");
+      localContent.push(tempContent);
+    } else {
+      localContent.push(tempContent);
+    }
+
+    localStorage.setItem("NPUR_TEMP_CONTENT", JSON.stringify(localContent));
+  };
+
+  useEffect(() => {
+    if (localStorage.getItem("NPUR_TEMP_CONTENT") === null) return;
+    // const localContent = JSON.parse(
+    //   localStorage.getItem("SALE_TEMP_CONTENT") || "[]"
+    // );
+    window.saleModal_3.showModal();
+  }, []);
+
+  
+  const userRestoreConfirmation = (accepted) => {
+    if (accepted) {
+      const localContent = JSON.parse(
+        localStorage.getItem("NPUR_TEMP_CONTENT") || "[]"
+      );
+
+      console.log("Local Content", localContent);
+
+      setExcelContent(localContent);
+      setBillSeriesRef(localContent[0]?.REMOTE_BILL_REF_NO);
+      handleChange({
+        target: {
+          name: "vehicleNo",
+          value: localContent[0]?.narration,
+        },
+      });
+
+      handleFormChange("partyName", localContent[0]?.partyName);
+
+      handleChange({
+        target: {
+          name: "seriesType",
+          value: localContent[0]?.vchSeries,
+        },
+      });
+      handleChange({
+        target: {
+          name: "saleType",
+          value: localContent[0]?.saleType,
+        },
+      });
+
+      handleFormChange("mobileNo", localContent[0]?.one_field_mobile);
+
+      // handleChange({
+      //   target: {
+      //     name: "saleDate",
+      //     value: localContent[0]?.billDate,
+      //   },
+      // });
+    } else {
+      localStorage.removeItem("NPUR_TEMP_CONTENT");
+    }
+  };
+
+  const handleChange = (event) => {
+    // mostly used in input fields
+    const name = event.target?.name;
+    const value = event.target?.value;
+    setFormData((values) => ({ ...values, [name]: value }));
   };
 
   return (
     <>
       <Toaster />
+
+      <dialog id="purchase_Modal_0" className="modal">
+        <form method="dialog" className="modal-box">
+          <h3 className="font-bold text-lg">Message!</h3>
+          <p className="py-4">{modalMessage?.message}</p>
+          <div className="modal-action">
+            <button className="btn">Close</button>
+          </div>
+        </form>
+      </dialog>
+
       <dialog id="purchase_modal_1" className="modal">
         <form method="dialog" className="modal-box">
           <h3 className="font-bold text-lg">{modalMessage?.title}</h3>
@@ -885,6 +1210,128 @@ export default function page() {
               className="btn"
             >
               {modalConfirmation?.button_2}
+            </button>
+          </div>
+        </form>
+      </dialog>
+
+      {/* Preview entries */}
+
+      <dialog id="purchase_modal_3" className="modal">
+        <form method="dialog" className="modal-box">
+          <h3 className="font-bold text-lg">Preview </h3>
+          <span className="text-sky-300 animate-pulse text-sm">
+            {formData?.partyName === "PHONE PE" ||
+            formData?.partyName === "Cash" ? (
+              <span>{formData?.partyName}</span>
+            ) : null}
+          </span>
+          <div className="overflow-x-auto overflow-y-auto max-h-[400px]">
+            <table className="table">
+              {/* head */}
+              <thead>
+                <tr>
+                  <th>Sl No.</th>
+                  <th>Item</th>
+                  <th>Action</th>
+                  <th>Qty</th>
+                  <th>MRP</th>
+                  <th>Disc%</th>
+                  <th>Tot. Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {/* row 1 */}
+                {console.log("excelContent console logged at the table ")}
+                {console.log(excelContent)}
+                {excelContent.map((item, index) => {
+                  // console.log("Item", item);
+                  return (
+                    <tr key={index} className="hover:bg-indigo-950">
+                      <th>{index + 1}</th>
+                      <td>{item?.itemName}</td>
+                      <td>
+                        <div className="flex flex-col gap-2">
+                          <button
+                            onClick={() => modifyExcelSheet("edit", index)}
+                            className="btn btn-sm btn-warning"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => modifyExcelSheet("delete", index)}
+                            className="btn btn-sm btn-error"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                      <td>{item?.quantity}</td>
+                      <td>{item?.mrp}</td>
+                      <td>{item?.disc}</td>
+                      <td>{item?.amount}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            <div className="ml-2 mb-2">
+              Bill Amount:{" "}
+              <span className="font-extrabold">{getTotalBillAmount()}</span>
+            </div>
+          </div>
+          <div className="flex justify-center items-center mt-4 bg-indigo-950 rounded-lg p-3">
+            <div className="flex flex-col gap-2 w-[50%] items-center">
+              <div className="flex flex-col gap-2">
+                <input
+                  name="cashPayment"
+                  value={formData?.cashPayment || ""}
+                  type="number"
+                  className="input input-bordered input-secondary w-full"
+                  placeholder="Cash"
+                  min={0} // Prevents negative values
+                  onWheel={(e) => {
+                    e.target.blur();
+                  }}
+                  onChange={(e) => {
+                    handleChange(e);
+                    // const value = Math.max(0, e.target.value); // Ensure non-negative value
+                    // handleInputSettlement("cash", value);
+                  }}
+                />
+                <input
+                  name="bankPayment"
+                  value={formData?.bankPayment || ""}
+                  onChange={(e) => {
+                    handleChange(e);
+                    // const value = Math.max(0, e.target.value); // Ensure non-negative value
+                    // handleInputSettlement("online", value);
+                  }}
+                  type="number"
+                  className="input input-bordered input-secondary w-full"
+                  placeholder="Bank"
+                  min={0} // Prevents negative values
+                  onWheel={(e) => {
+                    e.target.blur();
+                  }}
+                />
+              </div>
+              <div
+                onClick={() => {
+                  handleFormChange("cashPayment", "");
+                  handleFormChange("bankPayment", "");
+                  toast.success("Cleared the payment fields");
+                }}
+                className="btn bg-yellow-600 hover:bg-yellow-800 w-full"
+              >
+                Clear
+              </div>
+            </div>
+          </div>
+          <div className="modal-action">
+            <button className="btn bg-red-600">Cancel</button>
+            <button onClick={downloadSheet} className="btn bg-green-600">
+              Download
             </button>
           </div>
         </form>
@@ -1024,6 +1471,7 @@ export default function page() {
               defaultValue={{ label: "Choose IGST? (NO)", value: "NO" }}
               isClearable={false}
             />
+            {/* mentioned discount % */}
             <input
               hidden={formData?.purchaseType === "DNM"}
               value={formData?.mDiscPercentage || ""}
@@ -1151,7 +1599,8 @@ export default function page() {
                   }
 
                   handleFormChange("amount", unitPrice * e.target.value);
-                } else if (formData?.unitPriceAfterDiscount_D6) {
+                } 
+                else if (formData?.unitPriceAfterDiscount_D6) {
                   if (formData?.gstType === "Exclusive") {
                     const exclusiveTotalAmount = exclusiveTaxTotalAmount(
                       formData.unitPriceAfterDiscount_D6,
@@ -1246,6 +1695,7 @@ export default function page() {
           ].join(" ")}
           placeholder="Total Amount"
           type="number"
+          // value=
           hidden={formData?.purchaseType === "DM"}
           onWheel={(e) => {
             e.target.blur();
@@ -1278,14 +1728,21 @@ export default function page() {
           <Image
             className="mb-20"
             src="/assets/images/add-button.png"
-            width={80}
-            height={80}
+            width={70}
+            height={70}
             alt="icon"
           ></Image>
         </button>
+
+        {/* preview button added here  */}
         <button
           onClick={() => {
-            createSheet();
+            if (excelContent?.length === 0) {
+              toast.error("No item has been added");
+              return;
+            }
+
+            window.purchase_modal_3.showModal();
           }}
           className=" text-white hover:bg-blue-900"
         >
@@ -1294,9 +1751,25 @@ export default function page() {
             width={50}
             height={50}
             alt="icon"
+          />
+          <span className="mb-6 text-xl font-mono">Preview</span>
+        </button>
+        {/* 
+        <button
+          onClick={() => {
+            createSheet();
+          }}
+          className=" text-white hover:bg-blue-900"
+        >
+          <Image
+            src="/assets/images/download (1).png"
+            width={40}
+            height={40}
+            alt="icon"
           ></Image>
           <span className="mb-6 text-xl font-mono">Download</span>
-        </button>
+        </button> */}
+
         <button
           onClick={() => {
             getItemsData();
@@ -1311,6 +1784,7 @@ export default function page() {
           ></Image>
           <span className="mb-6 text-xl font-mono">Refresh</span>
         </button>
+
         <button
           onClick={() => {
             clearLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA");
