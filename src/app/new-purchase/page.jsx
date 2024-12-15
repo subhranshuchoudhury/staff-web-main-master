@@ -469,7 +469,7 @@ export default function page() {
         "No",
         [
           {
-            data: `🎫 Discount: ${SelectedItem?.unitPriceAfterDiscount ? ( formData?.mDiscPercentage === 0 || "0" ? (((formData?.mrp-SelectedItem?.unitPriceAfterDiscount)/(formData?.mrp))*100) : formData?.mDiscPercentage || ""): formData?.mDiscPercentage }%`,
+            data: `🎫 Discount: ${disc}%`,
             style: "text-xl font-bold text-orange-500",
           },
           {
@@ -505,7 +505,7 @@ export default function page() {
         "No",
         [
           {
-            data: `🎫 Discount: ${formData?.purchaseType=="DNM" ? formData?.dynamicdisc : formData?.mDiscPercentage}%`,
+            data: `🎫 Discount: ${formData?.purchaseType=="DNM" ? disc : formData?.mDiscPercentage}%`,
             style: "text-xl font-bold text-orange-500",
           },
           {
@@ -529,7 +529,7 @@ export default function page() {
         "No",
         [
           {
-            data: `🎫 Discount: ${item?.disc}%`,
+            data: `🎫 Discount: ${disc}%`,
             style: "text-xl font-bold text-red-500",
           },
           {
@@ -962,13 +962,15 @@ export default function page() {
           return newArray;
         });
 
-        setExcelContent((prevArray) => {
-          const newArray = prevArray.filter((item, index) => index !== rowNo);
-          return newArray;
-        });
-      }
+      //   setExcelContent((prevArray) => {
+      //     const newArray = prevArray.filter((item, index) => index !== rowNo);
+      //     return newArray;
+      //   });
 
+
+      }
     } 
+
     // editing
     else if (action === "edit") {
       // remove the row from the excel sheet
@@ -1285,7 +1287,7 @@ export default function page() {
               </tbody>
             </table>
             <div className="ml-2 mb-2">
-              Bill Amount:{" "}
+              Bill Amount:{""}
               <span className="font-extrabold">{getTotalBillAmount()}</span>
             </div>
           </div>
