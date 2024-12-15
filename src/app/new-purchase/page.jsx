@@ -53,6 +53,7 @@ export default function page() {
   const [DiscountStructure, setDiscountStructure] = useState([]);
   const [gotDbValue, setGotDbValue] = useState(false);
   const [BillSeriesRef, setBillSeriesRef] = useState(null);
+  const [calcDisc,setCalcDisc] = useState([]);
 
   // const [qrResult, setQrResult] = useState("");
   // const [barcodeScannedData, setBarcodeScannedData] = useState(null);
@@ -357,27 +358,34 @@ export default function page() {
 
     // * setting the content after all operations
 
+    console.log("This is saved SElected Item ", 
+      SelectedItem)
+    let calcDisc=((formData?.mrp-SelectedItem?.
+      unitPriceAfterDiscount)/(formData?.mrp))*100
+
+      console.log("This is the calculated Discount",calcDisc)
+
     const tempContent = {
       itemName: formData?.itemName,
       quantity: Number(formData?.quantity),
       unit: formData?.unit,
       partyName: formData?.partyName,
       mrp: Number(formData?.mrp),
-      mDiscPrecentage: formData?.mDiscPercentage,
-      dynamicdisc: formData?.dynamicdisc,
+      mDiscPercentage: formData.mDiscPercentage,
+      dynamicdisc: ((formData?.mrp*formData?.quantity)-formData?.amount)/(formData?.mrp*formData?.quantity)*100,
       gstPercentage: formData?.gstPercentage,
-      purchaseType: purchaseType,
+      purchaseType: formData?.purchaseType,
       invoiceNo: formData?.invoiceNo,
       isIGST: formData?.isIGST,
       gstType: formData?.gstType,
       itemLocation: formData?.itemLocation,
       billSeries: bill,
-      amount: amountField,
+      amount: formData?.purchaseType=="DNM" ? formData?.amount : amountField  ,
       billDate: dateToFormattedString(formData?.invoiceDate),
       originDate: formData?.invoiceDate,
       eligibility: eligibility,
       itemPartNo: formData?.itemPartNoOrg,
-      disc: formData?.mDiscPercentage,
+      disc: formData?.purchaseType=="DNM" ? ((formData?.mrp*formData?.quantity)-formData?.amount)/(formData?.mrp*formData?.quantity)*100 : formData?.mDiscPercentage,
       discountStructure: formData?.discountStructure,
       cgst: cgst,
       sgst: cgst,
@@ -461,7 +469,7 @@ export default function page() {
         "No",
         [
           {
-            data: `🎫 Discount: ${formData?.mDiscPercentage}%`,
+            data: `🎫 Discount: ${disc}%`,
             style: "text-xl font-bold text-orange-500",
           },
           {
@@ -497,7 +505,7 @@ export default function page() {
         "No",
         [
           {
-            data: `🎫 Discount: ${formData?.mDiscPercentage}%`,
+            data: `🎫 Discount: ${formData?.purchaseType=="DNM" ? disc : formData?.mDiscPercentage}%`,
             style: "text-xl font-bold text-orange-500",
           },
           {
@@ -521,7 +529,7 @@ export default function page() {
         "No",
         [
           {
-            data: `🎫 Discount: ${formData?.mDiscPercentage}%`,
+            data: `🎫 Discount: ${disc}%`,
             style: "text-xl font-bold text-red-500",
           },
           {
@@ -954,13 +962,15 @@ export default function page() {
           return newArray;
         });
 
-        setExcelContent((prevArray) => {
-          const newArray = prevArray.filter((item, index) => index !== rowNo);
-          return newArray;
-        });
-      }
+      //   setExcelContent((prevArray) => {
+      //     const newArray = prevArray.filter((item, index) => index !== rowNo);
+      //     return newArray;
+      //   });
 
+
+      }
     } 
+
     // editing
     else if (action === "edit") {
       // remove the row from the excel sheet
@@ -1003,7 +1013,7 @@ export default function page() {
         unit: item?.unit,
         partyName: item?.partyName,
         mrp: item?.mrp,
-        mDiscPrecentage: parseInt(item?.disc),
+        mDiscPrecentage: item?.mDiscPercentage,
         dynamicdisc: item?.dynamicdisc,
         gstPercentage: item?.gstPercentage,
         purchaseType: item?.purchaseType,
@@ -1014,6 +1024,7 @@ export default function page() {
         amount: item?.amount,
         repetitionPrint:item?.repetition,
       };
+
 
       // console.log("Form data before SETTING THE FORMDATA after restoringfield  " , formData)
 
@@ -1276,7 +1287,7 @@ export default function page() {
               </tbody>
             </table>
             <div className="ml-2 mb-2">
-              Bill Amount:{" "}
+              Bill Amount:{""}
               <span className="font-extrabold">{getTotalBillAmount()}</span>
             </div>
           </div>
@@ -1474,7 +1485,7 @@ export default function page() {
             {/* mentioned discount % */}
             <input
               hidden={formData?.purchaseType === "DNM"}
-              value={formData?.mDiscPercentage || ""}
+              value={formData.mDiscPercentage }
               onChange={(e) => {
                 handleFormChange("mDiscPercentage", e.target.value);
               }}
