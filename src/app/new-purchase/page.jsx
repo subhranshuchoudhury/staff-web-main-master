@@ -371,24 +371,21 @@ export default function page() {
       unit: formData?.unit,
       partyName: formData?.partyName,
       mrp: Number(formData?.mrp),
-      mDiscPrecentage: SelectedItem.
-      unitPriceAfterDiscount== null ? formData?.mDiscPercentage : calcDisc ,
-      dynamicdisc: formData?.dynamicdisc,
+      mDiscPercentage: formData.mDiscPercentage,
+      dynamicdisc: ((formData?.mrp*formData?.quantity)-formData?.amount)/(formData?.mrp*formData?.quantity)*100,
       gstPercentage: formData?.gstPercentage,
-      purchaseType: purchaseType,
+      purchaseType: formData?.purchaseType,
       invoiceNo: formData?.invoiceNo,
       isIGST: formData?.isIGST,
       gstType: formData?.gstType,
       itemLocation: formData?.itemLocation,
       billSeries: bill,
-      amount: SelectedItem.unitPriceAfterDiscount
-        ? formData?.amount : amountField ,
+      amount: formData?.purchaseType=="DNM" ? formData?.amount : amountField  ,
       billDate: dateToFormattedString(formData?.invoiceDate),
       originDate: formData?.invoiceDate,
       eligibility: eligibility,
       itemPartNo: formData?.itemPartNoOrg,
-      disc: SelectedItem.
-      unitPriceAfterDiscount== null ? formData?.mDiscPercentage : calcDisc ,
+      disc: formData?.purchaseType=="DNM" ? ((formData?.mrp*formData?.quantity)-formData?.amount)/(formData?.mrp*formData?.quantity)*100 : formData?.mDiscPercentage,
       discountStructure: formData?.discountStructure,
       cgst: cgst,
       sgst: cgst,
@@ -472,7 +469,7 @@ export default function page() {
         "No",
         [
           {
-            data: `🎫 Discount: ${SelectedItem?.unitPriceAfterDiscount ? ( formData?.mDiscPercentage === 0 || "0" ? (((formData?.mrp-SelectedItem?.unitPriceAfterDiscount)/(formData?.mrp))*100) : formData?.mDiscPercentage || ""): formData?.mDiscPercentage }%`,
+            data: `🎫 Discount: ${disc}%`,
             style: "text-xl font-bold text-orange-500",
           },
           {
@@ -508,7 +505,7 @@ export default function page() {
         "No",
         [
           {
-            data: `🎫 Discount: ${SelectedItem?.unitPriceAfterDiscount ? ( formData?.mDiscPercentage === 0 || "0" ? (((formData?.mrp-SelectedItem?.unitPriceAfterDiscount)/(formData?.mrp))*100) : formData?.mDiscPercentage || ""): formData?.mDiscPercentage }%`,
+            data: `🎫 Discount: ${formData?.purchaseType=="DNM" ? disc : formData?.mDiscPercentage}%`,
             style: "text-xl font-bold text-orange-500",
           },
           {
@@ -532,7 +529,7 @@ export default function page() {
         "No",
         [
           {
-            data: `🎫 Discount: ${SelectedItem?.unitPriceAfterDiscount ? ( formData?.mDiscPercentage === 0 || "0" ? (((formData?.mrp-SelectedItem?.unitPriceAfterDiscount)/(formData?.mrp))*100) : formData?.mDiscPercentage || ""): formData?.mDiscPercentage }%`,
+            data: `🎫 Discount: ${disc}%`,
             style: "text-xl font-bold text-red-500",
           },
           {
@@ -965,13 +962,15 @@ export default function page() {
           return newArray;
         });
 
-        setExcelContent((prevArray) => {
-          const newArray = prevArray.filter((item, index) => index !== rowNo);
-          return newArray;
-        });
-      }
+      //   setExcelContent((prevArray) => {
+      //     const newArray = prevArray.filter((item, index) => index !== rowNo);
+      //     return newArray;
+      //   });
 
+
+      }
     } 
+
     // editing
     else if (action === "edit") {
       // remove the row from the excel sheet
@@ -1014,7 +1013,7 @@ export default function page() {
         unit: item?.unit,
         partyName: item?.partyName,
         mrp: item?.mrp,
-        mDiscPrecentage: item?.mDiscPercentage || parseInt(item?.disc),
+        mDiscPrecentage: item?.mDiscPercentage,
         dynamicdisc: item?.dynamicdisc,
         gstPercentage: item?.gstPercentage,
         purchaseType: item?.purchaseType,
@@ -1288,7 +1287,7 @@ export default function page() {
               </tbody>
             </table>
             <div className="ml-2 mb-2">
-              Bill Amount:{" "}
+              Bill Amount:{""}
               <span className="font-extrabold">{getTotalBillAmount()}</span>
             </div>
           </div>
@@ -1486,7 +1485,7 @@ export default function page() {
             {/* mentioned discount % */}
             <input
               hidden={formData?.purchaseType === "DNM"}
-              value={SelectedItem?.unitPriceAfterDiscount ? ( formData?.mDiscPercentage === 0 || "0" ? (((formData?.mrp-SelectedItem?.unitPriceAfterDiscount)/(formData?.mrp))*100) : formData?.mDiscPercentage || ""): formData?.mDiscPercentage }
+              value={formData.mDiscPercentage }
               onChange={(e) => {
                 handleFormChange("mDiscPercentage", e.target.value);
               }}
