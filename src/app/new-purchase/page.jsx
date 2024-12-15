@@ -54,7 +54,6 @@ export default function page() {
   const [gotDbValue, setGotDbValue] = useState(false);
   const [BillSeriesRef, setBillSeriesRef] = useState(null);
   const [calcDisc,setCalcDisc] = useState([]);
-
   // const [qrResult, setQrResult] = useState("");
   // const [barcodeScannedData, setBarcodeScannedData] = useState(null);
   const [formData, setFormData] = useState({
@@ -380,7 +379,7 @@ export default function page() {
       gstType: formData?.gstType,
       itemLocation: formData?.itemLocation,
       billSeries: bill,
-      amount: formData?.purchaseType=="DNM" ? formData?.amount : amountField  ,
+      amount: formData?.purchaseType=="DNM" ? Number(formData?.amount) : Number(amountField)  ,
       billDate: dateToFormattedString(formData?.invoiceDate),
       originDate: formData?.invoiceDate,
       eligibility: eligibility,
@@ -396,6 +395,7 @@ export default function page() {
       SAVE_discAmount: formData?.discAmount,
       SAVE_selectedItem: SelectedItem,
       SAVE_actualTotalAmount: formData?.actualTotalAmount,
+      
       // REMOTE_BILL_REF_NO: remoteLabel,
       // REMOTE_BILL_REF_NO: remoteLabel,
     };
@@ -578,7 +578,7 @@ export default function page() {
   // const REMOTE_BILL_REF_NO = content[0].REMOTE_BILL_REF_NO; // the dynamic bill ref no eg. APP/16/2425
   // content[0].VCH_BILL_NO =
   //   REMOTE_BILL_REF_NO.split("/")[1] + "/" + REMOTE_BILL_REF_NO.split("/")[2];
-  const totalBillAmount = getTotalBillAmount();
+  const totalBillAmount = Number(getTotalBillAmount());
 
   if (formData?.bankPayment > 0) {
     content[0].SETTLEMENT_NARR2 = "Bank";
@@ -1287,8 +1287,8 @@ export default function page() {
               </tbody>
             </table>
             <div className="ml-2 mb-2">
-              Bill Amount:{""}
-              <span className="font-extrabold">{getTotalBillAmount()}</span>
+              Bill Amount:{" "}
+              <span className="font-extrabold">{Number(getTotalBillAmount())}</span>
             </div>
           </div>
           <div className="flex justify-center items-center mt-4 bg-indigo-950 rounded-lg p-3">
