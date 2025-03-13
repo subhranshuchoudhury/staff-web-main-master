@@ -55,6 +55,7 @@ export default function page(props) {
   const [qrResult, setQrResult] = useState("");
   const [barcodeScannedData, setBarcodeScannedData] = useState(null);
   const [PrevScanData, setPrevScanData] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     partyName: null,
     invoiceNo: null,
@@ -513,6 +514,7 @@ export default function page(props) {
 
   const checkNotDownload = (searchBar) => {
     const retrievedArray = getLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA");
+    if (retrievedArray && retrievedArray.length === 0) return;
     const agreed = () => {
       if (retrievedArray !== null && retrievedArray !== undefined) {
         setExcelContent(retrievedArray);
@@ -798,7 +800,7 @@ export default function page(props) {
       billSeries: bill,
       billDate: dateToFormattedString(formData?.invoiceDate),
       originDate: formData?.invoiceDate,
-      purchaseType: purchaseType,
+      purchaseType: formData?.purchaseType,
       partyName: formData?.partyName,
       eligibility: eligibility,
       invoiceNo: formData?.invoiceNo,
@@ -813,6 +815,10 @@ export default function page(props) {
       sgst: cgst,
       itemLocation: formData?.itemLocation,
       repetition: parseInt(formData?.quantity), // Quantity for print invoice duplication
+      isIGST: formData?.isIGST,
+      gstPercentage: formData?.gstPercentage,
+      mDiscPercentage: formData?.mDiscPercentage,
+      selectedItemRow: formData?.selectedItemRow,
     };
 
     handleFormChange({
@@ -854,7 +860,20 @@ export default function page(props) {
       setExcelContent((prevArray) => [...prevArray, tempContent]);
 
       // * saving the data to localStorage
-      storeNotDownload(tempContent);
+      if (!isEditing) storeNotDownload(tempContent);
+      else {
+        const datas = localStorage.getItem("PURCHASE_NOT_DOWNLOAD_DATA");
+        const parsedData = JSON.parse(datas);
+        const index = parsedData.findIndex(
+          (obj) => obj.selectedItemRow === formData?.selectedItemRow
+        );
+        parsedData[index] = tempContent;
+        localStorage.setItem(
+          "PURCHASE_NOT_DOWNLOAD_DATA",
+          JSON.stringify(parsedData)
+        );
+        setIsEditing(false);
+      }
 
       // * show the modal
       handleModal("Success ✅", "Content Added Successfully!", "Okay");
@@ -910,6 +929,19 @@ export default function page(props) {
           target: {
             name: "amount",
             value: null,
+          },
+        });
+      } else {
+        handleFormChange({
+          target: {
+            name: "mDiscPercentage",
+            value: 0,
+          },
+        });
+        handleFormChange({
+          target: {
+            name: "purchaseType",
+            value: "DNM",
           },
         });
       }
@@ -1317,6 +1349,66 @@ export default function page(props) {
     }
   };
 
+  const getTotalBillAmount = () =>
+    excelContent
+      .map((item) => item?.amount)
+      .reduce((acc, curr) => acc + (curr || 0), 0);
+
+  const modifyExcelSheet = (action, rowNo) => {
+    if (action === "delete") {
+      const confirmation = window.confirm(
+        `Are you sure you want to delete ${excelContent?.[rowNo]?.itemName}?`
+      );
+
+      if (confirmation) {
+        const newArray = excelContent.filter((_, index) => index !== rowNo);
+        setExcelContent(newArray);
+        localStorage.setItem(
+          "PURCHASE_NOT_DOWNLOAD_DATA",
+          JSON.stringify(newArray)
+        );
+      }
+    } else if (action === "edit") {
+      setIsEditing(true);
+      // remove the row from the excel sheet
+      setExcelContent((prevArray) => {
+        const newArray = prevArray.filter((_, index) => index !== rowNo);
+        return newArray;
+      });
+
+      // close the modal
+      window.saleModal_4.close();
+
+      console.log("Edit action triggered", excelContent?.[rowNo]);
+      const item = excelContent?.[rowNo];
+
+      // restore the fields
+      // setSelectedItem(item?.SAVE_selectedItem);
+
+      const restoreFields = {
+        partyName: item?.partyName,
+        invoiceNo: item?.invoiceNo,
+        invoiceDate: new Date(), // default date is today
+        gstType: item.billSeries,
+        unit: "Pcs", // default value
+        purchaseType: item.purchaseType,
+        itemPartNo: item?.itemName,
+        itemPartNoOrg: item?.itemPartNo,
+        itemLocation: item?.itemLocation,
+        quantity: item?.quantity,
+        mrp: item?.mrp,
+        gstPercentage: item?.gstPercentage,
+        amount: item?.amount,
+        finalDisc: "ERROR!",
+        isIGST: item?.isIGST,
+        dynamicdisc: item?.disc,
+        mDiscPercentage: item?.mDiscPercentage,
+        selectedItemRow: item?.selectedItemRow,
+      };
+
+      setFormData((prev) => ({ ...prev, ...restoreFields }));
+    }
+  };
   return (
     <>
       <Toaster />
@@ -1816,6 +1908,144 @@ export default function page(props) {
 
         <br />
       </div>
+      {/* Preview entries */}
+
+      <dialog id="saleModal_4" className="modal">
+        <form method="dialog" className="modal-box">
+          <h3 className="font-bold text-lg">Preview </h3>
+          <span className="text-sky-300 animate-pulse text-sm">
+            {formData?.partyName === "PHONE PE" ||
+            formData?.partyName === "Cash" ? (
+              <span>{formData?.partyName}</span>
+            ) : null}
+          </span>
+          <div className="overflow-x-auto overflow-y-auto max-h-[400px]">
+            <table className="table">
+              {/* head */}
+              <thead>
+                <tr>
+                  <th>Sl No.</th>
+                  <th>Item</th>
+                  <th>Action</th>
+                  <th>Party Name</th>
+                  <th>Invoice No</th>
+                  <th>Invoice Date</th>
+                  <th>Gst Type</th>
+                  <th>Unit</th>
+                  <th>Purchase Type</th>
+                  <th>Item Part No</th>
+                  <th>Item Part Organisation</th>
+                  <th>Item Location</th>
+                  <th>Qty</th>
+                  <th>MRP</th>
+                  <th>Disc%</th>
+                  <th>Tot. Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {/* row 1 */}
+
+                {excelContent.map((item, index) => {
+                  // console.log("Item", item);
+                  return (
+                    <tr key={index} className="hover:bg-indigo-950">
+                      <th>{index + 1}</th>
+                      <td>{item?.itemName}</td>
+                      <td>
+                        <div className="flex flex-col gap-2">
+                          <button
+                            onClick={() => modifyExcelSheet("edit", index)}
+                            className="btn btn-sm btn-warning"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => modifyExcelSheet("delete", index)}
+                            className="btn btn-sm btn-error"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                      <td>{item?.partyName}</td>
+                      <td>{item?.invoiceNo}</td>
+                      <td>{item?.billDate}</td>
+                      <td>{item?.billSeries}</td>
+                      <td>{item?.unit}</td>
+                      <td>{item?.purchaseType}</td>
+                      <td>{item?.itemName}</td>
+                      <td>{item?.itemPartNo}</td>
+                      <td>{item?.itemLocation}</td>
+                      <td>{item?.quantity}</td>
+                      <td>{item?.mrp}</td>
+                      <td>{item?.disc}</td>
+                      <td>{item?.amount}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            <div className="ml-2 mb-2">
+              Bill Amount:{" "}
+              <span className="font-extrabold">{getTotalBillAmount()}</span>
+            </div>
+          </div>
+          <div className="flex justify-center items-center mt-4 bg-indigo-950 rounded-lg p-3">
+            <div className="flex flex-col gap-2 w-[50%] items-center">
+              <div className="flex flex-col gap-2">
+                <input
+                  name="cashPayment"
+                  value={formData?.cashPayment || ""}
+                  type="number"
+                  className="input input-bordered input-secondary w-full"
+                  placeholder="Cash"
+                  min={0} // Prevents negative values
+                  onWheel={(e) => {
+                    e.target.blur();
+                  }}
+                  onChange={(e) => {
+                    handleChange(e);
+                    // const value = Math.max(0, e.target.value); // Ensure non-negative value
+                    // handleInputSettlement("cash", value);
+                  }}
+                />
+                <input
+                  name="bankPayment"
+                  value={formData?.bankPayment || ""}
+                  onChange={(e) => {
+                    handleChange(e);
+                    // const value = Math.max(0, e.target.value); // Ensure non-negative value
+                    // handleInputSettlement("online", value);
+                  }}
+                  type="number"
+                  className="input input-bordered input-secondary w-full"
+                  placeholder="Bank"
+                  min={0} // Prevents negative values
+                  onWheel={(e) => {
+                    e.target.blur();
+                  }}
+                />
+              </div>
+              <div
+                onClick={() => {
+                  handleFormChange("cashPayment", "");
+                  handleFormChange("bankPayment", "");
+                  toast.success("Cleared the payment fields");
+                }}
+                className="btn bg-yellow-600 hover:bg-yellow-800 w-full"
+              >
+                Clear
+              </div>
+            </div>
+          </div>
+          <div className="modal-action">
+            <button className="btn bg-red-600">Cancel</button>
+            <button onClick={createSheet} className="btn bg-green-600">
+              Download
+            </button>
+          </div>
+        </form>
+      </dialog>
 
       <div className="py-20"></div>
       {/* Bottom Nav Bar */}
@@ -1838,7 +2068,13 @@ export default function page(props) {
         </button>
         <button
           onClick={() => {
-            createSheet();
+            // createSheet();
+            if (excelContent?.length === 0) {
+              toast.error("No item has been added");
+              return;
+            }
+
+            window.saleModal_4.showModal();
           }}
           className=" text-white hover:bg-blue-900"
         >
@@ -1849,7 +2085,7 @@ export default function page(props) {
             height={50}
             alt="icon"
           ></Image>
-          <span className="mb-6 text-xl font-mono">Download</span>
+          <span className="mb-6 text-xl font-mono">Preview</span>
         </button>
         <button
           onClick={() => {
