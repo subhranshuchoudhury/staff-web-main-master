@@ -77,6 +77,7 @@ export default function page() {
     unitPrice: 0,
     repetitionPrint: 0,
     selectedData: null,
+    purchaseTypeText: null,
   });
   const [SelectedItem, setSelectedItem] = useState(null);
   const [modalMessage, setModalMessage] = useState({
@@ -277,7 +278,8 @@ export default function page() {
         key === "dynamicdisc" ||
         key === "itemPartNoOrg" ||
         key === "unitPriceAfterDiscount_D6" ||
-        key === "unitPrice"
+        key === "unitPrice" ||
+        key === "purchaseTypeText"
       )
         continue;
 
@@ -359,6 +361,7 @@ export default function page() {
       billDate: dateToFormattedString(formData?.invoiceDate),
       originDate: formData?.invoiceDate,
       purchaseType: formData?.purchaseType,
+      purchaseTypeText: purchaseType,
       partyName: formData?.partyName,
       eligibility: eligibility,
       invoiceNo: formData?.invoiceNo,
@@ -368,7 +371,7 @@ export default function page() {
       mrp: formData?.mrp,
       itemPartNo: formData?.itemPartNoOrg,
       disc: disc,
-      amount: amountField,
+      amount: formData?.amount,
       cgst: cgst,
       sgst: cgst,
       itemLocation: formData?.itemLocation,
@@ -378,6 +381,8 @@ export default function page() {
       mDiscPercentage: formData?.mDiscPercentage,
       selectedData: formData?.selectedData,
       repetitionPrint: parseInt(formData?.repetitionPrint),
+      gstType: formData?.gstType,
+      creditDays: formData?.creditDays,
     };
     // dynamic discount calculation
     handleFormChange("dynamicdisc", disc);
@@ -395,6 +400,7 @@ export default function page() {
         getFutureDate(formData?.invoiceDate, formData?.creditDays)
       );
 
+      console.log(futureCreditDay);
       tempContent.bill_ref_due_date = futureCreditDay;
     }
 
@@ -410,15 +416,20 @@ export default function page() {
 
     const modalConfirmedAdd = () => {
       if (excelContent.length !== 0) {
-        setExcelContent((prevArray) => {
-          const newArr = prevArray.filter(
-            (item) =>
-              item.selectedData.code !== tempContent.selectedData.code ||
-              item.partyName !== tempContent.partyName
-          );
-          const mergedArray = [...newArr, tempContent];
-          return mergedArray;
-        });
+        let index = excelContent.findIndex(
+          (content) =>
+            content.selectedData.code === tempContent.selectedData.code &&
+            content.partyName === tempContent.partyName
+        );
+        if (index !== -1) {
+          setExcelContent((prevArray) => {
+            const updatedArray = [...prevArray];
+            updatedArray[index] = tempContent;
+            return updatedArray;
+          });
+        } else {
+          setExcelContent((prevArray) => [...prevArray, tempContent]);
+        }
       } else {
         setExcelContent((prevArray) => [...prevArray, tempContent]);
       }
@@ -429,14 +440,22 @@ export default function page() {
         const datas = localStorage.getItem("PURCHASE_NOT_DOWNLOAD_DATA");
         const parsedData = JSON.parse(datas);
         const index = parsedData.findIndex(
-          (obj) => obj.selectedData.code === tempContent.selectedData.code
+          (obj) =>
+            obj.selectedData.code === tempContent.selectedData.code &&
+            obj.partyName === tempContent.partyName
         );
         parsedData[index] = tempContent;
+        localStorage.setItem(
+          "PURCHASE_NOT_DOWNLOAD_DATA",
+          JSON.stringify(parsedData)
+        );
         setIsEditing(false);
       }
 
       // * show the modal
-      handleModal("Success ✅", "Content Added Successfully!", "Okay");
+      if (isEditing)
+        handleModal("Success ✅", "Content Edited Successfully!", "Okay");
+      else handleModal("Success ✅", "Content Added Successfully!", "Okay");
       window.purchase_modal_1.showModal();
 
       // setQrResult("...");
@@ -451,7 +470,7 @@ export default function page() {
       handleFormChange("unitPrice", "");
       handleFormChange("gstPercentage", null);
       handleFormChange("purchaseType", "DNM");
-      handleFormChange("gstType", null);
+      handleFormChange("purchaseTypeText", null);
       handleFormChange("mDiscPercentage", 0);
       handleFormChange("selectedData", null);
       setSelectedItem(null);
@@ -467,7 +486,9 @@ export default function page() {
 
       handleConfirmationModal(
         "Confirmation",
-        "Are you sure you want to add this content?",
+        !isEditing
+          ? "Are you sure you want to add this content?"
+          : "Are you sure you want to edit this content?",
         "Yes",
         "No",
         [
@@ -835,7 +856,7 @@ export default function page() {
 
   const getTotalBillAmount = () =>
     excelContent
-      .map((item) => item?.amount)
+      .map((item) => parseFloat(item?.amount))
       .reduce((acc, curr) => acc + (curr || 0), 0);
 
   const modifyExcelSheet = (action, code, partyName) => {
@@ -869,7 +890,7 @@ export default function page() {
       setExcelContent((prevArray) => {
         const newArray = prevArray.filter(
           (item) =>
-            item.selectedData.editCode !== code && item.partyName !== partyName
+            item.selectedData.editCode !== code || item.partyName !== partyName
         );
         return newArray;
       });
@@ -885,10 +906,12 @@ export default function page() {
       const restoreFields = {
         partyName: item?.partyName,
         invoiceNo: item?.invoiceNo,
-        invoiceDate: new Date(), // default date is today
-        gstType: item.billSeries,
-        unit: "Pcs", // default value
+        invoiceDate: item?.originDate,
+
+        gstType: item.gstType,
+        unit: item?.unit,
         purchaseType: item.purchaseType,
+        purchaseTypeText: item.purchaseTypeText,
         itemName: item?.itemName,
         itemPartNoOrg: item?.itemPartNo,
         itemLocation: item?.itemLocation,
@@ -902,6 +925,7 @@ export default function page() {
         mDiscPercentage: item?.mDiscPercentage,
         selectedData: item?.selectedData,
         repetitionPrint: parseInt(item?.repetitionPrint),
+        creditDays: item?.creditDays,
       };
 
       setFormData((prev) => ({ ...prev, ...restoreFields }));
@@ -1150,29 +1174,6 @@ export default function page() {
               }}
             />
           </div>
-
-          {/* <form
-            className="animate-pulse"
-            onSubmit={(e) => {
-              e.preventDefault();
-              barCodeScanner();
-            }}
-          >
-            <input
-              value={barcodeScannedData || ""}
-              onFocus={(e) => {
-                e.target.value = "";
-                setBarcodeScannedData("");
-              }}
-              type="text"
-              placeholder="BARCODE SCAN 🔎"
-              onChange={(e) => {
-                setBarcodeScannedData(e.target.value);
-              }}
-              className="m-5 p-5 glass rounded-full w-[300px] text-center"
-            />
-          </form> */}
-          {/* <p className="text-center m-5 glass rounded-sm">{qrResult}</p> */}
 
           {/* Item DropDown */}
           {itemData?.length > 0 && (
@@ -1448,9 +1449,9 @@ export default function page() {
                       <td>{item?.partyName}</td>
                       <td>{item?.invoiceNo}</td>
                       <td>{item?.billDate}</td>
-                      <td>{item?.billSeries}</td>
+                      <td>{item?.gstType}</td>
                       <td>{item?.unit}</td>
-                      <td>{item?.purchaseType}</td>
+                      <td>{item?.purchaseTypeText}</td>
                       <td>{item?.itemName}</td>
                       <td>{item?.itemPartNo}</td>
                       <td>{item?.itemLocation}</td>
