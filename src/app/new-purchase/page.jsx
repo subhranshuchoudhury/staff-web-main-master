@@ -80,6 +80,7 @@ export default function page() {
     purchaseTypeText: null,
   });
   const [SelectedItem, setSelectedItem] = useState(null);
+  const [disc, setDisc] = useState(0);
   const [modalMessage, setModalMessage] = useState({
     title: "",
     message: "",
@@ -308,7 +309,6 @@ export default function page() {
       formData?.gstType === "Exempt"
         ? 0
         : parseInt(formData?.gstPercentage?.split("%")[0]?.trim());
-    let disc = 0;
     let purchaseType = "";
     let eligibility = "Goods/Services";
     let bill = "GST";
@@ -320,41 +320,42 @@ export default function page() {
       bill = "Main";
       cgst = 0;
       purchaseType = "EXEMPT";
-      disc = ExemptCalc(formData?.mrp, formData?.amount, formData?.quantity);
+      // disc = ExemptCalc(formData?.mrp, formData?.amount, formData?.quantity);
       eligibility = "None";
     } else if (formData?.gstType === "Inclusive") {
       purchaseType = "GST(INCL)";
-      disc = InclusiveCalc(formData?.mrp, formData?.amount, formData?.quantity);
+      // disc = InclusiveCalc(formData?.mrp, formData?.amount, formData?.quantity);
       cgst = parseInt(gstValue / 2);
     } else {
       purchaseType = "GST(INCL)";
-      disc = ExclusiveCalc(
-        formData?.mrp,
-        formData?.amount,
-        gstValue,
-        formData?.quantity
-      );
+      // disc = ExclusiveCalc(
+      //   formData?.mrp,
+      //   formData?.amount,
+      //   gstValue,
+      //   formData?.quantity
+      // );
       cgst = parseInt(gstValue / 2);
     }
 
-    if (formData?.purchaseType === "DM" && formData?.gstType === "Exclusive")
-      disc = exclusiveDM(
-        formData?.mrp,
-        formData?.quantity,
-        formData?.mDiscPercentage,
-        gstValue
-      );
-    else if (formData?.purchaseType === "DM") disc = formData?.mDiscPercentage;
+    // if (formData?.purchaseType === 'DM' && formData?.gstType === 'Exclusive')
+    //   disc = exclusiveDM(
+    //     formData?.mrp,
+    //     formData?.quantity,
+    //     formData?.mDiscPercentage,
+    //     gstValue
+    //   );
+    // else if (formData?.purchaseType === 'DM') disc = formData?.mDiscPercentage;
 
     // calculate the Total amount:
 
-    const amountField = TotalAmountCalc(
-      formData?.mrp,
-      disc,
-      formData?.quantity
-    );
+    // const amountField = TotalAmountCalc(
+    //   formData?.mrp,
+    //   disc,
+    //   formData?.quantity
+    // );
 
     // * setting the content after all operations
+    console.log(disc);
 
     const tempContent = {
       billSeries: bill,
@@ -383,6 +384,7 @@ export default function page() {
       repetitionPrint: parseInt(formData?.repetitionPrint),
       gstType: formData?.gstType,
       creditDays: formData?.creditDays,
+      unitPrice: formData?.unitPrice,
     };
     // dynamic discount calculation
     handleFormChange("dynamicdisc", disc);
@@ -400,7 +402,6 @@ export default function page() {
         getFutureDate(formData?.invoiceDate, formData?.creditDays)
       );
 
-      console.log(futureCreditDay);
       tempContent.bill_ref_due_date = futureCreditDay;
     }
 
@@ -597,7 +598,7 @@ export default function page() {
 
     let totalBillAmount = 0;
     const content = excelContent.map((item) => {
-      totalBillAmount += item?.amount || 0;
+      totalBillAmount += parseFloat(item?.amount) || 0;
       return { ...item };
     });
     content[0].BILL_REF_AMOUNT = Math.round(totalBillAmount);
@@ -630,7 +631,12 @@ export default function page() {
               ),
               purchaseType: "IGST",
             }))
-          : content,
+          : content.map((item) => {
+              return {
+                ...item,
+                purchaseType: item?.purchaseTypeText,
+              };
+            }),
       },
     ];
 
@@ -809,13 +815,60 @@ export default function page() {
     } else {
       totalAmount = totAmount;
     }
+    console.log({ totalAmount });
     if (formData?.purchaseType !== "DM" && formData?.unitPrice > 0) {
       handleFormChange("amount", totalAmount);
     }
   };
 
+  const handleTotAmount = async () => {
+    let gstValue =
+      formData?.gstType === "Exempt"
+        ? 0
+        : parseInt(formData?.gstPercentage?.split("%")[0]?.trim());
+    let disc = 0;
+
+    if (formData?.gstType === "Exempt") {
+      gstValue = 0;
+      bill = "Main";
+      cgst = 0;
+      disc = ExemptCalc(formData?.mrp, formData?.amount, formData?.quantity);
+    } else if (formData?.gstType === "Inclusive") {
+      disc = InclusiveCalc(formData?.mrp, formData?.amount, formData?.quantity);
+      cgst = parseInt(gstValue / 2);
+    } else {
+      disc = ExclusiveCalc(
+        formData?.mrp,
+        formData?.amount,
+        gstValue,
+        formData?.quantity
+      );
+    }
+
+    if (formData?.purchaseType === "DM" && formData?.gstType === "Exclusive")
+      disc = exclusiveDM(
+        formData?.mrp,
+        formData?.quantity,
+        formData?.mDiscPercentage,
+        gstValue
+      );
+    else if (formData?.purchaseType === "DM") disc = formData?.mDiscPercentage;
+
+    // calculate the Total amount:
+
+    const amountField = TotalAmountCalc(
+      formData?.mrp,
+      disc,
+      formData?.quantity
+    );
+    console.log(disc);
+    setDisc(disc);
+    handleFormChange("amount", amountField);
+  };
+
   useEffect(() => {
-    handleFindValue();
+    // handleFindValue();
+    handleTotAmount();
   }, [
     formData?.unitPrice,
     formData?.itemName,
@@ -855,9 +908,12 @@ export default function page() {
   };
 
   const getTotalBillAmount = () =>
-    excelContent
-      .map((item) => parseFloat(item?.amount))
-      .reduce((acc, curr) => acc + (curr || 0), 0);
+    parseFloat(
+      excelContent
+        .map((item) => parseFloat(item?.amount))
+        .reduce((acc, curr) => acc + (curr || 0), 0)
+        .toFixed(2)
+    );
 
   const modifyExcelSheet = (action, code, partyName) => {
     const index = excelContent.findIndex(
@@ -907,7 +963,7 @@ export default function page() {
         partyName: item?.partyName,
         invoiceNo: item?.invoiceNo,
         invoiceDate: item?.originDate,
-
+        unitPrice: item?.unitPrice,
         gstType: item.gstType,
         unit: item?.unit,
         purchaseType: item.purchaseType,
