@@ -17,6 +17,7 @@ import {
   IGSTnewDiscPercentage,
   unitPriceCalcExclDISC,
   unitPriceCalcEXemptInclDISC,
+  reverseCalculateTotal,
 } from "../Disc/disc";
 import Image from "next/image";
 import CustomOption from "../Dropdown/CustomOption";
@@ -313,6 +314,7 @@ export default function page() {
     let eligibility = "Goods/Services";
     let bill = "GST";
     let cgst = 0;
+    let disc = 0;
     // * discount calculation
 
     if (formData?.gstType === "Exempt") {
@@ -320,42 +322,48 @@ export default function page() {
       bill = "Main";
       cgst = 0;
       purchaseType = "EXEMPT";
-      // disc = ExemptCalc(formData?.mrp, formData?.amount, formData?.quantity);
+      disc = ExemptCalc(formData?.mrp, formData?.amount, formData?.quantity);
+      setDisc(ExemptCalc(formData?.mrp, formData?.amount, formData?.quantity));
       eligibility = "None";
     } else if (formData?.gstType === "Inclusive") {
       purchaseType = "GST(INCL)";
-      // disc = InclusiveCalc(formData?.mrp, formData?.amount, formData?.quantity);
+      disc = InclusiveCalc(formData?.mrp, formData?.amount, formData?.quantity);
+      setDisc(
+        InclusiveCalc(formData?.mrp, formData?.amount, formData?.quantity)
+      );
       cgst = parseInt(gstValue / 2);
     } else {
       purchaseType = "GST(INCL)";
-      // disc = ExclusiveCalc(
-      //   formData?.mrp,
-      //   formData?.amount,
-      //   gstValue,
-      //   formData?.quantity
-      // );
+      disc = ExclusiveCalc(
+        formData?.mrp,
+        formData?.amount,
+        gstValue,
+        formData?.quantity
+      );
+      setDisc(
+        ExclusiveCalc(
+          formData?.mrp,
+          formData?.amount,
+          gstValue,
+          formData?.quantity
+        )
+      );
       cgst = parseInt(gstValue / 2);
     }
 
-    // if (formData?.purchaseType === 'DM' && formData?.gstType === 'Exclusive')
-    //   disc = exclusiveDM(
-    //     formData?.mrp,
-    //     formData?.quantity,
-    //     formData?.mDiscPercentage,
-    //     gstValue
-    //   );
-    // else if (formData?.purchaseType === 'DM') disc = formData?.mDiscPercentage;
+    if (formData?.purchaseType === "DM" && formData?.gstType === "Exclusive")
+      setDisc(
+        exclusiveDM(
+          formData?.mrp,
+          formData?.quantity,
+          formData?.mDiscPercentage,
+          gstValue
+        )
+      );
+    else if (formData?.purchaseType === "DM")
+      setDisc(formData?.mDiscPercentage);
 
-    // calculate the Total amount:
-
-    // const amountField = TotalAmountCalc(
-    //   formData?.mrp,
-    //   disc,
-    //   formData?.quantity
-    // );
-
-    // * setting the content after all operations
-    console.log(disc);
+    let amountField = TotalAmountCalc(formData?.mrp, disc, formData?.quantity);
 
     const tempContent = {
       billSeries: bill,
@@ -372,7 +380,7 @@ export default function page() {
       mrp: formData?.mrp,
       itemPartNo: formData?.itemPartNoOrg,
       disc: disc,
-      amount: formData?.amount,
+      amount: amountField,
       cgst: cgst,
       sgst: cgst,
       itemLocation: formData?.itemLocation,
@@ -469,7 +477,7 @@ export default function page() {
       handleFormChange("mrp", null);
       handleFormChange("itemLocation", null);
       handleFormChange("unitPrice", "");
-      handleFormChange("gstPercentage", null);
+      handleFormChange("gstPercentage", 0);
       handleFormChange("purchaseType", "DNM");
       handleFormChange("purchaseTypeText", null);
       handleFormChange("mDiscPercentage", 0);
@@ -815,7 +823,6 @@ export default function page() {
     } else {
       totalAmount = totAmount;
     }
-    console.log({ totalAmount });
     if (formData?.purchaseType !== "DM" && formData?.unitPrice > 0) {
       handleFormChange("amount", totalAmount);
     }
@@ -830,12 +837,9 @@ export default function page() {
 
     if (formData?.gstType === "Exempt") {
       gstValue = 0;
-      bill = "Main";
-      cgst = 0;
       disc = ExemptCalc(formData?.mrp, formData?.amount, formData?.quantity);
     } else if (formData?.gstType === "Inclusive") {
       disc = InclusiveCalc(formData?.mrp, formData?.amount, formData?.quantity);
-      cgst = parseInt(gstValue / 2);
     } else {
       disc = ExclusiveCalc(
         formData?.mrp,
@@ -854,16 +858,15 @@ export default function page() {
       );
     else if (formData?.purchaseType === "DM") disc = formData?.mDiscPercentage;
 
-    // calculate the Total amount:
-
-    const amountField = TotalAmountCalc(
-      formData?.mrp,
-      disc,
-      formData?.quantity
-    );
-    console.log(disc);
-    setDisc(disc);
-    handleFormChange("amount", amountField);
+    if (disc) {
+      setDisc(disc);
+    }
+    // const amountField = TotalAmountCalc(
+    //   formData?.mrp,
+    //   disc,
+    //   formData?.quantity
+    // );
+    // handleFormChange("amount", amountField);
   };
 
   useEffect(() => {
@@ -912,7 +915,7 @@ export default function page() {
       excelContent
         .map((item) => parseFloat(item?.amount))
         .reduce((acc, curr) => acc + (curr || 0), 0)
-        .toFixed(2)
+        .toFixed(0)
     );
 
   const modifyExcelSheet = (action, code, partyName) => {
@@ -958,6 +961,11 @@ export default function page() {
       const item = excelContent?.[index];
 
       // restore the fields
+      let totalAmount = reverseCalculateTotal(
+        item?.amount,
+        item?.gstPercentage
+      );
+
       setSelectedItem(item?.selectedData);
       const restoreFields = {
         partyName: item?.partyName,
@@ -974,7 +982,10 @@ export default function page() {
         quantity: item?.quantity,
         mrp: item?.mrp,
         gstPercentage: item?.gstPercentage,
-        amount: item?.amount,
+        amount:
+          item?.gstType === "Exempt" || item?.gstType === "Exclusive"
+            ? totalAmount
+            : item?.amount,
         finalDisc: "ERROR!",
         isIGST: item?.isIGST,
         dynamicdisc: item?.disc,
@@ -1267,7 +1278,7 @@ export default function page() {
 
                 if (formData?.gstType !== "Exempt") {
                   // * if gst type is exempt, then it will not modify the gst percentage
-                  handleFormChange("gstPercentage", e?.gstPercentage || null);
+                  handleFormChange("gstPercentage", e?.gstPercentage || 0);
                 }
               }}
               getOptionLabel={(option) =>
@@ -1320,7 +1331,7 @@ export default function page() {
                     );
                   }
 
-                  handleFormChange("amount", unitPrice * e.target.value);
+                  // handleFormChange("amount", unitPrice * e.target.value);
                 } else if (formData?.unitPriceAfterDiscount_D6) {
                   if (formData?.gstType === "Exclusive") {
                     const exclusiveTotalAmount = exclusiveTaxTotalAmount(
@@ -1328,13 +1339,13 @@ export default function page() {
                       e.target.value,
                       formData?.gstPercentage
                     );
-                    handleFormChange("amount", exclusiveTotalAmount);
+                    // handleFormChange("amount", exclusiveTotalAmount);
                   } else {
                     const inclExemptTotalAmount = inclusiveExemptTaxTotalAmount(
                       formData?.unitPriceAfterDiscount_D6,
                       e.target.value
                     );
-                    handleFormChange("amount", inclExemptTotalAmount);
+                    // handleFormChange("amount", inclExemptTotalAmount);
                   }
                 }
               }}
@@ -1456,8 +1467,8 @@ export default function page() {
                   <th>Gst Type</th>
                   <th>Unit</th>
                   <th>Purchase Type</th>
-                  <th>Item Part No</th>
-                  <th>Item Part Organisation</th>
+                  {/* <th>Item Part No</th>
+                  <th>Item Part Organisation</th> */}
                   <th>Item Location</th>
                   <th>Qty</th>
                   <th>MRP</th>
@@ -1508,8 +1519,8 @@ export default function page() {
                       <td>{item?.gstType}</td>
                       <td>{item?.unit}</td>
                       <td>{item?.purchaseTypeText}</td>
-                      <td>{item?.itemName}</td>
-                      <td>{item?.itemPartNo}</td>
+                      {/* <td>{item?.itemName}</td>
+                      <td>{item?.itemPartNo}</td> */}
                       <td>{item?.itemLocation}</td>
                       <td>{item?.quantity}</td>
                       <td>{item?.mrp}</td>
