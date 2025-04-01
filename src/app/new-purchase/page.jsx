@@ -485,7 +485,6 @@ export default function page() {
       else
         handleFormChange("purchaseType", "DM");
       handleFormChange("purchaseTypeText", null);
-      handleFormChange("mDiscPercentage", 0);
       handleFormChange("selectedData", null);
       setSelectedItem(null);
 
