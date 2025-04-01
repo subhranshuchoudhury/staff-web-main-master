@@ -94,10 +94,10 @@ export default function page() {
     button_1: "",
     button_2: "",
     messages: [],
-    btn_f_1: () => {},
-    btn_f_2: () => {},
-    norm_f_3: () => {},
-    norm_f_4: () => {},
+    btn_f_1: () => { },
+    btn_f_2: () => { },
+    norm_f_3: () => { },
+    norm_f_4: () => { },
   });
 
   // * handle the modal
@@ -360,8 +360,10 @@ export default function page() {
           gstValue
         )
       );
-    else if (formData?.purchaseType === "DM")
+    if (formData?.purchaseType === "DM") {
+      disc = formData?.mDiscPercentage;
       setDisc(formData?.mDiscPercentage);
+    }
 
     let amountField = TotalAmountCalc(formData?.mrp, disc, formData?.quantity);
 
@@ -478,7 +480,10 @@ export default function page() {
       handleFormChange("itemLocation", null);
       handleFormChange("unitPrice", "");
       handleFormChange("gstPercentage", 0);
-      handleFormChange("purchaseType", "DNM");
+      if (formData?.purchaseType === "DNM")
+        handleFormChange("purchaseType", "DNM");
+      else
+        handleFormChange("purchaseType", "DM");
       handleFormChange("purchaseTypeText", null);
       handleFormChange("mDiscPercentage", 0);
       handleFormChange("selectedData", null);
@@ -487,7 +492,7 @@ export default function page() {
       if (formData?.gstType !== "Exempt")
         handleFormChange("gstPercentage", null);
 
-      if (formData?.purchaseType !== "DM") handleFormChange("amount", null);
+      handleFormChange("amount", null);
     };
 
     const askForConfirmation = (choice) => {
@@ -523,7 +528,7 @@ export default function page() {
           },
         ],
         modalConfirmedAdd,
-        () => {}
+        () => { }
       );
       window.purchase_modal_2.showModal();
     };
@@ -583,7 +588,7 @@ export default function page() {
           },
         ],
         askPrintPreference,
-        () => {}
+        () => { }
       );
       window.purchase_modal_2.showModal();
     } else {
@@ -616,35 +621,35 @@ export default function page() {
         sheet: "Sheet1",
         columns: formData?.isIGST
           ? purchaseBillFormat
-              .filter((col) => col.value !== "cgst" && col.value !== "sgst")
-              .concat({
-                label: "IGST PERCENT",
-                value: "igstPercent",
-                format: "0",
-              })
+            .filter((col) => col.value !== "cgst" && col.value !== "sgst")
+            .concat({
+              label: "IGST PERCENT",
+              value: "igstPercent",
+              format: "0",
+            })
           : purchaseBillFormat,
         content: formData?.isIGST
           ? content.map((item) => ({
-              ...item,
-              igstPercent: parseInt(item?.sgst + item?.cgst),
-              disc: IGSTnewDiscPercentage(
-                item?.disc,
-                parseInt(item?.sgst + item?.cgst)
-              ),
-              amount: IGSTnewAmount(
-                item?.mrp,
-                item?.disc,
-                parseInt(item?.quantity),
-                parseInt(item?.sgst + item?.cgst)
-              ),
-              purchaseType: "IGST",
-            }))
+            ...item,
+            igstPercent: parseInt(item?.sgst + item?.cgst),
+            disc: IGSTnewDiscPercentage(
+              item?.disc,
+              parseInt(item?.sgst + item?.cgst)
+            ),
+            amount: IGSTnewAmount(
+              item?.mrp,
+              item?.disc,
+              parseInt(item?.quantity),
+              parseInt(item?.sgst + item?.cgst)
+            ),
+            purchaseType: "IGST",
+          }))
           : content.map((item) => {
-              return {
-                ...item,
-                purchaseType: item?.purchaseTypeText,
-              };
-            }),
+            return {
+              ...item,
+              purchaseType: item?.purchaseTypeText,
+            };
+          }),
       },
     ];
 
@@ -725,7 +730,7 @@ export default function page() {
       writeOptions: {},
       RTL: false,
     };
-    let callback = function () {};
+    let callback = function () { };
     xlsx(data, settings, callback);
   };
 
@@ -1198,11 +1203,10 @@ export default function page() {
               }}
               value={
                 formData?.purchaseType && {
-                  label: `${
-                    formData?.purchaseType === "DNM"
-                      ? "Discount Not Mentioned"
-                      : "Discount Mentioned"
-                  }`,
+                  label: `${formData?.purchaseType === "DNM"
+                    ? "Discount Not Mentioned"
+                    : "Discount Mentioned"
+                    }`,
                   value: formData.purchaseType,
                 }
               }
@@ -1432,16 +1436,6 @@ export default function page() {
             e.target.blur();
           }}
         />
-
-        {
-          <p className="text-green-500">
-            RECORDED DISC%:{" "}
-            <span className="text-white font-bold">
-              {formData?.dynamicdisc ?? "Not available"}
-            </span>
-          </p>
-        }
-
         <br />
       </div>
       <dialog id="saleModal_4" className="modal">
@@ -1449,7 +1443,7 @@ export default function page() {
           <h3 className="font-bold text-lg">Preview </h3>
           <span className="text-sky-300 animate-pulse text-sm">
             {formData?.partyName === "PHONE PE" ||
-            formData?.partyName === "Cash" ? (
+              formData?.partyName === "Cash" ? (
               <span>{formData?.partyName}</span>
             ) : null}
           </span>
