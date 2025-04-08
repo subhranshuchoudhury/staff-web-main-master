@@ -653,10 +653,10 @@ export default function page() {
     ];
 
     const barcodeCustomItemName = (item) => {
-      const { itemName, partNo } = item;
+      const { itemName, itemPartNo } = item;
 
-      if (partNo) {
-        return partNo?.split("-")?.[0] || partNo;
+      if (itemPartNo) {
+        return itemPartNo?.split("-")?.[0] || itemPartNo;
       }
 
       if (itemName) {
@@ -674,14 +674,17 @@ export default function page() {
       const month = (date.getMonth() + 1).toString().padStart(2, "0");
       const year = date.getFullYear().toString().slice(-2);
       const roundedDisc = Math.round(item?.disc);
-      const discCode = `${roundedDisc}${day}${month}${year}`;
+      const discCode = `${roundedDisc < 10
+        ? `0${roundedDisc}`
+        : roundedDisc
+        }${day}${month}${year}`;
       const itemName = barcodeCustomItemName(item);
 
       return Array(item.repetition).fill({
         itemName,
         discCode,
         location: item?.itemLocation || "N/A",
-        coupon: "",
+        mrp: item?.mrp
       });
     });
 
