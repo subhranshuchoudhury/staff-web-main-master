@@ -3,7 +3,7 @@ const purchaseBarcodeFormat = [
     { label: "Item Name", value: "itemName" },
     { label: "Disc Code", value: "discCode" },
     { label: "Location", value: "location" },
-    { label: "Coupon", value: "coupon" },
+    { label: "MRP", value: "mrp" },
 
 ]
 
