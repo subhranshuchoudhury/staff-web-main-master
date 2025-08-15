@@ -8,11 +8,36 @@ import CustomOption from "../Dropdown/CustomOption";
 import CustomMenuList from "../Dropdown/CustomMenuList";
 import xlsx from "json-as-xlsx";
 import { useEffect, useState } from "react";
-import { uploadItem } from "../AppScript/script";
+
+// ADDED: Define a unique key for localStorage
+const LOCAL_STORAGE_KEY = "stockModuleBackup";
 
 export default function Page() {
   useEffect(() => {
     getAPIContent();
+
+    // ADDED: Check for saved data on component mount
+    const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (savedData) {
+      if (
+        window.confirm(
+          "It looks like you have an unsaved session. Do you want to restore your data?"
+        )
+      ) {
+        const backup = JSON.parse(savedData);
+        // Restore formData, ensuring the date string is converted back to a Date object
+        setFormData({
+          ...backup.formData,
+          stockDate: new Date(backup.formData.stockDate),
+        });
+        setRStockPositive(backup.RStockPositive || []);
+        setRStockNegative(backup.RStockNegative || []);
+        setLocationRackChangeList(backup.LocationRackChangeList || []);
+      } else {
+        // If the user chooses not to restore, clear the backup
+        localStorage.removeItem(LOCAL_STORAGE_KEY);
+      }
+    }
   }, []);
 
   const [formData, setFormData] = useState({
@@ -20,7 +45,6 @@ export default function Page() {
     stockDate: new Date(),
     item: null,
     unitName: null,
-    // quantity: null,
     location: null,
     purc_price: null,
     computerStock: null,
@@ -37,6 +61,28 @@ export default function Page() {
   const [RStockPositive, setRStockPositive] = useState([]);
   const [RStockNegative, setRStockNegative] = useState([]);
   const [LocationRackChangeList, setLocationRackChangeList] = useState([]);
+
+  // ADDED: useEffect to save data to localStorage whenever it changes
+  useEffect(() => {
+    // Avoid saving initial empty state
+    if (
+      RStockPositive.length === 0 &&
+      RStockNegative.length === 0 &&
+      LocationRackChangeList.length === 0 &&
+      !formData.user &&
+      !formData.item
+    ) {
+      return;
+    }
+
+    const backupData = {
+      formData,
+      RStockPositive,
+      RStockNegative,
+      LocationRackChangeList,
+    };
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(backupData));
+  }, [formData, RStockPositive, RStockNegative, LocationRackChangeList]);
 
   const handleChange = (event) => {
     const name = event.target?.name;
@@ -82,25 +128,6 @@ export default function Page() {
       )
       .then((data) => {
         const item_api_data = data[0];
-
-        // demo of response
-
-        // const demoData = {
-        //   _id: "669f819df84e0c9fd7551e42",
-        //   code: 11574,
-        //   itemName: "29066277-CMC ASSY SFC609/709",
-        //   partNumber: "29066277",
-        //   groupName: "BRAKES INDIA LTD",
-        //   unitName: "Pcs",
-        //   gstPercentage: "28%",
-        //   storageLocation: "BIN-2A/1/3",
-        //   closingStock: 1,
-        //   unitPrice: null,
-        //   unitPriceAfterDiscount: null,
-        //   __v: 0,
-        //   discPercentage: 0,
-        //   mrp: 1350,
-        // };
 
         setItemAPIData(item_api_data);
 
@@ -311,6 +338,9 @@ export default function Page() {
     });
     window.stockModal_1.showModal();
     uploadStock(uploadSheets);
+
+    // ADDED: Clear the backup from localStorage after successful download/upload
+    localStorage.removeItem(LOCAL_STORAGE_KEY);
   };
 
   const exportExcel = (data, fileName, callBack) => {
@@ -380,7 +410,6 @@ export default function Page() {
       ...values,
       stockDate: new Date(), // default today.
       item: null,
-      // quantity: null,
       location: null,
       purc_price: null,
       selectedItemRow: null,
@@ -412,7 +441,6 @@ export default function Page() {
           <div className="text-white">
             <b className="block mb-2 text-warning">Summary: </b>
             <p>ITEM: {formData?.item}</p>
-            {/* <p>QUANTITY: {formData?.quantity}</p> */}
             <p>PURCHASE PRICE: {formData?.purc_price}</p>
             <p>LOC: {formData?.location}</p>
           </div>
@@ -463,8 +491,6 @@ export default function Page() {
           }}
         />
       </div>
-
-      {/* <p className="text-center m-5 glass rounded-sm">{qrResult}</p> */}
 
       <Select
         placeholder="Select Item"
@@ -592,7 +618,6 @@ export default function Page() {
             setFormData({
               stockDate: new Date(), // default today.
               item: null,
-              // quantity: null,
               location: null,
               purc_price: null,
               selectedItemRow: -1,
@@ -604,6 +629,10 @@ export default function Page() {
 
             setRStockNegative([]);
             setRStockPositive([]);
+            setLocationRackChangeList([]); // ADDED: Also clear this list on reset
+
+            // ADDED: Clear the backup from localStorage on manual reset
+            localStorage.removeItem(LOCAL_STORAGE_KEY);
           }}
           className="text-white hover:bg-blue-900"
         >
