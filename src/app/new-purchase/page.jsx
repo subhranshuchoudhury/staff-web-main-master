@@ -38,7 +38,6 @@ import {
   exclusiveTaxTotalAmount,
   inclusiveExemptTaxTotalAmount,
 } from "@/utils/purchase/calc";
-
 const purchaseIDB = new SimpleIDB("Purchase", "purchase");
 
 export default function page() {
@@ -54,13 +53,9 @@ export default function page() {
   const [isEditing, setIsEditing] = useState(false);
   const [DiscountStructure, setDiscountStructure] = useState([]);
   const [gotDbValue, setGotDbValue] = useState(false);
-  const [BillSeriesRef, setBillSeriesRef] = useState(null);
-  const [exclusiveAmount,setExclusiveAmount]= useState(null);
-  console.log("Exclusive Amount ===================>",exclusiveAmount)
   // const [qrResult, setQrResult] = useState("");
   // const [barcodeScannedData, setBarcodeScannedData] = useState(null);
   const [formData, setFormData] = useState({
-
     partyName: null,
     invoiceNo: null,
     invoiceDate: new Date(), // default date is today
@@ -132,10 +127,9 @@ export default function page() {
       norm_f_3: f3,
     });
   };
-  const handleFormChange = (name, valueOrFunction) => {
+
+  const handleFormChange = (name, value) => {
     if (!name) return;
-    // Check if valueOrFunction is a function, then call it
-    const value = typeof valueOrFunction === 'function' ? valueOrFunction() : valueOrFunction;
     setFormData((values) => ({ ...values, [name]: value }));
   };
 
@@ -311,9 +305,6 @@ export default function page() {
   // * handle the add button
 
   const addSingleFormContent = () => {
-
-    console.log("Form data after editing and pressed on add button  " , formData)
-
     // * mutable values
     let gstValue =
       formData?.gstType === "Exempt"
@@ -376,56 +367,25 @@ export default function page() {
 
     let amountField = TotalAmountCalc(formData?.mrp, disc, formData?.quantity);
 
-    console.log("This is saved SElected Item ", 
-      SelectedItem)
-    let calcDisc=((formData?.mrp-SelectedItem?.
-      unitPriceAfterDiscount)/(formData?.mrp))*100
-
-      console.log("This is the calculated Discount",calcDisc)
-
     const tempContent = {
-      exclusiveInputAmount:exclusiveAmount,
-      itemName: formData?.itemName,
-      quantity: Number(formData?.quantity),
-      unit: formData?.unit,
-      partyName: formData?.partyName,
-      mrp: Math.round(formData?.mrp),
-      mDiscPercentage: formData.mDiscPercentage,
-      dynamicdisc: formData?.gstType === "Exclusive"?  (ExclusiveCalc(
-        formData?.mrp,
-        formData?.amount,
-        gstValue,
-        formData?.quantity
-      ))  : (((formData?.mrp*formData?.quantity)-formData?.amount)/(formData?.mrp*formData?.quantity)*100),
-      gstPercentage: formData?.gstPercentage,
-      purchaseType: formData?.purchaseType,
-      invoiceNo: formData?.invoiceNo,
-      isIGST: formData?.isIGST,
-      gstType: formData?.gstType,
-      itemLocation: formData?.itemLocation,
       billSeries: bill,
-      amount: Math.round(formData?.gstType === "Exclusive"? Number((formData?.mrp*formData?.quantity)*((100-(ExclusiveCalc(
-        formData?.mrp,
-        formData?.amount,
-        gstValue,
-        formData?.quantity
-      )))/100))  : (formData?.purchaseType=="DNM" ? Number(formData?.amount) : Number(amountField)))  ,
       billDate: dateToFormattedString(formData?.invoiceDate),
       originDate: formData?.invoiceDate,
       purchaseType: formData?.purchaseType,
       purchaseTypeText: purchaseType,
       partyName: formData?.partyName,
       eligibility: eligibility,
+      invoiceNo: formData?.invoiceNo,
+      itemName: formData?.itemName,
+      quantity: formData?.quantity,
+      unit: formData?.unit,
+      mrp: formData?.mrp,
       itemPartNo: formData?.itemPartNoOrg,
-      disc: formData?.gstType === "Exclusive" ? ExclusiveCalc(
-        formData?.mrp,
-        formData?.amount,
-        gstValue,
-        formData?.quantity
-      )   : (formData?.purchaseType=="DNM" ? ((formData?.mrp*formData?.quantity)-formData?.amount)/(formData?.mrp*formData?.quantity)*100 : formData?.mDiscPercentage),
-      discountStructure: formData?.discountStructure,
+      disc: disc,
+      amount: amountField,
       cgst: cgst,
       sgst: cgst,
+      itemLocation: formData?.itemLocation,
       repetition: parseInt(formData?.repetitionPrint),
       isIGST: formData?.isIGST,
       gstPercentage: formData?.gstPercentage,
@@ -515,7 +475,6 @@ export default function page() {
       handleFormChange("itemName", null);
       handleFormChange("dynamicdisc", null);
       handleFormChange("quantity", null);
-      
       handleFormChange("repetitionPrint", null);
       handleFormChange("mrp", null);
       handleFormChange("itemLocation", null);
@@ -583,7 +542,7 @@ export default function page() {
         "No",
         [
           {
-            data: `🎫 Discount: ${formData?.purchaseType=="DNM" ? disc : formData?.mDiscPercentage}%`,
+            data: `🎫 Discount: ${disc}%`,
             style: "text-xl font-bold text-orange-500",
           },
           {
@@ -636,10 +595,6 @@ export default function page() {
     }
   };
 
-  let content = [];
-
-
-  
   // * create Excel file
 
   const createSheet = () => {
@@ -658,7 +613,6 @@ export default function page() {
       totalBillAmount += parseFloat(item?.amount) || 0;
       return { ...item };
     });
-    
     content[0].BILL_REF_AMOUNT = Math.round(totalBillAmount);
 
     const data = [
@@ -751,6 +705,7 @@ export default function page() {
     DownloadBarcodeExcel(content[0]?.invoiceNo, barcodeData);
   };
 
+  // * download the excel file
 
   const DownloadExcel = (fileName, invoice, data, barcodeData) => {
     const settings = {
@@ -781,159 +736,58 @@ export default function page() {
     xlsx(data, settings, callback);
   };
 
-
-
-  excelContent.forEach((d) => {
-    content.push(d);
-  });
-
-  const getTotalBillAmount = () =>
-    excelContent
-      .map((item) => item?.amount)
-      .reduce((acc, curr) => acc + (curr || 0), 0);
-
-  // console.log("total Bill Amount: " + totalBillAmount);
-  // Add mobile to first field
-
-  // content[0].mobileNo = excelContent[0].one_field_mobile;
-  // content[0].settlement_amount_1_cashPayment = formData?.cashPayment; // settlement amount 1
-  // content[0].settlement_amount_2_bankPayment = formData?.bankPayment; // settlement amount 2
-  // const REMOTE_BILL_REF_NO = content[0].REMOTE_BILL_REF_NO; // the dynamic bill ref no eg. APP/16/2425
-  // content[0].VCH_BILL_NO =
-  //   REMOTE_BILL_REF_NO.split("/")[1] + "/" + REMOTE_BILL_REF_NO.split("/")[2];
-  
-  if (formData?.bankPayment > 0) {
-    content[0].SETTLEMENT_NARR2 = "Bank";
-  }
-  
-  
-  
-  console.log("XLSX Content", content);
-  
-  const totalBillAmount = Number(getTotalBillAmount());
-  
-  console.log(
-    "Total Bill Amount, Cash Payment, Bank Payment, Party Name",
-    totalBillAmount
-    
-  );
-  // content[0].BILL_REF_AMOUNT = Math.round(totalBillAmount);
-
-  let data = [
-    {
-      sheet: "Sheet1",
-      columns: [
-        { label: "BILL SERIES", value: "billSeries" },
-        { label: "BILL DATE", value: "billDate" },
-        { label: "Purc Type", value: "purchaseType" },
-        { label: "PARTY NAME", value: "partyName" },
-        { label: "ITC ELIGIBILITY", value: "eligibility" },
-        { label: "NARRATION", value: "invoiceNo" },
-        { label: "ITEM NAME", value: "itemName" },
-        { label: "QTY", value: "quantity", format: "0" },
-        { label: "Unit", value: "unit" },
-        { label: "PRICE", value: "mrp", format: "0.00" },
-        { label: "DISC%", value: "disc", format: "0.00" },
-        { label: "Amount", value: "amount", format: "0.00" },
-        { label: "CGST", value: "cgst", format: "0" },
-        { label: "SGST", value: "sgst", format: "0" },
-        { label: "BILL_REF", value: "invoiceNo" },
-        {
-          label: "BILL_REF_AMOUNT", // * total amount
-          value: "totalBillAmount",
-          format: "0",
-        },
-        {
-          label: "BILL_REF_DUE_DATE", // * credit days with current days
-          value: "bill_ref_due_date",
-        },
-      ],
-      content: content.map((item, index) => ({
-        ...item,
-        purchaseType: "GST(INCL)", // Set default static value if undefined
-        // Insert the totalBillAmount only in the first row (index === 0)
-        totalBillAmount: index === 0 ? totalBillAmount : "", // For first row only
-      })),
-    },
-  ];
-  
-  
   // * upload the document to history
 
-  const sendPurchaseHistory = async (
-    partyname,
-    invoice,
-    sheet, 
-    barcodeSheet
-  ) => {
-    try {
-      // Verify formData and data before accessing
-      if (!formData || !formData.partyName) {
-        throw new Error("Missing formData or partyName");
-      }
-      if (!data || !data[0] || !data[0].content) {
-        throw new Error("Data is not in expected format");
-      }
+  const sendPurchaseHistory = (partyname, invoice, sheet, barcodeSheet) => {
+    console.log("Barcode Data", barcodeSheet);
+    console.log("Sheet Data", sheet);
+    handleModal(
+      "⏳ Uploading...",
+      "Please wait while we upload your document...",
+      "Okay"
+    );
+    window.purchase_modal_1.showModal();
 
-      console.log("Form data--------->>>>>", formData);
-      console.log("Barcode Data", barcodeSheet);
-      console.log("Sheet Data", data);
+    const payload = {
+      sheetdata: JSON.stringify(sheet),
+      barcodedata: JSON.stringify(barcodeSheet),
+      items: sheet[0]?.content?.length,
+      invoice,
+      partyname,
+      desc: "purchase",
+    };
 
-      handleModalMessage(
-        "⏳ Uploading...",
-        "Please wait while we upload your document...",
-        "Okay"
-      );
+    const options = {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    };
 
-      // Calculate total amount
-      let totalAmount = data[0].content.reduce(
-        (acc, element) => acc + (element?.amount || 0),
-        0
-      );
-
-      // Prepare payload for the request
-      const payload = {
-        sheetdata: JSON.stringify(data),
-        barcodedata: JSON.stringify(barcodeSheet),
-        items: sheet[0].content.length,
-        invoice: invoice,
-        partyname: partyname,
-        desc: "purchase",
-        totalAmount,
-      };
-
-      // Set options for fetch
-      const options = {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      };
-
-      // Send request and handle response
-      const response = await fetch("/api/purchases", options);
-
-      if (response.ok) {
-        handleModal("Uploaded ✔", "The document has been uploaded", "Okay");
-        window.purchase_modal_1.showModal();
-        clearLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA");
-        resetSessionFields();
-      } else {
+    fetch("/api/purchases", options)
+      .then((response) => {
+        if (response.status === 200) {
+          // ? show modal
+          handleModal("Uploaded ✔", "The document has been uploaded", "Okay");
+          window.purchase_modal_1.showModal();
+          clearLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA");
+          resetSessionFields();
+        } else {
+          handleModal(
+            "Uploaded Failed ❌",
+            "Kindly re-download the document",
+            "Okay"
+          );
+          window.purchase_modal_1.showModal();
+        }
+      })
+      .catch((err) => {
         handleModal(
-          "Upload Failed ❌",
-          "Please re-download the document and try again.",
+          "Uploaded Failed ❌",
+          "Kindly re-download the document",
           "Okay"
         );
         window.purchase_modal_1.showModal();
-      }
-    } catch (error) {
-      console.error("Error uploading purchase history:", error);
-      handleModal(
-        "Upload Failed ❌",
-        "An error occurred. Please try again.",
-        "Okay"
-      );
-      window.purchase_modal_1.showModal();
-    }
+      });
   };
 
   // * Finding the value with the selected party name and group name
@@ -1057,11 +911,9 @@ export default function page() {
       repetitionPrint: 0,
       selectedData: null,
     });
-    setExclusiveAmount(null);
+
     setExcelContent([]);
     setSelectedItem(null);
-    localStorage.removeItem("NPUR_TEMP_CONTENT");
-
     toast.success("Session has been reset");
   };
 
@@ -1156,17 +1008,6 @@ export default function page() {
   return (
     <>
       <Toaster />
-
-      <dialog id="purchase_Modal_0" className="modal">
-        <form method="dialog" className="modal-box">
-          <h3 className="font-bold text-lg">Message!</h3>
-          <p className="py-4">{modalMessage?.message}</p>
-          <div className="modal-action">
-            <button className="btn">Close</button>
-          </div>
-        </form>
-      </dialog>
-
       <dialog id="purchase_modal_1" className="modal">
         <form method="dialog" className="modal-box">
           <h3 className="font-bold text-lg">{modalMessage?.title}</h3>
@@ -1254,130 +1095,6 @@ export default function page() {
               className="btn"
             >
               {modalConfirmation?.button_2}
-            </button>
-          </div>
-        </form>
-      </dialog>
-
-      {/* Preview entries */}
-
-      <dialog id="purchase_modal_3" className="modal">
-        <form method="dialog" className="modal-box">
-          <h3 className="font-bold text-lg">Preview </h3>
-          <span className="text-sky-300 animate-pulse text-sm">
-            {formData?.partyName === "PHONE PE" ||
-            formData?.partyName === "Cash" ? (
-              <span>{formData?.partyName}</span>
-            ) : null}
-          </span>
-          <div className="overflow-x-auto overflow-y-auto max-h-[400px]">
-            <table className="table">
-              {/* head */}
-              <thead>
-                <tr>
-                  <th>Sl No.</th>
-                  <th>Item</th>
-                  <th>Action</th>
-                  <th>Qty</th>
-                  <th>MRP</th>
-                  <th>Disc%</th>
-                  <th>Tot. Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                {/* row 1 */}
-                {console.log("excelContent console logged at the table ")}
-                {console.log(excelContent)}
-                {excelContent.map((item, index) => {
-                  // console.log("Item", item);
-                  return (
-                    <tr key={index} className="hover:bg-indigo-950">
-                      <th>{index + 1}</th>
-                      <td>{item?.itemName}</td>
-                      <td>
-                        <div className="flex flex-col gap-2">
-                          <button
-                            onClick={() => modifyExcelSheet("edit", index)}
-                            className="btn btn-sm btn-warning"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => modifyExcelSheet("delete", index)}
-                            className="btn btn-sm btn-error"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                      <td>{item?.quantity}</td>
-                      <td>{item?.mrp}</td>
-                      <td>{item?.disc?.toFixed(2)}</td>
-                      <td>{Math.round(Number(item?.amount))}</td>
-
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-            <div className="ml-2 mb-2">
-              Bill Amount:{" "}
-              <span className="font-extrabold">{Math.round(Number(getTotalBillAmount()))}
-              </span>
-            </div>
-          </div>
-          <div className="flex justify-center items-center mt-4 bg-indigo-950 rounded-lg p-3">
-            <div className="flex flex-col gap-2 w-[50%] items-center">
-              <div className="flex flex-col gap-2">
-                <input
-                  name="cashPayment"
-                  value={formData?.cashPayment || ""}
-                  type="number"
-                  className="input input-bordered input-secondary w-full"
-                  placeholder="Cash"
-                  min={0} // Prevents negative values
-                  onWheel={(e) => {
-                    e.target.blur();
-                  }}
-                  onChange={(e) => {
-                    handleChange(e);
-                    // const value = Math.max(0, e.target.value); // Ensure non-negative value
-                    // handleInputSettlement("cash", value);
-                  }}
-                />
-                <input
-                  name="bankPayment"
-                  value={formData?.bankPayment || ""}
-                  onChange={(e) => {
-                    handleChange(e);
-                    // const value = Math.max(0, e.target.value); // Ensure non-negative value
-                    // handleInputSettlement("online", value);
-                  }}
-                  type="number"
-                  className="input input-bordered input-secondary w-full"
-                  placeholder="Bank"
-                  min={0} // Prevents negative values
-                  onWheel={(e) => {
-                    e.target.blur();
-                  }}
-                />
-              </div>
-              <div
-                onClick={() => {
-                  handleFormChange("cashPayment", "");
-                  handleFormChange("bankPayment", "");
-                  toast.success("Cleared the payment fields");
-                }}
-                className="btn bg-yellow-600 hover:bg-yellow-800 w-full"
-              >
-                Clear
-              </div>
-            </div>
-          </div>
-          <div className="modal-action">
-            <button className="btn bg-red-600">Cancel</button>
-            <button onClick={createSheet} className="btn bg-green-600">
-              Download
             </button>
           </div>
         </form>
@@ -1516,10 +1233,9 @@ export default function page() {
               defaultValue={{ label: "Choose IGST? (NO)", value: "NO" }}
               isClearable={false}
             />
-            {/* mentioned discount % */}
             <input
               hidden={formData?.purchaseType === "DNM"}
-              value={formData.mDiscPercentage }
+              value={formData?.mDiscPercentage || ""}
               onChange={(e) => {
                 handleFormChange("mDiscPercentage", e.target.value);
               }}
@@ -1705,14 +1421,10 @@ export default function page() {
         />
 
         <input
-         onChange={(e) => {
-          handleFormChange("amount", e.target.value);
-          
-          if (!SelectedItem?.unitPriceAfterDiscount && formData?.gstType === "Exclusive") {
-            setExclusiveAmount(e.target.value);
-          }
-        }}        
-          value={   formData?.amount || ""}
+          onChange={(e) => {
+            handleFormChange("amount", e.target.value);
+          }}
+          value={formData?.amount || ""}
           className={[
             "input input-bordered  w-[295px] m-5",
             formData?.dynamicdisc !== "N/A"
@@ -1721,7 +1433,6 @@ export default function page() {
           ].join(" ")}
           placeholder="Total Amount"
           type="number"
-          // value=
           hidden={formData?.purchaseType === "DM"}
           onWheel={(e) => {
             e.target.blur();
@@ -1892,13 +1603,11 @@ export default function page() {
           <Image
             className="mb-20"
             src="/assets/images/add-button.png"
-            width={70}
-            height={70}
+            width={80}
+            height={80}
             alt="icon"
           ></Image>
         </button>
-
-        {/* preview button added here  */}
         <button
           onClick={() => {
             // createSheet();
@@ -1915,21 +1624,6 @@ export default function page() {
             src="/assets/images/download (1).png"
             width={50}
             height={50}
-            alt="icon"
-          />
-          <span className="mb-6 text-xl font-mono">Preview</span>
-        </button>
-        {/* 
-        <button
-          onClick={() => {
-            createSheet();
-          }}
-          className=" text-white hover:bg-blue-900"
-        >
-          <Image
-            src="/assets/images/download (1).png"
-            width={40}
-            height={40}
             alt="icon"
           ></Image>
           <span className="mb-6 text-xl font-mono">Preview</span>
@@ -1948,7 +1642,6 @@ export default function page() {
           ></Image>
           <span className="mb-6 text-xl font-mono">Refresh</span>
         </button>
-
         <button
           onClick={() => {
             clearLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA");
