@@ -36,6 +36,14 @@ export const TotalAmountCalc = (MRP, DISC, QUANTITY) => {
   return Math.round(result * 100) / 100;
 };
 
+export const reverseCalculateTotal = (finalTotal, gstRate) => {
+  finalTotal = parseFloat(finalTotal);
+  gstRate = parseFloat(gstRate);
+
+  const originalTotal = finalTotal / (1 + gstRate / 100);
+  return Math.round(originalTotal * 100) / 100;
+};
+
 // Type II : Discount mentioned
 
 export const exclusiveDM = (MRP, Quantity, discPercent, gst) => {

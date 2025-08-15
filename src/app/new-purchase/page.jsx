@@ -17,6 +17,7 @@ import {
   IGSTnewDiscPercentage,
   unitPriceCalcExclDISC,
   unitPriceCalcEXemptInclDISC,
+  reverseCalculateTotal,
 } from "../Disc/disc";
 import Image from "next/image";
 import CustomOption from "../Dropdown/CustomOption";
@@ -50,6 +51,7 @@ export default function page() {
   const [excelContent, setExcelContent] = useState([]);
   const [partyData, setPartyData] = useState([]);
   const [itemData, setItemData] = useState([]);
+  const [isEditing, setIsEditing] = useState(false);
   const [DiscountStructure, setDiscountStructure] = useState([]);
   const [gotDbValue, setGotDbValue] = useState(false);
   const [BillSeriesRef, setBillSeriesRef] = useState(null);
@@ -80,9 +82,11 @@ export default function page() {
     dynamicdisc: null,
     unitPrice: 0,
     repetitionPrint: 0,
+    selectedData: null,
+    purchaseTypeText: null,
   });
-  const [SelectedItem, setSelectedItem] = useState("");
-  
+  const [SelectedItem, setSelectedItem] = useState(null);
+  const [disc, setDisc] = useState(0);
   const [modalMessage, setModalMessage] = useState({
     title: "",
     message: "",
@@ -95,10 +99,10 @@ export default function page() {
     button_1: "",
     button_2: "",
     messages: [],
-    btn_f_1: () => {},
-    btn_f_2: () => {},
-    norm_f_3: () => {},
-    norm_f_4: () => {},
+    btn_f_1: () => { },
+    btn_f_2: () => { },
+    norm_f_3: () => { },
+    norm_f_4: () => { },
   });
 
   // * handle the modal
@@ -207,6 +211,7 @@ export default function page() {
     const retrievedArray = getLocalStorageJSONParse(
       "PURCHASE_NOT_DOWNLOAD_DATA"
     );
+    if (retrievedArray && retrievedArray.length === 0) return;
     const agreed = () => {
       if (retrievedArray !== null && retrievedArray !== undefined) {
         setExcelContent(retrievedArray);
@@ -260,9 +265,12 @@ export default function page() {
   const isDuplicate = (item) => {
     const result = excelContent.find(
       (obj) =>
+        obj?.partyName === item?.partyName &&
         obj?.itemName === item?.itemName &&
         obj?.itemName !== null &&
-        obj?.itemName !== undefined
+        obj?.itemName !== undefined &&
+        obj?.partyName !== null &&
+        obj?.partyName !== undefined
     );
     if (result) {
       return true;
@@ -278,7 +286,8 @@ export default function page() {
         key === "dynamicdisc" ||
         key === "itemPartNoOrg" ||
         key === "unitPriceAfterDiscount_D6" ||
-        key === "unitPrice"
+        key === "unitPrice" ||
+        key === "purchaseTypeText"
       )
         continue;
 
@@ -310,11 +319,11 @@ export default function page() {
       formData?.gstType === "Exempt"
         ? 0
         : parseInt(formData?.gstPercentage?.split("%")[0]?.trim());
-    let disc = 0;
     let purchaseType = "";
     let eligibility = "Goods/Services";
     let bill = "GST";
     let cgst = 0;
+    let disc = 0;
     // * discount calculation
 
     if (formData?.gstType === "Exempt") {
@@ -323,10 +332,14 @@ export default function page() {
       cgst = 0;
       purchaseType = "EXEMPT";
       disc = ExemptCalc(formData?.mrp, formData?.amount, formData?.quantity);
+      setDisc(ExemptCalc(formData?.mrp, formData?.amount, formData?.quantity));
       eligibility = "None";
     } else if (formData?.gstType === "Inclusive") {
       purchaseType = "GST(INCL)";
       disc = InclusiveCalc(formData?.mrp, formData?.amount, formData?.quantity);
+      setDisc(
+        InclusiveCalc(formData?.mrp, formData?.amount, formData?.quantity)
+      );
       cgst = parseInt(gstValue / 2);
     } else {
       purchaseType = "GST(INCL)";
@@ -336,27 +349,32 @@ export default function page() {
         gstValue,
         formData?.quantity
       );
+      setDisc(
+        ExclusiveCalc(
+          formData?.mrp,
+          formData?.amount,
+          gstValue,
+          formData?.quantity
+        )
+      );
       cgst = parseInt(gstValue / 2);
     }
 
     if (formData?.purchaseType === "DM" && formData?.gstType === "Exclusive")
-      disc = exclusiveDM(
-        formData?.mrp,
-        formData?.quantity,
-        formData?.mDiscPercentage,
-        gstValue
+      setDisc(
+        exclusiveDM(
+          formData?.mrp,
+          formData?.quantity,
+          formData?.mDiscPercentage,
+          gstValue
+        )
       );
-    else if (formData?.purchaseType === "DM") disc = formData?.mDiscPercentage;
+    if (formData?.purchaseType === "DM") {
+      disc = formData?.mDiscPercentage;
+      setDisc(formData?.mDiscPercentage);
+    }
 
-    // calculate the Total amount:
-
-    const amountField = TotalAmountCalc(
-      formData?.mrp,
-      formData?.mDiscPercentage,
-      formData?.quantity
-    );
-
-    // * setting the content after all operations
+    let amountField = TotalAmountCalc(formData?.mrp, disc, formData?.quantity);
 
     console.log("This is saved SElected Item ", 
       SelectedItem)
@@ -394,6 +412,9 @@ export default function page() {
       )))/100))  : (formData?.purchaseType=="DNM" ? Number(formData?.amount) : Number(amountField)))  ,
       billDate: dateToFormattedString(formData?.invoiceDate),
       originDate: formData?.invoiceDate,
+      purchaseType: formData?.purchaseType,
+      purchaseTypeText: purchaseType,
+      partyName: formData?.partyName,
       eligibility: eligibility,
       itemPartNo: formData?.itemPartNoOrg,
       disc: formData?.gstType === "Exclusive" ? ExclusiveCalc(
@@ -406,18 +427,15 @@ export default function page() {
       cgst: cgst,
       sgst: cgst,
       repetition: parseInt(formData?.repetitionPrint),
-      SAVE_discPercentage: formData?.disc,
-      SAVE_gstAmount: formData?.gstAmount,
-      SAVE_totalAmount: formData?.totalAmount,
-      SAVE_discAmount: formData?.discAmount,
-      SAVE_selectedItem: SelectedItem,
-      SAVE_actualTotalAmount: formData?.actualTotalAmount,
-      
-      // REMOTE_BILL_REF_NO: remoteLabel,
-      // REMOTE_BILL_REF_NO: remoteLabel,
+      isIGST: formData?.isIGST,
+      gstPercentage: formData?.gstPercentage,
+      mDiscPercentage: formData?.mDiscPercentage,
+      selectedData: formData?.selectedData,
+      repetitionPrint: parseInt(formData?.repetitionPrint),
+      gstType: formData?.gstType,
+      creditDays: formData?.creditDays,
+      unitPrice: formData?.unitPrice,
     };
-    console.log("prevArray====================>", tempContent);
-
     // dynamic discount calculation
     handleFormChange("dynamicdisc", disc);
 
@@ -448,13 +466,47 @@ export default function page() {
     };
 
     const modalConfirmedAdd = () => {
-      setExcelContent((prevArray) => [...prevArray, tempContent]);
+      if (excelContent.length !== 0) {
+        let index = excelContent.findIndex(
+          (content) =>
+            content.selectedData.code === tempContent.selectedData.code &&
+            content.partyName === tempContent.partyName
+        );
+        if (index !== -1) {
+          setExcelContent((prevArray) => {
+            const updatedArray = [...prevArray];
+            updatedArray[index] = tempContent;
+            return updatedArray;
+          });
+        } else {
+          setExcelContent((prevArray) => [...prevArray, tempContent]);
+        }
+      } else {
+        setExcelContent((prevArray) => [...prevArray, tempContent]);
+      }
 
       // * saving the data to localStorage
-      storeNotDownload(tempContent);
+      if (!isEditing) storeNotDownload(tempContent);
+      else {
+        const datas = localStorage.getItem("PURCHASE_NOT_DOWNLOAD_DATA");
+        const parsedData = JSON.parse(datas);
+        const index = parsedData.findIndex(
+          (obj) =>
+            obj.selectedData.code === tempContent.selectedData.code &&
+            obj.partyName === tempContent.partyName
+        );
+        parsedData[index] = tempContent;
+        localStorage.setItem(
+          "PURCHASE_NOT_DOWNLOAD_DATA",
+          JSON.stringify(parsedData)
+        );
+        setIsEditing(false);
+      }
 
       // * show the modal
-      handleModal("Success ✅", "Content Added Successfully!", "Okay");
+      if (isEditing)
+        handleModal("Success ✅", "Content Edited Successfully!", "Okay");
+      else handleModal("Success ✅", "Content Added Successfully!", "Okay");
       window.purchase_modal_1.showModal();
 
       // setQrResult("...");
@@ -468,12 +520,19 @@ export default function page() {
       handleFormChange("mrp", null);
       handleFormChange("itemLocation", null);
       handleFormChange("unitPrice", "");
+      handleFormChange("gstPercentage", 0);
+      if (formData?.purchaseType === "DNM")
+        handleFormChange("purchaseType", "DNM");
+      else
+        handleFormChange("purchaseType", "DM");
+      handleFormChange("purchaseTypeText", null);
+      handleFormChange("selectedData", null);
       setSelectedItem(null);
 
       if (formData?.gstType !== "Exempt")
         handleFormChange("gstPercentage", null);
 
-      if (formData?.purchaseType !== "DM") handleFormChange("amount", null);
+      handleFormChange("amount", null);
     };
 
     const askForConfirmation = (choice) => {
@@ -481,7 +540,9 @@ export default function page() {
 
       handleConfirmationModal(
         "Confirmation",
-        "Are you sure you want to add this content?",
+        !isEditing
+          ? "Are you sure you want to add this content?"
+          : "Are you sure you want to edit this content?",
         "Yes",
         "No",
         [
@@ -507,7 +568,7 @@ export default function page() {
           },
         ],
         modalConfirmedAdd,
-        () => {}
+        () => { }
       );
       window.purchase_modal_2.showModal();
     };
@@ -538,7 +599,7 @@ export default function page() {
       window.print_modal_1.showModal();
     };
 
-    if (isDuplicate(tempContent)) {
+    if (!isEditing && isDuplicate(tempContent)) {
       handleConfirmationModal(
         "Duplicate ❓",
         "The item is already added. Do you want to add again?",
@@ -567,7 +628,7 @@ export default function page() {
           },
         ],
         askPrintPreference,
-        () => {}
+        () => { }
       );
       window.purchase_modal_2.showModal();
     } else {
@@ -594,11 +655,8 @@ export default function page() {
 
     let totalBillAmount = 0;
     const content = excelContent.map((item) => {
-      totalBillAmount += item?.amount || 0;
-      return { 
-        ...item,  // Copy all properties of the current item
-        purchaseType: 'GST(INCL)' // Set purchaseType to 'GST(INCL)' for each item
-      };
+      totalBillAmount += parseFloat(item?.amount) || 0;
+      return { ...item };
     });
     
     content[0].BILL_REF_AMOUNT = Math.round(totalBillAmount);
@@ -608,38 +666,43 @@ export default function page() {
         sheet: "Sheet1",
         columns: formData?.isIGST
           ? purchaseBillFormat
-              .filter((col) => col.value !== "cgst" && col.value !== "sgst")
-              .concat({
-                label: "IGST PERCENT",
-                value: "igstPercent",
-                format: "0",
-              })
+            .filter((col) => col.value !== "cgst" && col.value !== "sgst")
+            .concat({
+              label: "IGST PERCENT",
+              value: "igstPercent",
+              format: "0",
+            })
           : purchaseBillFormat,
         content: formData?.isIGST
           ? content.map((item) => ({
+            ...item,
+            igstPercent: parseInt(item?.sgst + item?.cgst),
+            disc: IGSTnewDiscPercentage(
+              item?.disc,
+              parseInt(item?.sgst + item?.cgst)
+            ),
+            amount: IGSTnewAmount(
+              item?.mrp,
+              item?.disc,
+              parseInt(item?.quantity),
+              parseInt(item?.sgst + item?.cgst)
+            ),
+            purchaseType: "IGST",
+          }))
+          : content.map((item) => {
+            return {
               ...item,
-              igstPercent: parseInt(item?.sgst + item?.cgst),
-              disc: IGSTnewDiscPercentage(
-                item?.disc,
-                parseInt(item?.sgst + item?.cgst)
-              ),
-              amount: IGSTnewAmount(
-                item?.mrp,
-                item?.disc,
-                parseInt(item?.quantity),
-                parseInt(item?.sgst + item?.cgst)
-              ),
-              purchaseType: "IGST",
-            }))
-          : content,
+              purchaseType: item?.purchaseTypeText,
+            };
+          }),
       },
     ];
 
     const barcodeCustomItemName = (item) => {
-      const { itemName, partNo } = item;
+      const { itemName, itemPartNo } = item;
 
-      if (partNo) {
-        return partNo?.split("-")?.[0] || partNo;
+      if (itemPartNo) {
+        return itemPartNo?.split("-")?.[0] || itemPartNo;
       }
 
       if (itemName) {
@@ -657,14 +720,17 @@ export default function page() {
       const month = (date.getMonth() + 1).toString().padStart(2, "0");
       const year = date.getFullYear().toString().slice(-2);
       const roundedDisc = Math.round(item?.disc);
-      const discCode = `${roundedDisc}${day}${month}${year}`;
+      const discCode = `${roundedDisc < 10
+        ? `0${roundedDisc}`
+        : roundedDisc
+        }${day}${month}${year}`;
       const itemName = barcodeCustomItemName(item);
 
       return Array(item.repetition).fill({
         itemName,
         discCode,
         location: item?.itemLocation || "N/A",
-        coupon: "",
+        mrp: item?.mrp
       });
     });
 
@@ -711,7 +777,7 @@ export default function page() {
       writeOptions: {},
       RTL: false,
     };
-    let callback = function () {};
+    let callback = function () { };
     xlsx(data, settings, callback);
   };
 
@@ -915,8 +981,50 @@ export default function page() {
     }
   };
 
+  const handleTotAmount = async () => {
+    let gstValue =
+      formData?.gstType === "Exempt"
+        ? 0
+        : parseInt(formData?.gstPercentage?.split("%")[0]?.trim());
+    let disc = 0;
+
+    if (formData?.gstType === "Exempt") {
+      gstValue = 0;
+      disc = ExemptCalc(formData?.mrp, formData?.amount, formData?.quantity);
+    } else if (formData?.gstType === "Inclusive") {
+      disc = InclusiveCalc(formData?.mrp, formData?.amount, formData?.quantity);
+    } else {
+      disc = ExclusiveCalc(
+        formData?.mrp,
+        formData?.amount,
+        gstValue,
+        formData?.quantity
+      );
+    }
+
+    if (formData?.purchaseType === "DM" && formData?.gstType === "Exclusive")
+      disc = exclusiveDM(
+        formData?.mrp,
+        formData?.quantity,
+        formData?.mDiscPercentage,
+        gstValue
+      );
+    else if (formData?.purchaseType === "DM") disc = formData?.mDiscPercentage;
+
+    if (disc) {
+      setDisc(disc);
+    }
+    // const amountField = TotalAmountCalc(
+    //   formData?.mrp,
+    //   disc,
+    //   formData?.quantity
+    // );
+    // handleFormChange("amount", amountField);
+  };
+
   useEffect(() => {
-    handleFindValue();
+    // handleFindValue();
+    handleTotAmount();
   }, [
     formData?.unitPrice,
     formData?.itemName,
@@ -947,6 +1055,7 @@ export default function page() {
       dynamicdisc: null,
       unitPrice: 0,
       repetitionPrint: 0,
+      selectedData: null,
     });
     setExclusiveAmount(null);
     setExcelContent([]);
@@ -956,240 +1065,94 @@ export default function page() {
     toast.success("Session has been reset");
   };
 
-  const handleModalMessage = (message) => {
-    const name = message?.name;
-    const value = message?.value;
-    setModalMessage((values) => ({ ...values, [name]: value }));
-  };
+  const getTotalBillAmount = () =>
+    parseFloat(
+      excelContent
+        .map((item) => parseFloat(item?.amount))
+        .reduce((acc, curr) => acc + (curr || 0), 0)
+        .toFixed(0)
+    );
 
-
-  const exportExcel = (data) => {
-    const settings = {
-      fileName: `${
-        formData?.vehicleNo?.toUpperCase() || formData?.partyName
-      }_${new Date().getTime()}`,
-      extraLength: 3,
-      writeMode: "writeFile",
-      writeOptions: {},
-      RTL: false,
-    };
-
-    const callback = () => {
-      handleModalMessage({
-        name: "message",
-        value: `✅ Exporting excel successful`,
-      });
-      window.purchase_Modal_0.showModal();
-      localStorage.removeItem("NPUR_TEMP_CONTENT");
-
-      sendPurchaseHistory(data);
-    };
-
-    xlsx(data, settings, callback);
-  };
-
-  function removeItemFromLocalStorage(rowNo) {
-    // Step 1: Retrieve the data from local storage
-    let data = localStorage.getItem('PURCHASE_NOT_DOWNLOAD_DATA');
-    
-    // Step 2: Parse the data (assuming it is JSON)
-    if (data) {
-        data = JSON.parse(data);
-        
-        // Step 3: Check if rowNo is valid and remove the item at that index
-        if (Array.isArray(data) && rowNo >= 0 && rowNo < data.length) {
-            data.splice(rowNo, 1);  // Remove the item at rowNo index
-        }
-        
-        // Step 4: Update local storage with the modified data
-        localStorage.setItem('PURCHASE_NOT_DOWNLOAD_DATA', JSON.stringify(data));
-    } else {
-        console.log('No data found in local storage.');
-    }
-}
-
-// Example usage: Remove item at index 2
-
-
-  const modifyExcelSheet = async (action, rowNo) => {
-    // deleting
+  const modifyExcelSheet = (action, code, partyName) => {
+    const index = excelContent.findIndex(
+      (item) => item.selectedData.code === code && item.partyName === partyName
+    );
     if (action === "delete") {
       const confirmation = window.confirm(
-        `Are you sure you want to delete ${excelContent?.[rowNo]?.itemName}?`
+        `Are you sure you want to delete ${excelContent?.[index]?.itemName}?`
       );
 
       if (confirmation) {
-
-
-         
-        setExcelContent((retrivedArr) => {
-          const newArray = retrivedArr.filter((item, index) => index !== rowNo);
-          setLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA", newArray);
-          return newArray;
-        });
-
-      //   setExcelContent((prevArray) => {
-      //     const newArray = prevArray.filter((item, index) => index !== rowNo);
-      //     return newArray;
-      //   });
-
-
+        const excelArray = excelContent.filter(
+          (content) =>
+            content.selectedData.code !== code ||
+            content.partyName !== partyName
+        );
+        setExcelContent(excelArray);
+        const datas = localStorage.getItem("PURCHASE_NOT_DOWNLOAD_DATA");
+        const parsedData = JSON.parse(datas);
+        const localArray = parsedData.filter(
+          (content) =>
+            content.selectedData.code !== code ||
+            content.partyName !== partyName
+        );
+        setLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA", localArray);
       }
-    } 
-
-    // editing
-    else if (action === "edit") {
+    } else if (action === "edit") {
+      setIsEditing(true);
       // remove the row from the excel sheet
-
-      // Retrieve the array from localStorage and parse it
-      // const retrivedArr = await JSON.parse(
-      //   localStorage.getItem("PURCHASE_NOT_DOWNLOAD_DATA")
-      // );
-
-      setExcelContent((retrivedArr) => {
-        const newArray = retrivedArr.filter((item, index) => index !== rowNo);
-        setLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA", newArray);
+      setExcelContent((prevArray) => {
+        const newArray = prevArray.filter(
+          (item) =>
+            item.selectedData.editCode !== code || item.partyName !== partyName
+        );
         return newArray;
       });
 
-
-
-      window.purchase_modal_3.close();
-
-      
-      
-      console.log("Edit action triggered and this is excel content data =============>>>>", excelContent?.[rowNo]);
-      const item = excelContent?.[rowNo];
-
-      setSelectedItem(item?.SAVE_selectedItem);
-      
-
-
-
-
-      // console.log(
-      //   "form data before updating-------------------------->",
-      //   formData
-      // );
-
-
-      const restoreFields = {
-        itemName: item?.itemName,
-        quantity: item?.quantity,
-        unit: item?.unit,
-        partyName: item?.partyName,
-        mrp: item?.mrp,
-        mDiscPrecentage: item?.mDiscPercentage,
-        dynamicdisc: item?.dynamicdisc,
-        gstPercentage: item?.gstPercentage,
-        purchaseType: item?.purchaseType,
-        invoiceNo: item?.invoiceNo,
-        isIGST: item?.isIGST,
-        gstType: item?.gstType,
-        itemLocation: item?.itemLocation,
-        amount:  (formData?.gstType === 'Exclusive') ? ( item?.SAVE_selectedItem?.unitPriceAfterDiscount? (((item?.SAVE_selectedItem?.unitPriceAfterDiscount) / ((100 + (parseInt(item?.gstPercentage?.replace('%', ''), 10 ) || 0)) / 100)) * item?.quantity).toFixed(2) : (item?.exclusiveInputAmount)
-)
-:        item?.amount,
-        repetitionPrint:item?.repetition,
-      };
-
-      // console.log("selectedItem============>" , ((item?.SAVE_selectedItem?.unitPriceAfterDiscount)/((100+(parseInt(item?.gstPercentage?.replace('%', ''), 10) || 0))/100))*item?.quantity )
-
-
-      // console.log("Form data before SETTING THE FORMDATA after restoringfield  " , formData)
-
-
-
-      console.log("resotredfiled " , restoreFields)
-
-
-      setFormData((prev) => ({ ...prev, ...restoreFields }));
-
-      console.log("Form data AFTER SETTING THE FORMDATA after restoringfield  " , formData)
-
-
-
       // close the modal
+      window.saleModal_4.close();
 
-    }
-  };
+      console.log("Edit action triggered", excelContent?.[index]);
+      const item = excelContent?.[index];
 
-  
-  
-  const localStorageBackup = (tempContent) => {
-    const checkLocal = localStorage.getItem("NPUR_TEMP_CONTENT");
-    let localContent = [];
-    if (checkLocal !== null && checkLocal !== undefined) {
-      localContent = JSON.parse(checkLocal || "[]");
-      localContent.push(tempContent);
-    } else {
-      localContent.push(tempContent);
-    }
-
-    localStorage.setItem("NPUR_TEMP_CONTENT", JSON.stringify(localContent));
-  };
-
-  useEffect(() => {
-    if (localStorage.getItem("NPUR_TEMP_CONTENT") === null) return;
-    // const localContent = JSON.parse(
-    //   localStorage.getItem("SALE_TEMP_CONTENT") || "[]"
-    // );
-    window.saleModal_3.showModal();
-  }, []);
-
-  
-  const userRestoreConfirmation = (accepted) => {
-    if (accepted) {
-      const localContent = JSON.parse(
-        localStorage.getItem("NPUR_TEMP_CONTENT") || "[]"
+      // restore the fields
+      let totalAmount = reverseCalculateTotal(
+        item?.amount,
+        item?.gstPercentage
       );
 
-      console.log("Local Content", localContent);
+      setSelectedItem(item?.selectedData);
+      const restoreFields = {
+        partyName: item?.partyName,
+        invoiceNo: item?.invoiceNo,
+        invoiceDate: item?.originDate,
+        unitPrice: item?.unitPrice,
+        gstType: item.gstType,
+        unit: item?.unit,
+        purchaseType: item.purchaseType,
+        purchaseTypeText: item.purchaseTypeText,
+        itemName: item?.itemName,
+        itemPartNoOrg: item?.itemPartNo,
+        itemLocation: item?.itemLocation,
+        quantity: item?.quantity,
+        mrp: item?.mrp,
+        gstPercentage: item?.gstPercentage,
+        amount:
+          item?.gstType === "Exempt" || item?.gstType === "Exclusive"
+            ? totalAmount
+            : item?.amount,
+        finalDisc: "ERROR!",
+        isIGST: item?.isIGST,
+        dynamicdisc: item?.disc,
+        mDiscPercentage: item?.mDiscPercentage,
+        selectedData: item?.selectedData,
+        repetitionPrint: parseInt(item?.repetitionPrint),
+        creditDays: item?.creditDays,
+      };
 
-      setExcelContent(localContent);
-      setBillSeriesRef(localContent[0]?.REMOTE_BILL_REF_NO);
-      handleChange({
-        target: {
-          name: "vehicleNo",
-          value: localContent[0]?.narration,
-        },
-      });
-
-      handleFormChange("partyName", localContent[0]?.partyName);
-
-      handleChange({
-        target: {
-          name: "seriesType",
-          value: localContent[0]?.vchSeries,
-        },
-      });
-      handleChange({
-        target: {
-          name: "saleType",
-          value: localContent[0]?.saleType,
-        },
-      });
-
-      handleFormChange("mobileNo", localContent[0]?.one_field_mobile);
-
-      // handleChange({
-      //   target: {
-      //     name: "saleDate",
-      //     value: localContent[0]?.billDate,
-      //   },
-      // });
-    } else {
-      localStorage.removeItem("NPUR_TEMP_CONTENT");
+      setFormData((prev) => ({ ...prev, ...restoreFields }));
     }
   };
-
-  const handleChange = (event) => {
-    // mostly used in input fields
-    const name = event.target?.name;
-    const value = event.target?.value;
-    setFormData((values) => ({ ...values, [name]: value }));
-  };
-
   return (
     <>
       <Toaster />
@@ -1525,11 +1488,10 @@ export default function page() {
               }}
               value={
                 formData?.purchaseType && {
-                  label: `${
-                    formData?.purchaseType === "DNM"
-                      ? "Discount Not Mentioned"
-                      : "Discount Mentioned"
-                  }`,
+                  label: `${formData?.purchaseType === "DNM"
+                    ? "Discount Not Mentioned"
+                    : "Discount Mentioned"
+                    }`,
                   value: formData.purchaseType,
                 }
               }
@@ -1570,29 +1532,6 @@ export default function page() {
             />
           </div>
 
-          {/* <form
-            className="animate-pulse"
-            onSubmit={(e) => {
-              e.preventDefault();
-              barCodeScanner();
-            }}
-          >
-            <input
-              value={barcodeScannedData || ""}
-              onFocus={(e) => {
-                e.target.value = "";
-                setBarcodeScannedData("");
-              }}
-              type="text"
-              placeholder="BARCODE SCAN 🔎"
-              onChange={(e) => {
-                setBarcodeScannedData(e.target.value);
-              }}
-              className="m-5 p-5 glass rounded-full w-[300px] text-center"
-            />
-          </form> */}
-          {/* <p className="text-center m-5 glass rounded-sm">{qrResult}</p> */}
-
           {/* Item DropDown */}
           {itemData?.length > 0 && (
             <Select
@@ -1610,6 +1549,7 @@ export default function page() {
 
                 console.log("Selected Item: ", e);
                 setSelectedItem(e);
+                handleFormChange("selectedData", e);
                 handleFormChange("quantity", 0); // clearing the fields
                 handleFormChange("amount", 0); // clearing the fields
                 handleFormChange("itemName", e.itemName);
@@ -1628,7 +1568,7 @@ export default function page() {
 
                 if (formData?.gstType !== "Exempt") {
                   // * if gst type is exempt, then it will not modify the gst percentage
-                  handleFormChange("gstPercentage", e?.gstPercentage || null);
+                  handleFormChange("gstPercentage", e?.gstPercentage || 0);
                 }
               }}
               getOptionLabel={(option) =>
@@ -1681,22 +1621,21 @@ export default function page() {
                     );
                   }
 
-                  handleFormChange("amount", unitPrice * e.target.value);
-                } 
-                else if (formData?.unitPriceAfterDiscount_D6) {
+                  // handleFormChange("amount", unitPrice * e.target.value);
+                } else if (formData?.unitPriceAfterDiscount_D6) {
                   if (formData?.gstType === "Exclusive") {
                     const exclusiveTotalAmount = exclusiveTaxTotalAmount(
                       formData.unitPriceAfterDiscount_D6,
                       e.target.value,
                       formData?.gstPercentage
                     );
-                    handleFormChange("amount", exclusiveTotalAmount);
+                    // handleFormChange("amount", exclusiveTotalAmount);
                   } else {
                     const inclExemptTotalAmount = inclusiveExemptTaxTotalAmount(
                       formData?.unitPriceAfterDiscount_D6,
                       e.target.value
                     );
-                    handleFormChange("amount", inclExemptTotalAmount);
+                    // handleFormChange("amount", inclExemptTotalAmount);
                   }
                 }
               }}
@@ -1788,18 +1727,156 @@ export default function page() {
             e.target.blur();
           }}
         />
-
-        {
-          <p className="text-green-500">
-            RECORDED DISC%:{" "}
-            <span className="text-white font-bold">
-              {formData?.dynamicdisc ?? "Not available"}
-            </span>
-          </p>
-        }
-
         <br />
       </div>
+      <dialog id="saleModal_4" className="modal">
+        <form method="dialog" className="modal-box">
+          <h3 className="font-bold text-lg">Preview </h3>
+          <span className="text-sky-300 animate-pulse text-sm">
+            {formData?.partyName === "PHONE PE" ||
+              formData?.partyName === "Cash" ? (
+              <span>{formData?.partyName}</span>
+            ) : null}
+          </span>
+          <div className="overflow-x-auto overflow-y-auto max-h-[400px]">
+            <table className="table">
+              {/* head */}
+              <thead>
+                <tr>
+                  <th>Sl No.</th>
+                  <th>Item</th>
+                  <th>Action</th>
+                  <th>Party Name</th>
+                  <th>Invoice No</th>
+                  <th>Invoice Date</th>
+                  <th>Gst Type</th>
+                  <th>Unit</th>
+                  <th>Purchase Type</th>
+                  {/* <th>Item Part No</th>
+                  <th>Item Part Organisation</th> */}
+                  <th>Item Location</th>
+                  <th>Qty</th>
+                  <th>MRP</th>
+                  <th>Disc%</th>
+                  <th>Tot. Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {/* row 1 */}
+
+                {excelContent.map((item, index) => {
+                  // console.log("Item", item);
+                  return (
+                    <tr key={index} className="hover:bg-indigo-950">
+                      <th>{index + 1}</th>
+                      <td>{item?.itemName}</td>
+                      <td>
+                        <div className="flex flex-col gap-2">
+                          <button
+                            onClick={() =>
+                              modifyExcelSheet(
+                                "edit",
+                                item.selectedData.code,
+                                item.partyName
+                              )
+                            }
+                            className="btn btn-sm btn-warning"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() =>
+                              modifyExcelSheet(
+                                "delete",
+                                item.selectedData.code,
+                                item.partyName
+                              )
+                            }
+                            className="btn btn-sm btn-error"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                      <td>{item?.partyName}</td>
+                      <td>{item?.invoiceNo}</td>
+                      <td>{item?.billDate}</td>
+                      <td>{item?.gstType}</td>
+                      <td>{item?.unit}</td>
+                      <td>{item?.purchaseTypeText}</td>
+                      {/* <td>{item?.itemName}</td>
+                      <td>{item?.itemPartNo}</td> */}
+                      <td>{item?.itemLocation}</td>
+                      <td>{item?.quantity}</td>
+                      <td>{item?.mrp}</td>
+                      <td>{item?.disc}</td>
+                      <td>{item?.amount}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            <div className="ml-2 mb-2">
+              Bill Amount:{" "}
+              <span className="font-extrabold">{getTotalBillAmount()}</span>
+            </div>
+          </div>
+          <div className="flex justify-center items-center mt-4 bg-indigo-950 rounded-lg p-3">
+            <div className="flex flex-col gap-2 w-[50%] items-center">
+              <div className="flex flex-col gap-2">
+                <input
+                  name="cashPayment"
+                  value={formData?.cashPayment || ""}
+                  type="number"
+                  className="input input-bordered input-secondary w-full"
+                  placeholder="Cash"
+                  min={0} // Prevents negative values
+                  onWheel={(e) => {
+                    e.target.blur();
+                  }}
+                  onChange={(e) => {
+                    // handleChange(e);
+                    // const value = Math.max(0, e.target.value); // Ensure non-negative value
+                    // handleInputSettlement("cash", value);
+                  }}
+                />
+                <input
+                  name="bankPayment"
+                  value={formData?.bankPayment || ""}
+                  onChange={(e) => {
+                    // handleChange(e);
+                    // const value = Math.max(0, e.target.value); // Ensure non-negative value
+                    // handleInputSettlement("online", value);
+                  }}
+                  type="number"
+                  className="input input-bordered input-secondary w-full"
+                  placeholder="Bank"
+                  min={0} // Prevents negative values
+                  onWheel={(e) => {
+                    e.target.blur();
+                  }}
+                />
+              </div>
+              <div
+                onClick={() => {
+                  handleFormChange("cashPayment", "");
+                  handleFormChange("bankPayment", "");
+                  toast.success("Cleared the payment fields");
+                }}
+                className="btn bg-yellow-600 hover:bg-yellow-800 w-full"
+              >
+                Clear
+              </div>
+            </div>
+          </div>
+          <div className="modal-action">
+            <button className="btn bg-red-600">Cancel</button>
+            <button onClick={createSheet} className="btn bg-green-600">
+              Download
+            </button>
+          </div>
+        </form>
+      </dialog>
 
       <div className="py-20"></div>
       {/* Bottom Nav Bar */}
@@ -1824,12 +1901,13 @@ export default function page() {
         {/* preview button added here  */}
         <button
           onClick={() => {
+            // createSheet();
             if (excelContent?.length === 0) {
               toast.error("No item has been added");
               return;
             }
 
-            window.purchase_modal_3.showModal();
+            window.saleModal_4.showModal();
           }}
           className=" text-white hover:bg-blue-900"
         >
@@ -1854,9 +1932,8 @@ export default function page() {
             height={40}
             alt="icon"
           ></Image>
-          <span className="mb-6 text-xl font-mono">Download</span>
-        </button> */}
-
+          <span className="mb-6 text-xl font-mono">Preview</span>
+        </button>
         <button
           onClick={() => {
             getItemsData();
