@@ -7,15 +7,38 @@ import Image from "next/image";
 import CustomOption from "../Dropdown/CustomOption";
 import CustomMenuList from "../Dropdown/CustomMenuList";
 import xlsx from "json-as-xlsx";
-import { useEffect, useState, useRef } from "react";
-import { uploadItem } from "../AppScript/script";
+import { useEffect, useState } from "react";
+
+// ADDED: Define a unique key for localStorage
+const LOCAL_STORAGE_KEY = "stockModuleBackup";
 
 export default function Page() {
   useEffect(() => {
     getAPIContent();
-  }, []);
 
-  const selectRef = useRef();
+    // ADDED: Check for saved data on component mount
+    const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (savedData) {
+      if (
+        window.confirm(
+          "It looks like you have an unsaved session. Do you want to restore your data?"
+        )
+      ) {
+        const backup = JSON.parse(savedData);
+        // Restore formData, ensuring the date string is converted back to a Date object
+        setFormData({
+          ...backup.formData,
+          stockDate: new Date(backup.formData.stockDate),
+        });
+        setRStockPositive(backup.RStockPositive || []);
+        setRStockNegative(backup.RStockNegative || []);
+        setLocationRackChangeList(backup.LocationRackChangeList || []);
+      } else {
+        // If the user chooses not to restore, clear the backup
+        localStorage.removeItem(LOCAL_STORAGE_KEY);
+      }
+    }
+  }, []);
 
   const [formData, setFormData] = useState({
     user: null,
@@ -38,6 +61,28 @@ export default function Page() {
   const [RStockPositive, setRStockPositive] = useState([]);
   const [RStockNegative, setRStockNegative] = useState([]);
   const [LocationRackChangeList, setLocationRackChangeList] = useState([]);
+
+  // ADDED: useEffect to save data to localStorage whenever it changes
+  useEffect(() => {
+    // Avoid saving initial empty state
+    if (
+      RStockPositive.length === 0 &&
+      RStockNegative.length === 0 &&
+      LocationRackChangeList.length === 0 &&
+      !formData.user &&
+      !formData.item
+    ) {
+      return;
+    }
+
+    const backupData = {
+      formData,
+      RStockPositive,
+      RStockNegative,
+      LocationRackChangeList,
+    };
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(backupData));
+  }, [formData, RStockPositive, RStockNegative, LocationRackChangeList]);
 
   const handleChange = (event) => {
     const name = event.target?.name;
@@ -99,6 +144,8 @@ export default function Page() {
   };
 
   const addContent = () => {
+    // if (!isFormValidated(formData)) return;
+
     const convertToDateString = (date) => {
       var dateString = `${date}`;
       var date = new Date(dateString);
@@ -291,6 +338,9 @@ export default function Page() {
     });
     window.stockModal_1.showModal();
     uploadStock(uploadSheets);
+
+    // ADDED: Clear the backup from localStorage after successful download/upload
+    localStorage.removeItem(LOCAL_STORAGE_KEY);
   };
 
   const exportExcel = (data, fileName, callBack) => {
@@ -369,18 +419,6 @@ export default function Page() {
     }));
   };
 
-  // Get the selected item object for react-select
-  const getSelectedItem = () => {
-    if (!formData?.item || !ItemAPIData.length) return null;
-    return ItemAPIData.find(item => item.itemName === formData.item) || null;
-  };
-
-  const handleOpenMenu = () => {
-    if (selectRef.current) {
-      selectRef.current.focus(); // This will trigger the menu to open
-    }
-  };
-
   // ****
   return (
     <>
@@ -388,7 +426,7 @@ export default function Page() {
         <form method="dialog" className="modal-box">
           <h3 className="font-bold text-lg">Message!</h3>
           <p className="py-4">{modalMessage?.message}</p>
-      <div className="modal-action">
+          <div className="modal-action">
             <button className="btn">Close</button>
           </div>
         </form>
@@ -455,13 +493,200 @@ export default function Page() {
       </div>
 
       <Select
+        placeholder="Select Item"
+        className="w-[95%] m-auto p-5 text-blue-800 font-bold"
+        options={ItemAPIData}
+        getOptionLabel={(option) => `${option["itemName"]}`}
+        value={formData?.item && { itemName: formData?.item }}
+        onChange={(e) => {
+          handleChange({ target: { name: "item", value: e?.itemName } });
+          handleChange({ target: { name: "unitName", value: e?.unitName } });
+          handleChange({
+            target: { name: "computerStock", value: e?.closingStock },
+          });
+          handleChange({ target: { name: "selectedItemRow", value: e?._id } });
+          handleChange({
+            target: { name: "location", value: e?.storageLocation },
+          });
+          if (formData?.seriesType === "MAIN") return;
+          handleChange({
+            target: { name: "gstAmount", value: e?.gstPercentage || null },
+          });
+        }}
+        filterOption={createFilter({ ignoreAccents: false })}
+        components={{ Option: CustomOption, MenuList: CustomMenuList }}
+      />
+
+      <div className="flex justify-center items-center flex-wrap">
+        <input
+          className="input input-bordered input-secondary w-[295px] m-5"
+          placeholder="Physical Stock"
+          type="text"
+          onChange={(e) => {
+            handleChange(e);
+          }}
+          value={formData?.physicalStock || ""}
+          name="physicalStock"
+        />
+        <input
+          className="input input-bordered input-secondary w-[295px] m-5"
+          placeholder="Computer Stock"
+          type="number"
+          onChange={(e) => {
+            // handleChange(e);
+          }}
+          value={formData?.computerStock || ""}
+          name="computerStock"
+          onWheel={(e) => {
+            e.target.blur();
+          }}
+        />
+      </div>
+
+      <div className="flex justify-center items-center flex-wrap">
+        <input
+          className="input input-bordered input-secondary w-[295px] m-5"
+          placeholder="Purchase Price"
+          type="number"
+          onChange={(e) => {
+            handleChange(e);
+          }}
+          value={formData?.purc_price || ""}
+          name="purc_price"
+          onWheel={(e) => {
+            e.target.blur();
+          }}
+        />
+        <input
+          className="input input-bordered input-secondary w-[295px] m-5"
+          placeholder="Location"
+          type="text"
+          onChange={(e) => {
+            handleChange(e);
+          }}
+          value={formData?.location || ""}
+          name="location"
+        />
+      </div>
+
+      <div className="py-20"></div>
+
+      {/* Bottom Nav Bar */}
+
+      <div className="btm-nav glass bg-blue-800">
+        <button
+          onClick={() => {
+            if (isFormValidated(formData)) window.stockModal_2.showModal();
+          }}
+          className="text-white hover:bg-blue-900"
+        >
+          <Image
+            className="mb-20"
+            src="/assets/images/add-button.png"
+            width={70}
+            height={70}
+            alt="icon"
+          ></Image>
+        </button>
+        <button
+          onClick={downloadSheet}
+          className=" text-white hover:bg-blue-900"
+        >
+          <Image
+            src="/assets/images/download (1).png"
+            width={50}
+            height={50}
+            alt="icon"
+          ></Image>
+          <span className="mb-6 text-xl font-mono">Download</span>
+        </button>
+        <button
+          onClick={getAPIContent}
+          className=" text-white hover:bg-blue-900"
+        >
+          <Image
+            src="/assets/images/refresh-arrow.png"
+            width={50}
+            height={50}
+            alt="icon"
+          ></Image>
+          <span className="mb-6 text-xl font-mono">Refresh</span>
+        </button>
+
+        <button
+          onClick={() => {
+            setFormData({
+              stockDate: new Date(), // default today.
+              item: null,
+              location: null,
+              purc_price: null,
+              selectedItemRow: -1,
+              computerStock: null,
+              physicalStock: null,
+              unitName: null,
+              user: null,
+            });
+
+            setRStockNegative([]);
+            setRStockPositive([]);
+            setLocationRackChangeList([]); // ADDED: Also clear this list on reset
+
+            // ADDED: Clear the backup from localStorage on manual reset
+            localStorage.removeItem(LOCAL_STORAGE_KEY);
+          }}
+          className="text-white hover:bg-blue-900"
+        >
+          <Image
+            src="/assets/images/remove.png"
+            width={50}
+            height={50}
+            alt="icon"
+          ></Image>
+          <span className="mb-6 text-xl font-mono">Reset</span>
+        </button>
+      </div>
+    </>
+  );
+        }          <span className="loading loading-infinity w-[80px] text-sky-500"></span>
+        )}
+      </div>
+
+      <div className="flex justify-center items-center flex-wrap">
+        <div className="flex justify-center items-center flex-wrap">
+          <input
+            className="input input-bordered input-secondary w-[295px] m-5"
+            placeholder="User"
+            type="text"
+            name="user"
+            value={formData?.user || ""}
+            onChange={handleChange}
+          />
+        </div>
+        <DatePicker
+          className="input input-bordered input-secondary w-[295px] m-5 hover:cursor-pointer"
+          placeholderText="STOCK DATE"
+          showPopperArrow={true}
+          maxDate={new Date()}
+          selected={formData?.stockDate ?? new Date()}
+          onChange={(selectedDate) => {
+            handleChange({
+              target: {
+                name: "stockDate",
+                value: selectedDate,
+              },
+            });
+          }}
+        />
+      </div>
+
+      <Select
         ref={selectRef}
         placeholder="Select Item"
         className="w-[95%] m-auto p-5 text-blue-800 font-bold"
         options={ItemAPIData}
         getOptionLabel={(option) => `${option.itemName} - ${option.partNumber}`}
         getOptionValue={(option) => option.itemName}
-        value={getSelectedItem()}
+        value={formData?.item && { itemName: formData?.item }}
         onChange={(selectedOption) => {
           if (selectedOption) {
             handleChange({ target: { name: "item", value: selectedOption.itemName } });
