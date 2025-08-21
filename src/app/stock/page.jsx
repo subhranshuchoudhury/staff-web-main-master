@@ -635,6 +635,7 @@ export default function Page() {
     <input
     className="input input-bordered input-secondary w-[295px] m-5"
     placeholder="Purchase Price"
+    defaultValue={1}
     type="number"
     onChange={(e) => {
       handleChange(e);
