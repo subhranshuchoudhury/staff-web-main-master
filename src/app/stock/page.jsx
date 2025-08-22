@@ -52,7 +52,7 @@ export default function Page() {
     item: null,
     unitName: null,
     location: null,
-    purc_price: null,
+    purc_price: 1,
     computerStock: null,
     physicalStock: null,
     selectedItemRow: null,
@@ -488,7 +488,7 @@ export default function Page() {
       stockDate: new Date(), // default today.
       item: null,
       location: null,
-      purc_price: null,
+      purc_price: 1,
       selectedItemRow: null,
       computerStock: null,
       physicalStock: null,
@@ -583,7 +583,7 @@ export default function Page() {
       placeholder="Select Item"
       className="w-[95%] m-auto p-5 text-blue-800 font-bold"
       options={ItemAPIData}
-      getOptionLabel={(option) => `${option.itemName} - ${option.partNumber}`}
+      getOptionLabel={(option) => `${option.itemName} ${option?.partNumber && "- " + option.partNumber}`}
       value={formData?.item && { itemName: formData?.item }}
       onChange={(e) => {
         handleChange( { target: { name: "item", value: e?.itemName } });
@@ -708,7 +708,7 @@ setFormData({
 stockDate: new Date(), // default today.
 item: null,
 location: null,
-purc_price: null,
+purc_price: 1,
 selectedItemRow: -1,
 computerStock: null,
 physicalStock: null,
