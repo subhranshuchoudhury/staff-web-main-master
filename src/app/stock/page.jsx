@@ -153,12 +153,44 @@ export default function Page() {
           form[key] = 0;
           continue;
         }
+        
+        // Provide specific error messages for certain fields
+        let fieldName = key;
+        let errorMessage = "";
+        
+        switch(key) {
+          case "unitName":
+            fieldName = "Unit Name";
+            errorMessage = "📜 Please select an item first. The unit name will be automatically filled.";
+            break;
+          case "item":
+            fieldName = "Item";
+            errorMessage = "📜 Please select an item from the dropdown.";
+            break;
+          case "physicalStock":
+            fieldName = "Physical Stock";
+            errorMessage = "📜 Please enter the physical stock count.";
+            break;
+          case "computerStock":
+            fieldName = "Computer Stock";
+            errorMessage = "📜 Computer stock should be automatically filled when you select an item.";
+            break;
+          case "user":
+            fieldName = "User";
+            errorMessage = "📜 Please enter the user name.";
+            break;
+          case "location":
+            fieldName = "Location";
+            errorMessage = "📜 Please enter or confirm the storage location.";
+            break;
+          default:
+            fieldName = key.replace(/[A-Z]/g, (match) => " " + match).trim().toUpperCase();
+            errorMessage = `📜 The field "${fieldName}" is empty.`;
+        }
+        
         handleModalMessage({
           name: "message",
-          value: `📜 The field "${key
-            .replace(/[A-Z]/g, (match) => " " + match)
-            .trim()
-            .toUpperCase()}" is empty.`,
+          value: errorMessage,
         });
         window.stockModal_1.showModal();
         return false;
@@ -459,8 +491,11 @@ export default function Page() {
           <div className="text-white">
             <b className="block mb-2 text-warning">Summary: </b>
             <p>ITEM: {formData?.item}</p>
+            <p>UNIT: {formData?.unitName}</p>
             <p>PURCHASE PRICE: {formData?.purc_price}</p>
             <p>LOC: {formData?.location}</p>
+            <p>COMPUTER STOCK: {formData?.computerStock}</p>
+            <p>PHYSICAL STOCK: {formData?.physicalStock}</p>
           </div>
           <div className="modal-action">
             <button className="btn btn-success">Edit</button>
@@ -521,7 +556,8 @@ export default function Page() {
         onChange={(e) => {
           if (e) {
             handleChange({ target: { name: "item", value: e?.itemName } });
-            handleChange({ target: { name: "unitName", value: e?.unitName } });
+            // Ensure unitName is set, with a fallback if it's empty
+            handleChange({ target: { name: "unitName", value: e?.unitName || "PCS" } });
             handleChange({
               target: { name: "computerStock", value: e?.closingStock },
             });
@@ -529,10 +565,13 @@ export default function Page() {
             handleChange({
               target: { name: "location", value: e?.storageLocation },
             });
-            if (formData?.seriesType === "MAIN") return;
-            handleChange({
-              target: { name: "gstAmount", value: e?.gstPercentage || null },
-            });
+          } else {
+            // Clear fields when selection is cleared
+            handleChange({ target: { name: "item", value: null } });
+            handleChange({ target: { name: "unitName", value: null } });
+            handleChange({ target: { name: "computerStock", value: null } });
+            handleChange({ target: { name: "selectedItemRow", value: null } });
+            handleChange({ target: { name: "location", value: null } });
           }
         }}
         filterOption={createFilter({ ignoreAccents: false })}
@@ -544,22 +583,26 @@ export default function Page() {
         <input
           className="input input-bordered input-secondary w-[295px] m-5"
           placeholder="Physical Stock"
-          type="text"
+          type="number"
           onChange={(e) => {
             handleChange(e);
           }}
           value={formData?.physicalStock || ""}
           name="physicalStock"
+          onWheel={(e) => {
+            e.target.blur();
+          }}
         />
         <input
           className="input input-bordered input-secondary w-[295px] m-5"
           placeholder="Computer Stock"
           type="number"
           onChange={(e) => {
-            // handleChange(e);
+            // Keep this read-only as it's auto-filled from item selection
           }}
           value={formData?.computerStock || ""}
           name="computerStock"
+          readOnly
           onWheel={(e) => {
             e.target.blur();
           }}
@@ -643,7 +686,7 @@ export default function Page() {
               item: null,
               location: null,
               purc_price: 1,
-              selectedItemRow: -1,
+              selectedItemRow: null,
               computerStock: null,
               physicalStock: null,
               unitName: null,
