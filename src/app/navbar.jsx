@@ -3,27 +3,52 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const isRootPage = pathname === "/";
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  
+  // Refs for dropdowns to handle outside clicks
+  const mobileMenuRef = useRef(null);
+  const profileMenuRef = useRef(null);
+
+  // Handle outside clicks to close dropdowns
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target)) {
+        setMobileMenuOpen(false);
+      }
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+        setProfileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     // Check if user is logged in
     const authStatus = localStorage.getItem("isAuthenticated");
     setIsLoggedIn(authStatus === "true");
+    
+    // Close all menus when route changes
+    setMobileMenuOpen(false);
+    setProfileMenuOpen(false);
   }, [pathname]);
 
   const handleLogout = () => {
     localStorage.removeItem("isAuthenticated");
     localStorage.removeItem("email");
     setIsLoggedIn(false);
-    setProfileDropdownOpen(false);
+    setProfileMenuOpen(false);
     router.push("/");
   };
 
@@ -32,14 +57,24 @@ export default function Navbar() {
     return null;
   }
 
+  const navLinks = [
+    { href: "/dashboard", label: "Dashboard" },
+    { href: "/purchase", label: "Purchase" },
+    { href: "/purchase/dynamic", label: "Excel Purchase" },
+    { href: "/add-item-group", label: "Add Group" },
+    { href: "/purchase/party", label: "Add Party" },
+    { href: "/history", label: "History" },
+  ];
+
   return (
-    <div className="navbar bg-base-100 fixed top-0 left-0 right-0 z-50 shadow-md">
+    <nav className="navbar bg-base-100 fixed top-0 left-0 right-0 z-50 shadow-md">
       <div className="navbar-start">
-        <div className="dropdown">
-          <label 
+        <div className="dropdown" ref={mobileMenuRef}>
+          <div 
             tabIndex={0} 
+            role="button"
             className="btn btn-ghost btn-circle"
-            onClick={() => setDropdownOpen(!dropdownOpen)}
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -55,42 +90,23 @@ export default function Navbar() {
                 d="M4 6h16M4 12h16M4 18h7"
               />
             </svg>
-          </label>
-          {dropdownOpen && (
+          </div>
+          {mobileMenuOpen && (
             <ul
               tabIndex={0}
               className="menu menu-sm dropdown-content mt-3 p-2 bg-blue-950 rounded-box w-52 z-20 shadow-xl"
             >
-              <li>
-                <Link href={"/dashboard"} onClick={() => setDropdownOpen(false)}>
-                  Dashboard
-                </Link>
-              </li>
-              <li>
-                <Link href={"/purchase"} onClick={() => setDropdownOpen(false)}>
-                  Purchase
-                </Link>
-              </li>
-              <li>
-                <Link href={"/purchase/dynamic"} onClick={() => setDropdownOpen(false)}>
-                  Excel Purchase
-                </Link>
-              </li>
-              <li>
-                <Link href={"/add-item-group"} onClick={() => setDropdownOpen(false)}>
-                  Add Group
-                </Link>
-              </li>
-              <li>
-                <Link href={"/purchase/party"} onClick={() => setDropdownOpen(false)}>
-                  Add Party
-                </Link>
-              </li>
-              <li>
-                <Link href={"/history"} onClick={() => setDropdownOpen(false)}>
-                  History
-                </Link>
-              </li>
+              {navLinks.map((link) => (
+                <li key={link.href}>
+                  <Link 
+                    href={link.href} 
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="hover:bg-blue-700"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           )}
         </div>
@@ -99,52 +115,62 @@ export default function Navbar() {
       <div className="navbar-center">
         <Link
           href="/dashboard"
-          className="btn btn-ghost uppercase font-mono text-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700"
+          className="btn btn-ghost uppercase font-mono text-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 transition-all duration-300"
         >
           Jyeshtha Motors
         </Link>
       </div>
       
       <div className="navbar-end">
-        <div className="dropdown dropdown-end">
-          <label 
+        <div className="dropdown dropdown-end" ref={profileMenuRef}>
+          <div 
             tabIndex={1} 
+            role="button"
             className="btn btn-ghost btn-circle avatar"
-            onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+            onClick={() => setProfileMenuOpen(!profileMenuOpen)}
           >
             <div className="w-10 rounded-full ring-2 ring-blue-500">
-              <img src="/assets/images/jmlogo.jpg" alt="Profile" />
+              <img 
+                src="/assets/images/jmlogo.jpg" 
+                alt="Profile" 
+                width={40}
+                height={40}
+                className="object-cover"
+              />
             </div>
-          </label>
+          </div>
           
-          {profileDropdownOpen && (
+          {profileMenuOpen && (
             <ul
               tabIndex={1}
               className="menu menu-sm dropdown-content mt-3 p-2 bg-blue-950 rounded-box w-52 z-20 shadow-xl"
             >
               <li className="px-4 py-2 text-white border-b border-blue-800">
-                <span className="text-sm">
+                <span className="text-sm font-medium">
                   {localStorage.getItem("email") || "User"}
                 </span>
               </li>
               <li>
-                <a className="hover:bg-blue-700" onClick={() => setProfileDropdownOpen(false)}>
+                <button 
+                  className="hover:bg-blue-700 w-full text-left"
+                  onClick={() => setProfileMenuOpen(false)}
+                >
                   Profile Settings
-                </a>
+                </button>
               </li>
               <li>
                 {isLoggedIn ? (
-                  <a 
-                    className="hover:bg-red-700 text-red-200"
+                  <button 
+                    className="hover:bg-red-700 text-red-200 w-full text-left"
                     onClick={handleLogout}
                   >
                     Logout
-                  </a>
+                  </button>
                 ) : (
                   <Link 
                     href="/" 
-                    className="hover:bg-blue-700"
-                    onClick={() => setProfileDropdownOpen(false)}
+                    className="hover:bg-blue-700 w-full"
+                    onClick={() => setProfileMenuOpen(false)}
                   >
                     Login
                   </Link>
@@ -154,6 +180,6 @@ export default function Navbar() {
           )}
         </div>
       </div>
-    </div>
+    </nav>
   );
 }
