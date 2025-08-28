@@ -15,30 +15,13 @@ export function middleware(request) {
   // Check if the current path is a public route
   const isPublicRoute = publicRoutes.includes(pathname);
   
-  // Create response object
-  const response = NextResponse.next();
-  
-  // CRITICAL: Add headers to prevent caching of protected pages
-  // This ensures browser doesn't cache pages and serve stale content from history
-  if (!isPublicRoute) {
-    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-    response.headers.set('Pragma', 'no-cache');
-    response.headers.set('Expires', '0');
-    response.headers.set('X-Accel-Expires', '0'); // For Nginx proxies
-  }
-
   // If user is NOT authenticated
   if (!isAuthenticated) {
     // Allow access only to public routes
     if (!isPublicRoute) {
       const url = request.nextUrl.clone();
       url.pathname = '/';
-      
-      // Also set no-cache headers on redirect to prevent caching of redirect
-      const redirectResponse = NextResponse.redirect(url);
-      redirectResponse.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
-      redirectResponse.headers.set('Pragma', 'no-cache');
-      return redirectResponse;
+      return NextResponse.redirect(url);
     }
   }
   
@@ -46,15 +29,10 @@ export function middleware(request) {
   if (isAuthenticated && pathname === '/') {
     const url = request.nextUrl.clone();
     url.pathname = '/dashboard';
-    
-    // Set no-cache headers on this redirect as well
-    const redirectResponse = NextResponse.redirect(url);
-    redirectResponse.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
-    redirectResponse.headers.set('Pragma', 'no-cache');
-    return redirectResponse;
+    return NextResponse.redirect(url);
   }
   
-  return response;
+  return NextResponse.next();
 }
 
 export const config = {
