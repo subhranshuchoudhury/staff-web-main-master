@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 
 const AuthPage = () => {
@@ -50,9 +50,12 @@ const AuthPage = () => {
     try {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Store auth state
+      // Store auth state in localStorage
       localStorage.setItem("isAuthenticated", "true");
       localStorage.setItem("email", formData.email);
+      
+      // Set authentication cookie for middleware
+      document.cookie = "authToken=authenticated; path=/; max-age=86400"; // 24 hours
       
       // Redirect to dashboard
       router.push("/dashboard");
@@ -62,6 +65,8 @@ const AuthPage = () => {
       setIsLoading(false);
     }
   };
+
+  // Note: Removed the authentication check here since middleware handles redirects
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 to-purple-900 p-4">
@@ -99,6 +104,7 @@ const AuthPage = () => {
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter your email"
+              autoComplete="email"
             />
           </div>
 
@@ -114,6 +120,7 @@ const AuthPage = () => {
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter your password"
+              autoComplete="current-password"
             />
           </div>
 
