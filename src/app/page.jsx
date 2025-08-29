@@ -221,7 +221,7 @@ const AuthPage = () => {
               onClick={() => setShowAddUser(true)}
               className="w-full mt-4 bg-green-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-green-700 transition duration-300"
             >
-              Add New User
+              New User
             </button>
           </>
         ) : (
