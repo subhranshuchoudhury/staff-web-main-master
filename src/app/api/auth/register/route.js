@@ -1,6 +1,5 @@
-// src/app/api/auth/register/route.js
 import { NextResponse } from 'next/server';
-import { createUser } from '../../../../model/User.js';
+import { createUser } from '@/model/User';
 
 export async function POST(request) {
   try {
