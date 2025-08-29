@@ -1,6 +1,5 @@
-// src/app/api/auth/reset-password/route.js
 import { NextResponse } from 'next/server';
-import { resetPassword, validateResetToken } from '../../../../model/User.js';
+import { resetPassword, validateResetToken } from '@/model/User';
 
 export async function POST(request) {
   try {
