@@ -1,22 +1,7 @@
 // src/app/api/auth/logout/route.js
 import { NextResponse } from 'next/server';
 
-export async function POST(request) {
-  try {
-    // Create response
-    const response = NextResponse.json({
-      success: true,
-      message: 'Logged out successfully'
-    });
 
-    // Clear the auth cookie with all necessary options
-    response.cookies.set('authToken', '', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 0, // Expire immediately
-      path: '/', // Ensure it clears from all paths
-    });
 
     // Also try to delete the cookie (additional cleanup)
     response.cookies.delete('authToken');
