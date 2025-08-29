@@ -1,6 +1,5 @@
-// src/app/api/auth/login/route.js
 import { NextResponse } from 'next/server';
-import { validateUser } from '../../../../model/User.js';
+import { validateUser } from '@/model/User'; // Using alias instead of relative path
 
 export async function POST(request) {
   try {
