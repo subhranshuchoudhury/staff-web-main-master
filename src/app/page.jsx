@@ -221,7 +221,7 @@ const AuthPage = () => {
               onClick={() => setShowAddUser(true)}
               className="w-full mt-4 bg-green-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-green-700 transition duration-300"
             >
-              New User
+              Add New User
             </button>
           </>
         ) : (
@@ -276,17 +276,7 @@ const AuthPage = () => {
           </>
         )}
 
-        {/* Current Users Display */}
-        <div className="mt-6 p-4 bg-gray-100 rounded-lg">
-          <p className="text-sm text-gray-600 font-semibold mb-2">Current Users ({credentials.length}):</p>
-          <div className="space-y-1">
-            {credentials.map((cred, index) => (
-              <p key={index} className="text-xs text-gray-600 font-mono">
-                {cred.email}
-              </p>
-            ))}
-          </div>
-        </div>
+
 
         <div className="mt-4 p-4 bg-gray-100 rounded-lg">
           <p className="text-sm text-gray-600 text-center font-semibold">
