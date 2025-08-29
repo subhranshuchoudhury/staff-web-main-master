@@ -1,7 +1,5 @@
-// src/app/api/auth/forgot-password/route.js
 import { NextResponse } from 'next/server';
-import { changePassword } from '../../../../model/User.js';
-import bcrypt from 'bcryptjs';
+import { changePassword } from '@/model/User';
 
 export async function POST(request) {
   try {
