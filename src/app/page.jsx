@@ -13,8 +13,8 @@ const AuthPage = () => {
   const [error, setError] = useState("");
 
   // Hardcoded credentials
-  const validEmail = "admin@jyeshthamotors.com";
-  const validPassword = "Jyeshtha@2024";
+  const validEmail = "jyeshthamotors@gmail.com";
+  const validPassword = "Jyeshtha@2025";
 
   const router = useRouter();
 
