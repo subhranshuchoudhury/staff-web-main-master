@@ -2,7 +2,7 @@
 
 import React from "react";
 import PropTypes from "prop-types";
-import VirtualList from "react-tiny-virtual-list";
+import { FixedSizeList as List } from "react-window";
 
 const DefaultItemHeight = 40;
 
@@ -14,26 +14,21 @@ export default class CustomMenuList extends React.Component {
     getValue: PropTypes.func.isRequired,
   };
 
-  renderItem = (props) => {
+  renderItem = ({ index, style }) => {
     const { children } = this.props;
-    if (Array.isArray(children)) {
-      return (
-        <li style={props.style} key={props.index}>
-          {children[props.index]}
-        </li>
-      );
-    }
+    const childrenArray = React.Children.toArray(children);
+
     return (
-      <li key={props.index} className="react-virtualized-menu-placeholder">
-        {children.props.children}
+      <li style={style} key={index}>
+        {childrenArray[index]}
       </li>
     );
   };
 
   render() {
     const { options, children, maxHeight, getValue } = this.props;
-
     const [value] = getValue();
+
     const initialOffset = options.indexOf(value) * DefaultItemHeight;
     const childrenOptions = React.Children.toArray(children);
     const wrapperHeight =
@@ -43,14 +38,15 @@ export default class CustomMenuList extends React.Component {
 
     return (
       <span className="react-virtualized-list-wrapper">
-        <VirtualList
-          width="100%"
+        <List
           height={wrapperHeight + 6}
-          scrollOffset={initialOffset}
+          width="100%"
           itemCount={childrenOptions.length}
           itemSize={DefaultItemHeight}
-          renderItem={this.renderItem}
-        />
+          initialScrollOffset={initialOffset}
+        >
+          {this.renderItem}
+        </List>
       </span>
     );
   }
