@@ -11,7 +11,7 @@ const anthropic = createAnthropic({
 });
 
 async function extractInvoiceData(imageBuffers) {
-  const model = anthropic("claude-3-haiku-20240307");
+  const model = anthropic("claude-sonnet-4-20250514");
   const systemPrompt = `
     You are an expert invoice data extraction service.
     The following images represent sequential pages of a SINGLE INVOICE. Your task is to process all pages and merge the information into one final JSON object.
@@ -57,6 +57,8 @@ async function extractInvoiceData(imageBuffers) {
     }
 
     IMPORTANT:
+    - Extract fields from the image and return ONLY valid JSON. 
+    - Do not add explanations, text, or formatting outside of JSON.
     - If any field is missing, use "N/A" for string values and 0 for numeric values.
     - Do not include any other text, explanations, or markdown formatting like \`\`\`json.
     - If you find missing information, note it in the "message" field.
@@ -77,6 +79,7 @@ async function extractInvoiceData(imageBuffers) {
     system: systemPrompt,
     messages: [{ role: "user", content: userContent }],
     temperature: 0.1,
+    response_format: { type: "json" },
   });
 
   const cleaned = text
