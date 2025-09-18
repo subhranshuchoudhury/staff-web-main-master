@@ -34,7 +34,7 @@ async function extractInvoiceData(imageBuffers) {
 
     Invoice-level details:
     - invoice_no: The main Invoice Number.
-    - invoice_date: The date of the invoice (format: DD-MM-YYYY).
+    - invoice_date: The date of the invoice only (format: DD-MM-YYYY for example : 12-01-2024)
     - format: The type of invoice (e.g., "Retail", "Tax").
     - grand_total: The final payable amount (usually on the last page).
 
