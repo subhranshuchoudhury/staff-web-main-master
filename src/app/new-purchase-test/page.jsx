@@ -1192,11 +1192,13 @@ export default function page() {
        handleFormChange("gstPercentage", 0);
      }
 
-     // set quantity again to ensure UI consistency
-     handleFormChange("quantity", item?.qty || 1);
-     setAddedItems((prev) => new Set(prev).add(item.part_no));
+     
+     const itemQty = item?.qty || 1;
 
-     // setIsClaudeModalOpen(false);
+     // Set both quantity and repetitionPrint to ensure consistency
+     handleFormChange("quantity", itemQty);
+     handleFormChange("repetitionPrint", itemQty);
+     setAddedItems((prev) => new Set(prev).add(item.part_no));
    };
    return (
      <>
