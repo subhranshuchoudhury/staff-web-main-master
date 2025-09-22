@@ -1132,6 +1132,7 @@ export default function page() {
 
        const responseData = await response.json();
        setApiResponse(responseData);
+       //  console.log(apiResponse);
        setEditedApiResponse(JSON.parse(JSON.stringify(responseData)));
      } catch (error) {
        console.error("Error calling API:", error);
@@ -1184,15 +1185,17 @@ export default function page() {
      );
 
      // set GST only when GST type isn't Exempt (mirrors Select onChange behavior)
+     // set GST only when GST type isn't Exempt (mirrors Select onChange behavior)
      if (formData?.gstType !== "Exempt") {
-       const gstValue =
-         matched?.gstPercentage ?? (item?.cgst || 0) + (item?.sgst || 0) ?? 0;
-       handleFormChange("gstPercentage", gstValue);
-     } else {
-       handleFormChange("gstPercentage", 0);
-     }
+       // Combine cgst and sgst, providing a fallback of 0 if they don't exist.
+       const totalGstRate = (item?.cgst || 0) + (item?.sgst || 0);
 
-     
+       // Format the number into the expected string format, e.g., "18 %".
+       const gstStringFormat = `${totalGstRate} %`;
+
+       // Update the form state with the correctly formatted string.
+       handleFormChange("gstPercentage", gstStringFormat);
+     }
      const itemQty = item?.qty || 1;
 
      // Set both quantity and repetitionPrint to ensure consistency
@@ -1477,9 +1480,9 @@ export default function page() {
                    e?.storageLocation || "Not Available"
                  );
 
-                 if (formData?.gstType !== "Exempt") {
+                 if (formData?.gstType === "Exempt") {
                    // * if gst type is exempt, then it will not modify the gst percentage
-                   handleFormChange("gstPercentage", e?.gstPercentage || 0);
+                   handleFormChange("gstPercentage", 0);
                  }
                }}
                getOptionLabel={(option) =>
@@ -1585,8 +1588,22 @@ export default function page() {
                }}
              />
            </div>
+           <Select
+             isDisabled={formData?.gstType === "Exempt"}
+             placeholder="Select GST %"
+             isSearchable={false}
+             className="w-full m-auto p-5 text-blue-800 font-bold"
+             options={gstAmount}
+             getOptionLabel={(option) => `${option["value"]}`}
+             value={
+               formData.gstPercentage ? { value: formData.gstPercentage } : null
+             }
+             onChange={(e) => {
+               handleFormChange("gstPercentage", e.value);
+             }}
+           />
 
-           {!loadingExcel && (
+           {/* {!loadingExcel && (
              <Select
                isDisabled={formData?.gstType === "Exempt"}
                placeholder="Select GST %"
@@ -1594,16 +1611,16 @@ export default function page() {
                className="w-full m-auto p-5 text-blue-800 font-bold"
                options={gstAmount}
                getOptionLabel={(option) => `${option["value"]}`}
-               value={
-                 SelectedItem?.gstPercentage && {
-                   value: SelectedItem?.gstPercentage,
-                 }
-               }
+               //  value={
+               //    SelectedItem?.gstPercentage && {
+               //      value: SelectedItem?.gstPercentage,
+               //    }
+               //  }
                onChange={(e) => {
                  handleFormChange("gstPercentage", e.value);
                }}
              />
-           )}
+           )} */}
          </div>
 
          <input
