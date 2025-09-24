@@ -442,72 +442,54 @@ export default function page() {
      };
 
      const modalConfirmedAdd = () => {
-       if (excelContent.length !== 0) {
-         let index = excelContent.findIndex(
-           (content) =>
-             content.selectedData.code === tempContent.selectedData.code &&
-             content.partyName === tempContent.partyName
-         );
-         if (index !== -1) {
-           setExcelContent((prevArray) => {
-             const updatedArray = [...prevArray];
-             updatedArray[index] = tempContent;
-             return updatedArray;
-           });
-         } else {
-           setExcelContent((prevArray) => [...prevArray, tempContent]);
-         }
-       } else {
-         setExcelContent((prevArray) => [...prevArray, tempContent]);
-       }
+  // This single line replaces the original conditional block from lines 73-77
+  setExcelContent((prevArray) => [...prevArray, tempContent]);
 
-       // * saving the data to localStorage
-       if (!isEditing) storeNotDownload(tempContent);
-       else {
-         const datas = localStorage.getItem("PURCHASE_NOT_DOWNLOAD_DATA");
-         const parsedData = JSON.parse(datas);
-         const index = parsedData.findIndex(
-           (obj) =>
-             obj.selectedData.code === tempContent.selectedData.code &&
-             obj.partyName === tempContent.partyName
-         );
-         parsedData[index] = tempContent;
-         localStorage.setItem(
-           "PURCHASE_NOT_DOWNLOAD_DATA",
-           JSON.stringify(parsedData)
-         );
-         setIsEditing(false);
-       }
+  // * saving the data to localStorage
+  if (!isEditing) storeNotDownload(tempContent);
+  else {
+    const datas = localStorage.getItem("PURCHASE_NOT_DOWNLOAD_DATA");
+    const parsedData = JSON.parse(datas);
+    const index = parsedData.findIndex(
+      (obj) =>
+        obj.selectedData.code === tempContent.selectedData.code &&
+        obj.partyName === tempContent.partyName
+    );
+    parsedData[index] = tempContent;
+    localStorage.setItem(
+      "PURCHASE_NOT_DOWNLOAD_DATA",
+      JSON.stringify(parsedData)
+    );
+    setIsEditing(false);
+  }
 
-       // * show the modal
-       if (isEditing)
-         handleModal("Success ✅", "Content Edited Successfully!", "Okay");
-       else handleModal("Success ✅", "Content Added Successfully!", "Okay");
-       window.purchase_modal_1.showModal();
+  // * show the modal
+  if (isEditing)
+    handleModal("Success ✅", "Content Edited Successfully!", "Okay");
+  else handleModal("Success ✅", "Content Added Successfully!", "Okay");
+  window.purchase_modal_1.showModal();
 
-       // setQrResult("...");
+  // * clearing fields
+  handleFormChange("itemName", null);
+  handleFormChange("dynamicdisc", null);
+  handleFormChange("quantity", null);
+  handleFormChange("repetitionPrint", null);
+  handleFormChange("mrp", null);
+  handleFormChange("itemLocation", null);
+  handleFormChange("unitPrice", "");
+  handleFormChange("gstPercentage", 0);
+  if (formData?.purchaseType === "DNM")
+    handleFormChange("purchaseType", "DNM");
+  else handleFormChange("purchaseType", "DM");
+  handleFormChange("purchaseTypeText", null);
+  handleFormChange("selectedData", null);
+  setSelectedItem(null);
 
-       // * clearing fields
-       handleFormChange("itemName", null);
-       handleFormChange("dynamicdisc", null);
-       handleFormChange("quantity", null);
-       handleFormChange("repetitionPrint", null);
-       handleFormChange("mrp", null);
-       handleFormChange("itemLocation", null);
-       handleFormChange("unitPrice", "");
-       handleFormChange("gstPercentage", 0);
-       if (formData?.purchaseType === "DNM")
-         handleFormChange("purchaseType", "DNM");
-       else handleFormChange("purchaseType", "DM");
-       handleFormChange("purchaseTypeText", null);
-       handleFormChange("selectedData", null);
-       setSelectedItem(null);
+  if (formData?.gstType !== "Exempt")
+    handleFormChange("gstPercentage", null);
+  handleFormChange("amount", null);
+};
 
-       if (formData?.gstType !== "Exempt")
-         handleFormChange("gstPercentage", null);
-
-       handleFormChange("amount", null);
-     };
 
      const askForConfirmation = (choice) => {
        if (choice === "NO") tempContent.repetition = 0;
