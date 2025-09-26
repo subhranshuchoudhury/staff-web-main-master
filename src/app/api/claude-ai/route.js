@@ -12,7 +12,7 @@ const anthropic = createAnthropic({
 
 async function extractInvoiceData(imageBuffers) {
   const model = anthropic("claude-sonnet-4-20250514");
-  const systemPrompt = `
+const systemPrompt = `
     You are an expert invoice data extraction service.
     The following images represent sequential pages of a SINGLE INVOICE. Your task is to process all pages and merge the information into one final JSON object.
 
@@ -24,7 +24,13 @@ async function extractInvoiceData(imageBuffers) {
     Extract the following fields:
 
     For each line item (across all pages, combined into one list):
-    - part_no: Part Number (labeled as "Part No.", "SKU", "Item Code", etc.)
+    - **part_no:** Part Number. Follow this extraction logic carefully:
+        - **Priority 1:** First, try to find a dedicated column labeled "Part No.", "SKU", "Item Code", etc.
+        - **Priority 2 (Fallback):** If no dedicated part number column is present, the part number is often embedded within the main item description. You must identify and extract it.
+        - **Examples of extracting from a description:**
+            - For a description like "HS 3156 DSX NA (Tata Cummins Euro - II Halfset)", the part_no is "HS 3156 DSX NA".
+            - For a description like "Harvestore Euro II Ring (5313 MolyPlus)", the part_no is "5313 MolyPlus".
+            - The part number is usually an alphanumeric code at the beginning of the description or inside parentheses.
     - mrp: Maximum Retail Price (labeled as "MRP", "Price", or "Unit Price")
     - qty: Quantity (labeled as "Qty", "Quantity", etc.)
     - cgst: CGST percentage

@@ -1128,14 +1128,35 @@ export default function page() {
      // setIsClaudeModalOpen(false);
      if (!item || !apiResponse) return;
 
-     const partNo = (item.part_no || "").toString().trim();
+     // 1. Clean the incoming part number: remove special chars, spaces, and convert to uppercase.
+     const cleanedPartNo = (item.part_no || "")
+       .toString()
+       .replace(/[^a-zA-Z0-9]/g, "") // This regex removes anything that is NOT a letter or number
+       .toUpperCase();
 
-     // find item in local itemData where partNumber or itemName starts with part_no
+     // Exit if the part number is empty after cleaning
+     if (!cleanedPartNo) return;
+
+     // 2. Update the search logic to use the cleaned part number.
      const matched =
        itemData?.find((i) => {
-         const pn = (i.partNumber || "").toString();
-         const name = (i.itemName || "").toString();
-         return pn.startsWith(partNo) || name.startsWith(partNo);
+         // Clean the local part number for a consistent comparison
+         const localPartNo = (i.partNumber || "")
+           .toString()
+           .replace(/[^a-zA-Z0-9]/g, "")
+           .toUpperCase();
+
+         // Clean the local item name for a consistent comparison
+         const localItemName = (i.itemName || "")
+           .toString()
+           .replace(/[^a-zA-Z0-9]/g, "")
+           .toUpperCase();
+
+         // Check if the cleaned local data starts with the cleaned incoming part number
+         return (
+           localPartNo.startsWith(cleanedPartNo) ||
+           localItemName.startsWith(cleanedPartNo)
+         );
        }) || null;
 
      // prefer matched record for filling form, fallback to incoming item values
@@ -1872,7 +1893,7 @@ export default function page() {
          className="modal modal-bottom sm:modal-middle"
          onClose={() => setClaudeModalOpen(false)}
        >
-         <div className="modal-box bg-base-100 relative max-w-4xl max-h-[90vh] flex flex-col">
+         <div className="modal-box bg-base-100 relative max-w-5xl max-h-[90vh] flex flex-col">
            {/* --- MODAL HEADER --- */}
            <h2 className="text-3xl font-extrabold text-primary">
              Import Details
