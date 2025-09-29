@@ -26,10 +26,11 @@ const systemPrompt = `
     For each line item (across all pages, combined into one list):
     - **part_no:** Part Number. Follow this extraction logic carefully:
         - **Priority 1:** First, try to find a dedicated column labeled "Part No.", "SKU", "Item Code", etc.
-        - **Priority 2 (Fallback):** If no dedicated part number column is present, the part number is often embedded within the main item description. You must identify and extract it.
-        - **Examples of extracting from a description:**
+        - **Priority 2 (Fallback):** If no dedicated part number column is present, the part number is often embedded within the main item description or Product Name. You must identify and extract it.
+        - **Examples of extracting from a description or Product name:**
             - For a description like "HS 3156 DSX NA (Tata Cummins Euro - II Halfset)", the part_no is "HS 3156 DSX NA".
             - For a description like "Harvestore Euro II Ring (5313 MolyPlus)", the part_no is "5313 MolyPlus".
+            - For a Product Name like "94510374098F8 FUEL FILTER ELEM", the part_no is "94510374098F8".
             - The part number is usually an alphanumeric code at the beginning of the description or inside parentheses.
     - mrp: Maximum Retail Price (labeled as "MRP", "Price", or "Unit Price")
     - qty: Quantity (labeled as "Qty", "Quantity", etc.)
@@ -71,7 +72,6 @@ const systemPrompt = `
     - If no data can be found at all, return an empty structure with a message:
       { "invoice_no": "N/A", "invoice_date": "N/A", "format": "N/A", "grand_total": 0, "message": "No data found on any page.", "items": [] }
     `;
-
   const userContent = [
     {
       type: "text",
