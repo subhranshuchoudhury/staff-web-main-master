@@ -1610,7 +1610,7 @@ export default function page() {
              <Select
                isDisabled={formData?.gstType === "Exempt"}
                placeholder="Select GST %"
-               isSearchable={false}
+            
                className="w-full m-auto p-5 text-blue-800 font-bold"
                options={gstAmount}
                getOptionLabel={(option) => `${option["value"]}`}
