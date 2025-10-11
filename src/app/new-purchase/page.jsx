@@ -927,86 +927,90 @@ export default function page() {
          .toFixed(0)
      );
 
-   const modifyExcelSheet = (action, code, partyName) => {
-     const index = excelContent.findIndex(
-       (item) => item.selectedData.code === code && item.partyName === partyName
-     );
-     if (action === "delete") {
-       const confirmation = window.confirm(
-         `Are you sure you want to delete ${excelContent?.[index]?.itemName}?`
-       );
+const modifyExcelSheet = (action, code, partyName) => {
+  if (action === "delete") {
+    const index = excelContent.findIndex(
+      (item) => item.selectedData.code === code && item.partyName === partyName
+    );
+    const confirmation = window.confirm(
+      `Are you sure you want to delete ${excelContent?.[index]?.itemName}?`
+    );
 
-       if (confirmation) {
-         const excelArray = excelContent.filter(
-           (content) =>
-             content.selectedData.code !== code ||
-             content.partyName !== partyName
-         );
-         setExcelContent(excelArray);
-         const datas = localStorage.getItem("PURCHASE_NOT_DOWNLOAD_DATA");
-         const parsedData = JSON.parse(datas);
-         const localArray = parsedData.filter(
-           (content) =>
-             content.selectedData.code !== code ||
-             content.partyName !== partyName
-         );
-         setLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA", localArray);
-       }
-     } else if (action === "edit") {
-       setIsEditing(true);
-       // remove the row from the excel sheet
-       setExcelContent((prevArray) => {
-         const newArray = prevArray.filter(
-           (item) =>
-             item.selectedData.editCode !== code || item.partyName !== partyName
-         );
-         return newArray;
-       });
+    if (confirmation) {
+      // Filter out the deleted item from the state
+      const updatedExcelContent = excelContent.filter(
+        (content) =>
+          content.selectedData.code !== code || content.partyName !== partyName
+      );
+      setExcelContent(updatedExcelContent); // Update localStorage as well
 
-       // close the modal
-       window.saleModal_4.close();
+      const datas = localStorage.getItem("PURCHASE_NOT_DOWNLOAD_DATA");
+      const parsedData = JSON.parse(datas);
+      const localArray = parsedData.filter(
+        (content) =>
+          content.selectedData.code !== code || content.partyName !== partyName
+      );
+      setLocalStorage("PURCHASE_NOT_DOWNLOAD_DATA", localArray);
+    }
+  } else if (action === "edit") {
+    // 1. Find the exact item to be edited from the current excelContent array
+    const itemToEdit = excelContent.find(
+      (item) => item.selectedData.code === code && item.partyName === partyName
+    ); // Exit if the item is not found
 
-       console.log("Edit action triggered", excelContent?.[index]);
-       const item = excelContent?.[index];
+    if (!itemToEdit) {
+      console.error("Could not find the item to edit.");
+      return;
+    } // 2. Set the editing flag
 
-       // restore the fields
-       let totalAmount = reverseCalculateTotal(
-         item?.amount,
-         item?.gstPercentage
-       );
+    setIsEditing(true); // 3. **Remove the item from the excelContent state** by filtering it out. //    This creates a new array without the item being edited.
 
-       setSelectedItem(item?.selectedData);
-       const restoreFields = {
-         partyName: item?.partyName,
-         invoiceNo: item?.invoiceNo,
-         invoiceDate: item?.originDate,
-         unitPrice: item?.unitPrice,
-         gstType: item.gstType,
-         unit: item?.unit,
-         purchaseType: item.purchaseType,
-         purchaseTypeText: item.purchaseTypeText,
-         itemName: item?.itemName,
-         itemPartNoOrg: item?.itemPartNo,
-         itemLocation: item?.itemLocation,
-         quantity: item?.quantity,
-         mrp: item?.mrp,
-         gstPercentage: item?.gstPercentage,
-         amount:
-           item?.gstType === "Exempt" || item?.gstType === "Exclusive"
-             ? totalAmount
-             : item?.amount,
-         finalDisc: "ERROR!",
-         isIGST: item?.isIGST,
-         dynamicdisc: item?.disc,
-         mDiscPercentage: item?.mDiscPercentage,
-         selectedData: item?.selectedData,
-         repetitionPrint: parseInt(item?.repetitionPrint),
-         creditDays: item?.creditDays,
-       };
+    setExcelContent((prevArray) =>
+      prevArray.filter(
+        (item) =>
+          item.selectedData.code !== code || item.partyName !== partyName
+      )
+    ); // 4. Use the 'itemToEdit' object we found to restore the form fields
 
-       setFormData((prev) => ({ ...prev, ...restoreFields }));
-     }
-   };
+    let totalAmount = reverseCalculateTotal(
+      itemToEdit?.amount,
+      itemToEdit?.gstPercentage
+    );
+
+    setSelectedItem(itemToEdit?.selectedData);
+    const restoreFields = {
+      partyName: itemToEdit?.partyName,
+      invoiceNo: itemToEdit?.invoiceNo,
+      invoiceDate: itemToEdit?.originDate,
+      unitPrice: itemToEdit?.unitPrice,
+      gstType: itemToEdit.gstType,
+      unit: itemToEdit?.unit,
+      purchaseType: itemToEdit.purchaseType,
+      purchaseTypeText: itemToEdit.purchaseTypeText,
+      itemName: itemToEdit?.itemName,
+      itemPartNoOrg: itemToEdit?.itemPartNo,
+      itemLocation: itemToEdit?.itemLocation,
+      quantity: itemToEdit?.quantity,
+      mrp: itemToEdit?.mrp,
+      gstPercentage: itemToEdit?.gstPercentage,
+      amount:
+        itemToEdit?.gstType === "Exempt" || itemToEdit?.gstType === "Exclusive"
+          ? totalAmount
+          : itemToEdit?.amount,
+      finalDisc: "ERROR!",
+      isIGST: itemToEdit?.isIGST,
+      dynamicdisc: itemToEdit?.disc,
+      mDiscPercentage: itemToEdit?.mDiscPercentage,
+      selectedData: itemToEdit?.selectedData,
+      repetitionPrint: parseInt(itemToEdit?.repetitionPrint),
+      creditDays: itemToEdit?.creditDays,
+    };
+
+    setFormData((prev) => ({ ...prev, ...restoreFields })); // 5. Close the preview modal
+
+    window.saleModal_4.close();
+  }
+};
 
    const [claudeFormData, setClaudeFormData] = useState({
      partyName: "",
